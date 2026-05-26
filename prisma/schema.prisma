@@ -16,13 +16,24 @@ model User {
 }
 
 model QRCode {
-  id           String   @id @default(uuid())
+  id           String    @id @default(uuid())
   url          String
-  shortcode    String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  shortcode    String    @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   expiresAt    DateTime?
-  scanCount    Int      @default(0)
-  isActive     Boolean  @default(true)
+  scanCount    Int       @default(0)
+  isActive     Boolean   @default(true)
   description  String?
+  scanLogs     ScanLog[]
+}
+
+model ScanLog {
+  id        String   @id @default(uuid())
+  qrCodeId  String
+  scannedAt DateTime @default(now())
+  qrCode    QRCode   @relation(fields: [qrCodeId], references: [id], onDelete: Cascade)
+
+  @@index([scannedAt])
+  @@index([qrCodeId])
 }

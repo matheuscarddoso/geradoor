@@ -25,6 +25,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import Link from "next/link";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
@@ -52,8 +53,8 @@ const WhatsappLinkGenerator: React.FC = () => {
   }, [theme]);
 
   const handleGenerate = async () => {
-    if (!phone) {
-      toast.error("Por favor, preencha o número de telefone antes de gerar o QR Code");
+    if (!phone || !isValidPhoneNumber(phone)) {
+      toast.error("Por favor, preencha um número de telefone válido");
       return;
     }
 

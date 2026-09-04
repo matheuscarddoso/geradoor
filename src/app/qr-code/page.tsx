@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import NavbarSection from "@/components/NavbarSection";
 import { Copy, Loader } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
+import LogoPicker, { DEFAULT_LOGO, type LogoConfig } from "@/components/qr/LogoPicker";
+import DecorativeQR from "@/components/qr/DecorativeQR";
+import { parseLink } from "@/lib/link";
 
 const PLACEHOLDER_URL = "https://geradoor.com";
+const QR_SIZE = 180;
 
 const QRCodeGenerator: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
+  const [logo, setLogo] = useState<LogoConfig>(DEFAULT_LOGO);
+  const [touched, setTouched] = useState(false);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -31,23 +38,24 @@ const QRCodeGenerator: React.FC = () => {
     setQrCodeValue(null);
   };
 
+  const link = useMemo(() => parseLink(inputValue), [inputValue]);
+  // Só acusa erro depois que o campo perdeu o foco, para não brigar com quem
+  // ainda está no meio de digitar o endereço.
+  const showError = touched && inputValue.length > 0 && !link.ok;
+
   const handleGenerate = async () => {
     if (!inputValue) {
       toast.error("Por favor, preencha o link antes de gerar o QR Code");
       return;
     }
 
-    let url = inputValue.trim();
-    if (!/^https?:\/\//i.test(url)) {
-      url = `https://${url}`;
-    }
-
-    try {
-      new URL(url);
-    } catch {
-      toast.error("O link informado não é válido");
+    if (!link.ok || !link.url) {
+      setTouched(true);
+      toast.error(link.reason ?? "Esse link não é válido");
       return;
     }
+
+    const url = link.url;
 
     const shortcode = uuidv4().slice(0, 6);
     const baseUrl = "https://www.geradoor.com/";
@@ -144,12 +152,12 @@ const QRCodeGenerator: React.FC = () => {
       <NavbarSection />
 
       <motion.div
-        className="max-w-screen-md w-full h-full flex items-center justify-center"
+        className="max-w-screen-md w-full h-full flex items-center justify-center overflow-y-auto py-24"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
-        <div className="w-full flex flex-col md:flex-row gap-10 md:gap-16 items-center">
+        <div className="w-full my-auto flex flex-col md:flex-row gap-10 md:gap-16 items-center">
 
           {/* Left — form (always visible) */}
           <div className="flex-1 flex flex-col space-y-4 w-full">
@@ -161,18 +169,47 @@ const QRCodeGenerator: React.FC = () => {
                 para criar um QRCode
               </p>
             </div>
-            <Input
-              type="text"
-              placeholder="https://"
-              className="bg-background"
-              value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-            />
+            <div className="space-y-1.5">
+              <Input
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                placeholder="https://"
+                className={cn(
+                  "bg-background",
+                  showError &&
+                    "border-red-500/70 focus-visible:ring-red-500/40 dark:border-red-500/60"
+                )}
+                value={inputValue}
+                onChange={handleInputChange}
+                onBlur={() => setTouched(true)}
+                onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                aria-invalid={showError}
+                aria-describedby={showError ? "link-erro" : undefined}
+              />
+              <AnimatePresence initial={false}>
+                {showError && (
+                  <motion.p
+                    key="link-erro"
+                    id="link-erro"
+                    role="alert"
+                    initial={{ opacity: 0, transform: "translateY(-2px)" }}
+                    animate={{ opacity: 1, transform: "translateY(0px)" }}
+                    exit={{ opacity: 0, transform: "translateY(-2px)" }}
+                    transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+                    className="text-xs text-red-500 dark:text-red-400"
+                  >
+                    {link.reason}
+                  </motion.p>
+                )}
+              </AnimatePresence>
+            </div>
+            <LogoPicker value={logo} onChange={setLogo} disabled={loadingQrCode} />
+
             <Button
-              className="w-full md:hidden"
+              className="w-full"
               onClick={handleGenerate}
-              disabled={!inputValue || loadingQrCode}
+              disabled={!link.ok || loadingQrCode}
             >
               {loadingQrCode ? <Loader className="animate-spin h-4 w-4" /> : "Criar QRCode"}
             </Button>
@@ -181,55 +218,84 @@ const QRCodeGenerator: React.FC = () => {
           {/* Right — QR panel (desktop only) */}
           <div className="hidden md:flex flex-1 flex-col items-center gap-4">
 
-            {/* QR code + overlay */}
-            <div className="relative rounded-2xl overflow-hidden">
-              <motion.div
-                className="bg-white p-5 rounded-2xl overflow-hidden"
-                animate={{ opacity: inputValue ? 1 : 0.25 }}
-                transition={{ duration: 0.3 }}
-              >
-                <QRCodeSVG
-                  value={qrCodeValue ?? (inputValue || PLACEHOLDER_URL)}
-                  size={180}
-                  className="qrcode-svg"
-                />
-              </motion.div>
+            {/* QR code — decorativo enquanto não foi criado */}
+            <div className="relative overflow-hidden">
+              <div className="bg-white p-5 overflow-hidden">
+                {qrCodeValue ? (
+                  <QRCodeSVG
+                    value={qrCodeValue}
+                    size={QR_SIZE}
+                    className="qrcode-svg"
+                    /* Nível H recupera ~30% dos módulos e é o que permite cobrir
+                       o centro com o logo. Sem logo, mantém o nível padrão para
+                       não alterar a densidade dos códigos já existentes. */
+                    level={logo.src ? "H" : "L"}
+                    imageSettings={
+                      logo.src
+                        ? {
+                            src: logo.src,
+                            height: Math.round(QR_SIZE * logo.scale),
+                            width: Math.round(QR_SIZE * logo.scale),
+                            excavate: true,
+                          }
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <div className="relative text-zinc-900">
+                    <DecorativeQR seed={inputValue} size={QR_SIZE} />
+                    {logo.src && (
+                      // eslint-disable-next-line @next/next/no-img-element -- data URL gerado no cliente, next/image não se aplica
+                      <img
+                        src={logo.src}
+                        alt=""
+                        style={{
+                          width: QR_SIZE * logo.scale,
+                          height: QR_SIZE * logo.scale,
+                        }}
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 {loadingQrCode && (
                   <motion.div
                     key="loading"
-                    className="absolute inset-0 flex items-center justify-center backdrop-blur-md bg-white/10"
+                    className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
                   >
-                    <Loader className="animate-spin h-5 w-5" />
-                  </motion.div>
-                )}
-
-                {!loadingQrCode && !qrCodeValue && (
-                  <motion.div
-                    key="preview"
-                    className="absolute inset-0 flex items-center justify-center backdrop-blur-md"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Button
-                      size="sm"
-                      onClick={handleGenerate}
-                      disabled={!inputValue}
-                      className="rounded-full text-[14px]"
-                    >
-                      Criar QRCode
-                    </Button>
+                    <Loader className="animate-spin h-5 w-5 text-zinc-900" />
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Deixa explícito que o desenho acima não é escaneável ainda */}
+            <AnimatePresence initial={false}>
+              {!qrCodeValue && (
+                <motion.p
+                  key="preview-label"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}
+                  className="text-xs text-zinc-500 dark:text-zinc-400 text-center max-w-[220px] leading-relaxed"
+                >
+                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                    Prévia ilustrativa
+                  </span>
+                  <br />
+                  Este desenho não é escaneável. Clique em criar para gerar o
+                  código real.
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             {/* Link + downloads — aparecem após criação */}
             <AnimatePresence>

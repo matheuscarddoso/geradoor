@@ -8,9 +8,8 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import NavbarSection from "@/components/NavbarSection";
-import { Copy, Loader, Send } from "lucide-react";
+import { Copy, Loader } from "lucide-react";
 import { PhoneInput } from "@/components/PhoneInput";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -27,7 +26,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import Link from "next/link";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import IMessagePreview from "@/components/whatsapp/IMessagePreview";
+import PhoneFrame from "@/components/whatsapp/PhoneFrame";
 
 const WhatsappLinkGenerator: React.FC = () => {
   const [phone, setPhone] = useState<string | null>("");
@@ -35,16 +35,6 @@ const WhatsappLinkGenerator: React.FC = () => {
   const [qrCodeValue, setQrCodeValue] = useState<string | null>("");
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
   const { theme, setTheme } = useTheme();
-  const [open, setOpen] = useState(false);
-
-  const handleMouseEnter = () => {
-    setOpen(true);
-  };
-
-  const handleMouseLeave = () => {
-    setOpen(false);
-  };
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       document.documentElement.classList.remove("light", "dark");
@@ -90,7 +80,7 @@ const WhatsappLinkGenerator: React.FC = () => {
       description: "Link copiado com sucesso!",
       action: {
         label: "Cancelar",
-        onClick: () => console.log("Cancelar"),
+        onClick: () => {},
       },
     });
   }
@@ -146,13 +136,13 @@ const WhatsappLinkGenerator: React.FC = () => {
       <NavbarSection />
 
       <motion.div
-        className="max-w-screen-md mx-auto w-full h-full max-h-[400px] hidden md:flex lg:flex flex-col space-y-2 items-start justify-center"
+        className="max-w-4xl mx-auto w-full h-full max-h-[560px] hidden md:flex lg:flex flex-col space-y-2 items-start justify-center"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
       >
         <ResizablePanelGroup direction="horizontal" className="">
-          <ResizablePanel>
+          <ResizablePanel defaultSize={44}>
             <motion.div 
               className="flex flex-col h-full justify-center pe-6 ps-1"
               initial={{ opacity: 0, x: -20, y: 0 }}
@@ -216,55 +206,21 @@ const WhatsappLinkGenerator: React.FC = () => {
             </motion.div>
           </ResizablePanel>
           <ResizableHandle withHandle />
-          <ResizablePanel>
+          <ResizablePanel defaultSize={56}>
             <motion.div 
               className="flex flex-col items-center justify-center ps-6 pe-1 h-full"
               initial={{ opacity: 0, x: 20, y: 0 }}
               animate={{ opacity: 1, x: 0, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}>
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger
-                  asChild
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}
-                  onClick={e => {
-                    e.preventDefault();
-                  }}>
-                  <div className="flex flex-col items-start w-full h-full border rounded-md p-4 bg-background my-auto">
-                    <div className="flex flex-row gap-3 items-center">
-                      <Avatar className="w-8 h-8 rounded-full overflow-hidden">
-                        <AvatarImage src="/supmark.avif" className="h-full object-cover" alt="What is up Mark?"></AvatarImage>
-                        <AvatarFallback>CN</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{phone == "" ? "+00 000 00-0000" : phone}</p>
-                        <p className="text-xs font-normal text-muted-foreground leading-none">Digitando...</p>
-                      </div>
-                    </div>
-                    <div className="mt-auto flex flex-col w-full space-y-4">
-                      { message && (
-                        <div className="bg-primary text-primary-foreground text-sm p-1 px-2 font-normal rounded-sm ms-auto mt-auto">
-                          <span>{message}</span>
-                        </div>
-                      )}
-                      <div className="flex flex-row w-full">
-                        <Input
-                          type="text"
-                          placeholder="Digite sua mensagem..."
-                          className="bg-background w-full"
-                          disabled
-                        />
-                        <div className="w-9 h-9 ms-3 px-2 border rounded-md flex items-center justify-center">
-                          <Send className="" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent side="top" className="p-2">
-                  <p className="text-xs text-center">Conteúdo apenas para pré-visualização, sem interação / ação existente.</p>
-                </PopoverContent>
-              </Popover>
+              <div className="flex h-full w-full min-h-0 flex-col items-center justify-center">
+                <PhoneFrame className="w-full max-w-[360px]">
+                  <IMessagePreview phone={phone ?? ""} message={message ?? ""} />
+                </PhoneFrame>
+                <p className="mt-3 shrink-0 text-center text-[11px] leading-snug text-muted-foreground">
+                  Prévia ilustrativa. Sem interação — o link real abre o
+                  WhatsApp.
+                </p>
+              </div>
 
             </motion.div>
           </ResizablePanel>

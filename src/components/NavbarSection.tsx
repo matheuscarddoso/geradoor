@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { DoorOpen, Minus } from 'lucide-react';
+import { Minus } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
@@ -18,9 +18,11 @@ import {
 import { usePathname } from 'next/navigation';
 import { Separator } from './ui/separator';
 import { AnimatedLink } from './PageTransition';
+import { MaximizeIcon, type MaximizeIconHandle } from '@/components/ui/maximize-icon';
 
 const NavbarSection: React.FC = () => {
   const currentPath = usePathname();
+  const logoRef = useRef<MaximizeIconHandle>(null);
 
   return (
     <motion.div
@@ -30,8 +32,15 @@ const NavbarSection: React.FC = () => {
       transition={{ duration: 0.5, delay: 0.2 }}
     >
       <div className="bg-background dark:bg-primary-dark-2 pointer-events-auto relative mx-auto w-full flex h-full items-center overflow-y-scroll rounded-[14px] px-2 py-2 shadow-[rgba(142,140,152,0.2)_0px_0px_30px,rgba(219,216,224,0.2)_0px_0px_0px_1px] dark:shadow-[rgba(111,109,120,0.1)_0px_0px_30px,rgba(60,57,63,0.4)_0px_0px_0px_1px] sm:overflow-y-visible">
-        <Button variant="ghost" className='hover:bg-transparent'>
-          <DoorOpen className="w-4 h-4" />
+        <Button
+          variant="ghost"
+          className='hover:bg-transparent gap-2'
+          onMouseEnter={() => logoRef.current?.startAnimation()}
+          onMouseLeave={() => logoRef.current?.stopAnimation()}
+        >
+          {/* O ref deixa o ícone em modo controlado: quem dispara a animação
+              é o hover do botão inteiro, não só o hover sobre o desenho. */}
+          <MaximizeIcon ref={logoRef} size={16} className="flex items-center" />
           Geradoor
         </Button>
         <div className="mx-auto hidden lg:inline md:inline">

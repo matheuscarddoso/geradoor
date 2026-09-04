@@ -1,79 +1,41 @@
-"use client";
+import type { Metadata } from "next";
+import CpfGeneratorClient from "./CpfGeneratorClient";
+import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
-import React, { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
-import { formatCPF, generateCPF } from './utils/cpf_gen';
-import { Input } from '@/components/ui/input';
-import { toast } from "sonner";
-import { motion } from 'framer-motion';
-import NavbarSection from '@/components/NavbarSection';
+// A home fica no mesmo segmento do layout raiz, e title.template só se aplica
+// a segmentos filhos. Por isso a marca entra manualmente aqui.
+const TITLE = "Gerador de CPF válido online e grátis | Geradoor";
+const DESCRIPTION =
+  "Gere CPF válido para testar sistemas e formulários. Números aleatórios que respeitam o cálculo dos dígitos verificadores. Grátis e sem cadastro.";
 
-const CPFGenerator: React.FC = () => {
-  const [cpf, setCpf] = useState<string>('');
-  const [copied, setCopied] = useState<boolean>(false);
-  const {theme, setTheme} = useTheme();
+export const metadata: Metadata = pageMetadata({
+  title: TITLE,
+  description: DESCRIPTION,
+  path: "/",
+});
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme || "dark");
-      handleGenerate();
-    }
-  }, [theme]);  
+const schema = [
+  toolSchema({
+    name: "Gerador de CPF",
+    description: DESCRIPTION,
+    path: "/",
+    features: [
+      "Gera CPF com dígitos verificadores válidos",
+      "Copiar com um clique",
+      "Formato com ou sem pontuação",
+    ],
+  }),
+  breadcrumbSchema([{ name: "Gerador de CPF", path: "/" }]),
+];
 
-  const handleGenerate = () => {
-    const newCpf = generateCPF();
-    setCpf(newCpf);
-  };
-
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(cpf);
-    setCopied(true);
-    toast("Copiado pro trem que coisa", {
-      description: "CPF copiado para a área de transferência",
-      action: {
-        label: "Cancelar",
-        onClick: () => {},
-      },
-    });
-    setTimeout(() => {
-      setCopied(false);
-    }, 1000);
-  };
-
+export default function Page() {
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
-        className="pattern absolute inset-0 -z-10 h-full w-full" 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      ></motion.div>
-      <NavbarSection />
-      <motion.div
-        className="max-w-screen-md w-full h-full flex flex-col space-y-2 items-center justify-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <div className="flex flex-col items-center justify-center space-y-3 my-5">
-          <h1 className="text-4xl font-semibold tracking-tighter">Gerador de CPF</h1>
-          <p className="text-lg text-zinc-700 dark:text-zinc-400 font-normal leading-6 tracking-tighter text-center">Clique em &quot;Gerar CPF&quot; e obtenha um número<br />de CPF válido instantaneamente.</p>
-        </div>
-        <Button className="w-full max-w-[250px] mt-8" onClick={handleGenerate}>
-          Gerar CPF
-        </Button>
-        <div className="flex space-x-2 w-full max-w-[250px] mx-auto">
-          <Input readOnly type="text" placeholder="CPF" className="bg-background" value={formatCPF(cpf)} />
-          <Button variant="outline" onClick={copyToClipboard}>
-            {copied ? 'Copiado!' : 'Copiar'}
-          </Button>
-        </div>
-      </motion.div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
+      />
+      <CpfGeneratorClient />
+    </>
   );
-};
-
-export default CPFGenerator;
+}

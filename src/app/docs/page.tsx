@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+/**
+ * Fora do índice enquanto o conteúdo for o boilerplate do shadcn.
+ * Página fina indexada derruba o sinal de qualidade do domínio inteiro.
+ */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { NavActions } from "@/components/nav-actions"
 import {

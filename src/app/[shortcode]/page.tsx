@@ -1,3 +1,13 @@
+import type { Metadata } from "next";
+
+/**
+ * Rota de redirect, não é conteúdo. Fora do índice para o Google não
+ * catalogar milhares de URLs curtas que só apontam para outro lugar.
+ */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
+
 import { prisma } from '@/lib/prisma';
 import { redirect, notFound } from 'next/navigation';
 

@@ -35,7 +35,7 @@ const CNPJGenerator: React.FC = () => {
       description: "CNPJ copiado para a área de transferência",
       action: {
         label: "Cancelar",
-        onClick: () => console.log("Cancelar"),
+        onClick: () => {},
       },
     });
     setTimeout(() => {

@@ -51,7 +51,7 @@ const CartaoDeCreditoGenerator: React.FC = () => {
       description: `${type} copiado para a área de transferência`,
       action: {
         label: "Cancelar",
-        onClick: () => console.log("Cancelar"),
+        onClick: () => {},
       },
     });
     setTimeout(() => {

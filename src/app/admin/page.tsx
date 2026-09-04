@@ -15,31 +15,48 @@ import {
 
 export const dynamic = "force-dynamic";
 
+/** Teto das tabelas do painel. Os contadores usam count(), não este limite. */
+const LISTING_LIMIT = 500;
+const SCAN_HISTORY_LIMIT = 20_000;
+
 export default async function AdminPage() {
   const since7Days = subDays(new Date(), 7);
 
-  const [users, qrcodes, totalScansAgg, scansThisWeekAgg, scanHistory] = await Promise.all([
-    prisma.user.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.qRCode.findMany({ orderBy: { createdAt: "desc" } }),
+  // Teto nas listagens: a página é force-dynamic, então cada request pagava
+  // por trazer a tabela inteira do banco só para exibir 8 linhas. As contagens
+  // exibidas vêm de count()/aggregate e continuam refletindo o total real.
+  const [
+    users,
+    qrcodes,
+    totalQR,
+    activeQR,
+    totalScansAgg,
+    scansThisWeekAgg,
+    scanHistory,
+    topQRCodes,
+    recentQRCodes,
+  ] = await Promise.all([
+    prisma.user.findMany({ orderBy: { createdAt: "desc" }, take: LISTING_LIMIT }),
+    prisma.qRCode.findMany({ orderBy: { createdAt: "desc" }, take: LISTING_LIMIT }),
+    prisma.qRCode.count(),
+    prisma.qRCode.count({ where: { isActive: true } }),
     prisma.qRCode.aggregate({ _sum: { scanCount: true } }),
     prisma.scanLog.count({ where: { scannedAt: { gte: since7Days } } }),
     prisma.scanLog.findMany({
       where: { scannedAt: { gte: since7Days } },
       select: { scannedAt: true },
       orderBy: { scannedAt: "asc" },
+      take: SCAN_HISTORY_LIMIT,
     }),
+    prisma.qRCode.findMany({
+      where: { scanCount: { gt: 0 } },
+      orderBy: { scanCount: "desc" },
+      take: 8,
+    }),
+    prisma.qRCode.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
   ]);
 
-  const totalQR = qrcodes.length;
-  const activeQR = qrcodes.filter((q) => q.isActive).length;
   const totalScans = totalScansAgg._sum.scanCount ?? 0;
-
-  const topQRCodes = [...qrcodes]
-    .filter((q) => q.scanCount > 0)
-    .sort((a, b) => b.scanCount - a.scanCount)
-    .slice(0, 8);
-
-  const recentQRCodes = qrcodes.slice(0, 8);
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
@@ -108,7 +125,7 @@ export default async function AdminPage() {
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-xl font-medium tracking-tight">QR Codes</h2>
             <span className="text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">
-              {qrcodes.length}
+              {totalQR}
             </span>
           </div>
           {qrcodes.length === 0 ? (

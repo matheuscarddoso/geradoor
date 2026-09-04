@@ -6,21 +6,24 @@ export default async function QRCodeRedirectPage({
 }: {
   params: Promise<{ shortcode: string }>;
 }) {
-  // await the params promise before using .shortcode
   const { shortcode } = await params;
 
   const qrCode = await prisma.qRCode.findUnique({
     where: { shortcode },
   });
 
-  if (!qrCode || !qrCode.isActive) {
+  const isExpired = qrCode?.expiresAt != null && qrCode.expiresAt <= new Date();
+
+  if (!qrCode || !qrCode.isActive || isExpired) {
     notFound();
   }
 
   await prisma.$transaction([
+    // increment é resolvido no banco. A versão anterior lia scanCount fora da
+    // transação e escrevia lido+1, então scans concorrentes se sobrescreviam.
     prisma.qRCode.update({
       where: { shortcode },
-      data: { scanCount: qrCode.scanCount + 1 },
+      data: { scanCount: { increment: 1 } },
     }),
     prisma.scanLog.create({
       data: { qrCodeId: qrCode.id },
@@ -32,5 +35,4 @@ export default async function QRCodeRedirectPage({
     : `https://${qrCode.url}`;
 
   redirect(url);
-  return null;
 }

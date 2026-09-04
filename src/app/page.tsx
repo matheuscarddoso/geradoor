@@ -35,7 +35,7 @@ const CPFGenerator: React.FC = () => {
       description: "CPF copiado para a área de transferência",
       action: {
         label: "Cancelar",
-        onClick: () => console.log("Cancelar"),
+        onClick: () => {},
       },
     });
     setTimeout(() => {

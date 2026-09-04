@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/app/utils/rateLimit";
+import { createQRCodeSchema } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
@@ -10,13 +11,22 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { url, shortcode, expiresAt, description } = await req.json();
+    const body = await req.json();
+    const parsed = createQRCodeSchema.safeParse(body);
 
-    try {
-      new URL(url);
-    } catch {
-      return new NextResponse("URL inválida", { status: 400 });
+    if (!parsed.success) {
+      // Mantém a mensagem histórica quando o problema é a URL: era o único
+      // 400 que esta rota emitia e integrações podem casar com esse texto.
+      const urlFailed = parsed.error.issues.some(
+        (issue) => issue.path[0] === "url"
+      );
+      return new NextResponse(
+        urlFailed ? "URL inválida" : "Dados inválidos",
+        { status: 400 }
+      );
     }
+
+    const { url, shortcode, expiresAt, description } = parsed.data;
 
     const newQRCode = await prisma.qRCode.create({
       data: {

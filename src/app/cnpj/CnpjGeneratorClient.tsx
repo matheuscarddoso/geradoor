@@ -1,31 +1,37 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { formatCNPJ, generateCNPJ } from '../utils/cnpj_gen';
 import { Input } from '@/components/ui/input';
 import { toast } from "sonner";
-import { motion } from 'framer-motion';
-import NavbarSection from '@/components/NavbarSection';
+import { PageHeader } from '@/components/shell/AppShell';
+import { useRecentes } from '@/lib/recentes';
+import { useEspacoParaGerar } from '@/lib/useEspacoParaGerar';
+import { GerarComEspaco } from '@/components/GerarComEspaco';
 
 const CNPJGenerator: React.FC = () => {
   const [cnpj, setCnpj] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
-  const {theme, setTheme} = useTheme();
+  const { registrar } = useRecentes();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme || "dark");
-      handleGenerate();
-    }
-  }, [theme]);  
+    // Gera o primeiro valor ao montar. Antes isto convivia com uma
+    // manipulação manual da classe de tema no <html>, que brigava com o
+    // next-themes; a dependência era [theme], então trocar o tema regerava o
+    // valor sem motivo. Agora depende só da montagem.
+    handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);  
 
   const handleGenerate = () => {
-    const newCpf = generateCNPJ();
-    setCnpj(newCpf);
+    const newCnpj = generateCNPJ();
+    setCnpj(newCnpj);
+    registrar({ tipo: "cnpj", label: formatCNPJ(newCnpj) });
   };
+
+  // Gerar passou a ser exclusivo da barra de espaço.
+  useEspacoParaGerar(handleGenerate);
 
 
   const copyToClipboard = () => {
@@ -44,34 +50,27 @@ const CNPJGenerator: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
-        className="pattern absolute inset-0 -z-10 h-full w-full" 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      ></motion.div>
-      <NavbarSection />
-      <motion.div
-        className="max-w-screen-md w-full h-full flex flex-col space-y-2 items-center justify-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <div className="flex flex-col items-center justify-center space-y-3 my-5">
-          <h1 className="text-4xl font-semibold tracking-tighter">Gerador de CNPJ</h1>
-          <p className="text-lg text-zinc-700 dark:text-zinc-400 font-normal leading-6 tracking-tighter text-center">Clique em &quot;Gerar CNPJ&quot; e obtenha um número<br />de CNPJ válido instantaneamente.</p>
-        </div>
-        <Button className="w-full max-w-[250px] mt-8" onClick={handleGenerate}>
-          Gerar CNPJ
+    <div className="w-full max-w-md">
+      <PageHeader
+        title="Gerador de CNPJ"
+        description="Números aleatórios com dígitos verificadores válidos, para testar cadastros e integrações."
+      />
+
+      <div className="flex w-full flex-col gap-3">
+        <Input
+          readOnly
+          type="text"
+          placeholder="CNPJ"
+          className="bg-background text-center"
+          value={formatCNPJ(cnpj)}
+        />
+
+        <Button onClick={copyToClipboard}>
+          {copied ? "Copiado!" : "Copiar CNPJ"}
         </Button>
-        <div className="flex space-x-2 w-full max-w-[250px] mx-auto">
-          <Input readOnly type="text" placeholder="CNPJ" className="bg-background" value={formatCNPJ(cnpj)} />
-          <Button variant="outline" onClick={copyToClipboard}>
-            {copied ? 'Copiado!' : 'Copiar'}
-          </Button>
-        </div>
-      </motion.div>
+
+        <GerarComEspaco onGerar={handleGenerate} />
+      </div>
     </div>
   );
 };

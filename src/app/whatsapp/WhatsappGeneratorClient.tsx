@@ -4,17 +4,19 @@ import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { PageHeader } from "@/components/shell/AppShell";
+import { useRecentes } from "@/lib/recentes";
 import { QRCodeSVG } from "qrcode.react";
-import NavbarSection from "@/components/NavbarSection";
 import { Copy, Loader } from "lucide-react";
 import { PhoneInput } from "@/components/PhoneInput";
 import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+  DialogSelo,
+  DialogDestaque,
+  DialogSuperficie,
+  DialogAcoes,
+} from "@/components/ui/dialog-parts";
 import {
   Dialog,
   DialogContent,
@@ -24,23 +26,36 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { v4 as uuidv4 } from "uuid";
+import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { rasterizeSvgMarkup } from "@/lib/image";
+import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import Link from "next/link";
 import IMessagePreview from "@/components/whatsapp/IMessagePreview";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
+
+/** Lado do QR renderizado nas duas telas. */
+const QR_RENDER_SIZE = 200;
+/** Lado do logo como fração da imagem. */
+const LOGO_SCALE = 0.22;
 
 const WhatsappLinkGenerator: React.FC = () => {
   const [phone, setPhone] = useState<string | null>("");
   const [message, setMessage] = useState<string | null>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>("");
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
-  const { theme, setTheme } = useTheme();
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme || "dark");
-    }
-  }, [theme]);
+  // resolvedTheme, não theme: o segundo devolve o valor escolhido, que pode
+  // ser "system", enquanto as cores do QR precisam do tema efetivo.
+  const { resolvedTheme } = useTheme();
 
   const handleGenerate = async () => {
     if (!phone || !isValidPhoneNumber(phone)) {
@@ -65,7 +80,9 @@ const WhatsappLinkGenerator: React.FC = () => {
       }
 
       const data = await response.json();
-      setQrCodeValue(baseUrl + data.shortcode);
+      const criado = baseUrl + data.shortcode;
+      setQrCodeValue(criado);
+      registrar({ tipo: "whatsapp", label: criado, href: "/whatsapp" });
       setLoadingQrCode(false);
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
@@ -85,213 +102,249 @@ const WhatsappLinkGenerator: React.FC = () => {
     });
   }
 
-  const downloadQRCode = () => {
-    const svg = document.querySelector(".qrcode-svg");
-    if (!svg) {
-      toast.error("QR Code não encontrado!");
-      return;
-    }
-  
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-  
-    const scale = 4;
-    const size = 200;
-  
-    canvas.width = size * scale;
-    canvas.height = size * scale;
-  
-    ctx?.scale(scale, scale);
-  
-    const img = new Image();
-    img.onload = () => {
-      ctx?.clearRect(0, 0, canvas.width, canvas.height);
-      ctx?.drawImage(img, 0, 0, size, size);
-  
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "qrcode.png";
-          a.click();
-          URL.revokeObjectURL(url);
-        }
+  const [baixando, setBaixando] = useState<QrFormat | null>(null);
+  const [usarLogo, setUsarLogo] = useState(true);
+  const { registrar } = useRecentes();
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+
+  /**
+   * A marca do WhatsApp entra no QR como PNG data URL, não como SVG.
+   *
+   * O download desenha o SVG do código num canvas, e um <image> apontando para
+   * SVG aninhado não carrega quando o SVG externo é lido como imagem — o logo
+   * sairia faltando no arquivo baixado. Rasterizar resolve, e o resultado fica
+   * em estado para não repetir o trabalho a cada toggle.
+   */
+  useEffect(() => {
+    if (!usarLogo || logoSrc) return;
+    const preset = LOGO_PRESETS.find((item) => item.id === "whatsapp");
+    if (!preset) return;
+
+    let ativo = true;
+    rasterizeSvgMarkup(presetMarkup(preset))
+      .then((src) => {
+        if (ativo) setLogoSrc(src);
+      })
+      .catch(() => {
+        if (!ativo) return;
+        toast.error("Não foi possível carregar o ícone do WhatsApp");
+        setUsarLogo(false);
       });
+    return () => {
+      ativo = false;
     };
-  
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  }, [usarLogo, logoSrc]);
+
+  /**
+   * Nível H recupera cerca de 30% dos módulos e é o que permite cobrir o
+   * centro. Sem logo o nível volta ao padrão, para não mudar a densidade dos
+   * códigos já gerados. A 22% da imagem o logo ocupa ~9% da área do código.
+   */
+  const logoAtivo = usarLogo && logoSrc !== null;
+  const imageSettings = logoAtivo
+    ? {
+        src: logoSrc,
+        height: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
+        width: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
+        excavate: true,
+      }
+    : undefined;
+
+  const handleDownload = async (format: QrFormat) => {
+    try {
+      setBaixando(format);
+      await downloadQrCode({
+        // Duas instâncias do QR existem no DOM ao mesmo tempo, uma por
+        // breakpoint. `:not([hidden])` não serve porque a que sobra é escondida
+        // por classe, então pegamos a que de fato tem área renderizada.
+        element: Array.from(
+          document.querySelectorAll<SVGElement>(".qrcode-svg")
+        ).find((el) => el.getBoundingClientRect().width > 0) ?? null,
+        format,
+        filename: "qrcode-whatsapp",
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof QrDownloadError
+          ? error.message
+          : "Não foi possível baixar o QR Code"
+      );
+    } finally {
+      setBaixando(null);
+    }
   };
 
 
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
-        className="pattern absolute inset-0 -z-10 h-full w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      ></motion.div>
-      <NavbarSection />
-
-      <motion.div
-        className="max-w-4xl mx-auto w-full h-full max-h-[560px] hidden md:flex lg:flex flex-col space-y-2 items-start justify-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <ResizablePanelGroup direction="horizontal" className="">
-          <ResizablePanel defaultSize={44}>
-            <motion.div 
-              className="flex flex-col h-full justify-center pe-6 ps-1"
-              initial={{ opacity: 0, x: -20, y: 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}>
-              <h1 className="font-semibold leading-none tracking-tight mb-1">Gerador de link do WhatsApp</h1>
-              <p className="text-sm text-muted-foreground mb-6">Digite o número e a mensagem para criar seu link wa.me.</p>
-              <PhoneInput defaultCountry="BR" value={phone ?? ""} onChange={(e) => setPhone(e)} placeholder="(00) 00000-0000" />
-              <Input
-                type="text"
-                placeholder="Customize sua mensagem"
-                className="bg-background mt-4"
-                value={message ?? ""}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-              <p className="mt-2 font-normal text-sm tracking-tight leading-4">Exemplo: &quot;Olá, eu gostaria de receber mais informações sobre o produto&quot;</p>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="w-full mt-8" onClick={handleGenerate} disabled={phone == ""}>
-                    Gerar meu link
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Esse é o seu link do WhatsApp</DialogTitle>
-                    <DialogDescription>
-                      Copie e compartilhe em qualquer lugar para ser contactado instantaneamente.
-                    </DialogDescription>
-                    { loadingQrCode ? (
-                      <div className="flex items-center justify-center w-full h-full py-12">
-                        <Loader className="animate-spin rounded-full h-5 w-5"/>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col pt-6">
-                        <div className="flex flex-row items-center justify-center mb-6 mx-auto">
-                          <Link className="underline underline-offset-4" href={qrCodeValue ?? ""} target="_blank" >{qrCodeValue}</Link>
-                          <Button variant="ghost" className="w-7 h-7 p-0 ms-1" onClick={copyLink}>
-                            <Copy />
-                          </Button>
-                        </div>
-                        <QRCodeSVG
-                          className="mx-auto qrcode-svg"
-                          value={qrCodeValue ?? ""}
-                          size={200}
-                          fgColor={theme === "dark" ? "white" : "black"}
-                          bgColor={theme === "dark" ? "black" : "white"}
-                        />
-                        <div className="flex flex-row gap-4 mt-6 justify-center">
-                          <Button variant="secondary" onClick={downloadQRCode}>
-                            Baixar QR Code
-                          </Button>
-                          <Button className="" onClick={copyLink}>
-                            Copiar link
-                          </Button>
-                        </div>
-                      </div>
-                    ) }
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </motion.div>
-          </ResizablePanel>
-          <ResizableHandle withHandle />
-          <ResizablePanel defaultSize={56}>
-            <motion.div 
-              className="flex flex-col items-center justify-center ps-6 pe-1 h-full"
-              initial={{ opacity: 0, x: 20, y: 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}>
-              <div className="flex h-full w-full min-h-0 flex-col items-center justify-center">
-                <PhoneFrame className="w-full max-w-[360px]">
-                  <IMessagePreview phone={phone ?? ""} message={message ?? ""} />
-                </PhoneFrame>
-                <p className="mt-3 shrink-0 text-center text-[11px] leading-snug text-muted-foreground">
-                  Prévia ilustrativa. Sem interação — o link real abre o
-                  WhatsApp.
-                </p>
-              </div>
-
-            </motion.div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </motion.div>
-
-      <motion.div
-        className="max-w-screen-md mx-auto w-full h-full max-h-[400px] flex md:hidden lg:hidden flex-col space-y-2 items-start justify-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <div className="flex flex-col h-full justify-center w-full mx-auto px-4 max-w-[400px]">
-          <h1 className="font-semibold leading-none tracking-tight mb-1">Gerador de link do WhatsApp</h1>
-          <p className="text-sm text-muted-foreground mb-6">Digite o número e a mensagem para criar seu link wa.me.</p>
-          <PhoneInput defaultCountry="BR" value={phone ?? ""} onChange={(e) => setPhone(e)} placeholder="(00) 00000-0000" />
-          <Input
-            type="text"
-            placeholder="Customize sua mensagem"
-            className="bg-background mt-4"
-            value={message ?? ""}
-            onChange={(e) => setMessage(e.target.value)}
+    /* A página recebe a área crua do shell (SEM_MOLDURA) para o painel da
+       direita encostar nas bordas. O padding volta aqui, só na coluna da
+       esquerda. */
+    <div className="flex h-full min-h-[620px] w-full">
+      <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
+        <div className="w-full max-w-md">
+          <PageHeader
+            title="Gerador de link do WhatsApp"
+            description="Crie um link wa.me com a mensagem já preenchida. Quem clicar abre a conversa direto com você."
           />
-          <p className="mt-2 font-normal text-sm tracking-tight leading-4">Exemplo: &quot;Olá, eu gostaria de receber mais informações sobre o produto&quot;</p>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="w-full mt-8" onClick={handleGenerate} disabled={phone == ""}>
-                Gerar meu link
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Esse é o seu link do WhatsApp</DialogTitle>
-                <DialogDescription>
-                  Copie e compartilhe em qualquer lugar para ser contactado instantaneamente.
-                </DialogDescription>
-                { loadingQrCode ? (
-                  <div className="flex items-center justify-center w-full h-full py-12">
-                    <Loader className="animate-spin rounded-full h-5 w-5"/>
-                  </div>
-                ) : (
-                  <div className="flex flex-col pt-6">
-                    <div className="flex flex-row items-center justify-center mb-6 mx-auto">
-                      <Link className="underline underline-offset-4" href={qrCodeValue ?? ""} target="_blank" >{qrCodeValue}</Link>
-                      <Button variant="ghost" className="w-7 h-7 p-0 ms-1" onClick={copyLink}>
-                        <Copy />
-                      </Button>
-                    </div>
-                    <QRCodeSVG
-                      className="mx-auto qrcode-svg"
-                      value={qrCodeValue ?? ""}
-                      size={200}
-                      fgColor={theme === "dark" ? "white" : "black"}
-                      bgColor={theme === "dark" ? "black" : "white"}
-                    />
-                    <div className="flex flex-row gap-4 mt-6 justify-center">
-                      <Button variant="secondary" onClick={downloadQRCode}>
-                        Baixar QR Code
-                      </Button>
-                      <Button className="" onClick={copyLink}>
-                        Copiar link
-                      </Button>
-                    </div>
-                  </div>
-                ) }
-              </DialogHeader>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </motion.div>
 
+        {/* Largura pelo conteúdo: a máscara "(00) 00000-0000" mais o seletor de
+            país cabem em ~210px. Esticar até os 448px da coluna dá a impressão
+            de que falta algo para preencher. */}
+        <PhoneInput
+          defaultCountry="BR"
+          value={phone ?? ""}
+          onChange={(e) => setPhone(e)}
+          placeholder="(00) 00000-0000"
+          className="max-w-[260px]"
+        />
+
+        {/* Textarea e não input: a mensagem pré-preenchida costuma passar de
+            uma linha, e num campo de linha única o texto rola na horizontal e
+            some da vista enquanto se digita. */}
+        <Textarea
+          placeholder="Customize sua mensagem"
+          className="bg-background mt-4 min-h-[84px] resize-y"
+          value={message ?? ""}
+          onChange={(e) => setMessage(e.target.value)}
+          maxLength={500}
+        />
+        <p className="mt-2 text-sm font-normal leading-4 tracking-tight text-subtle">Exemplo: &quot;Olá, eu gostaria de receber mais informações sobre o produto&quot;</p>
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <Label
+              htmlFor="logo-whatsapp"
+              className="text-sm font-medium leading-none"
+            >
+              Ícone do WhatsApp no centro
+            </Label>
+            <p className="mt-1 text-xs text-subtle">
+              A marca aparece no meio do QR Code
+            </p>
+          </div>
+          <Switch
+            id="logo-whatsapp"
+            checked={usarLogo}
+            onCheckedChange={setUsarLogo}
+            aria-label="Usar o ícone do WhatsApp no centro do QR Code"
+          />
+        </div>
+
+        <Dialog>
+        <DialogTrigger asChild>
+        <Button className="w-full mt-4" onClick={handleGenerate} disabled={phone == ""}>
+        Gerar meu link
+        </Button>
+        </DialogTrigger>
+        <DialogContent>
+          {loadingQrCode ? (
+            <div className="flex flex-col items-center gap-4 py-8">
+              <Loader className="h-5 w-5 animate-spin text-subtle" />
+              <p className="text-sm text-subtle">Criando seu link...</p>
+            </div>
+          ) : (
+            <>
+              <DialogSelo variante="sucesso" />
+
+              <DialogHeader>
+                <DialogTitle>Link criado</DialogTitle>
+                <DialogDescription>
+                  Copie e compartilhe em qualquer lugar para ser contactado
+                  instantaneamente.
+                </DialogDescription>
+              </DialogHeader>
+
+              <DialogDestaque>
+                <Link
+                  href={qrCodeValue ?? ""}
+                  target="_blank"
+                  className="truncate hover:underline"
+                >
+                  {qrCodeValue}
+                </Link>
+              </DialogDestaque>
+
+              <DialogSuperficie className="flex justify-center py-5">
+                <QRCodeSVG
+                  className="qrcode-svg"
+                  value={qrCodeValue ?? ""}
+                  size={QR_RENDER_SIZE}
+                  /* A especificação do QR pede 4 módulos de quiet zone. O
+                     qrcode.react vem com marginSize 0 e o código saía
+                     encostado na borda, o que faz leitores falharem. */
+                  marginSize={4}
+                  level={logoAtivo ? "H" : "L"}
+                  imageSettings={imageSettings}
+                  fgColor={resolvedTheme === "dark" ? "white" : "black"}
+                  bgColor={resolvedTheme === "dark" ? "black" : "white"}
+                />
+              </DialogSuperficie>
+
+              <DialogAcoes>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary" disabled={baixando !== null}>
+                      {baixando ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          Baixar
+                          <ChevronDown className="ms-1 h-4 w-4 opacity-60" />
+                        </>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="center" className="min-w-[9rem]">
+                    <DropdownMenuItem onClick={() => handleDownload("png")}>
+                      PNG
+                      <span className="ms-auto text-xs text-subtle">imagem</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDownload("pdf")}>
+                      PDF
+                      <span className="ms-auto text-xs text-subtle">impressão</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDownload("svg")}>
+                      SVG
+                      <span className="ms-auto text-xs text-subtle">vetor</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Button onClick={copyLink}>Copiar link</Button>
+              </DialogAcoes>
+            </>
+          )}
+        </DialogContent>
+        </Dialog>
+        </div>
+      </div>
+
+      {/* Painel da prévia, com respiro em relação ao resto do conteúdo */}
+      <div className="hidden w-[46%] shrink-0 py-3 pe-3 md:block">
+        <div className="relative h-full w-full overflow-hidden rounded-2xl">
+        {/* Fundo em <img> e não em background-image: o navegador trata como
+            imagem, respeita lazy loading e o object-cover recorta pelo centro
+            em qualquer proporção do painel. */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- fundo decorativo, sem ganho em passar pelo next/image */}
+        <img
+          src="/preview-bg.webp"
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+        />
+
+          {/* Ancorado pelo RODAPÉ, não pelo topo: assim o quanto fica cortado
+              é sempre 10% da altura do aparelho, e não uma sobra que muda
+              conforme a altura do painel. `recorte="inteiro"` desliga o fade
+              do próprio frame — dois recortes juntos deixariam o esmaecido
+              no meio do painel em vez de na borda. */}
+          <PhoneFrame
+            recorte="inteiro"
+            className="absolute bottom-[-10%] left-1/2 w-[64%] -translate-x-1/2"
+          >
+            <IMessagePreview phone={phone ?? ""} message={message ?? ""} />
+          </PhoneFrame>
+        </div>
+      </div>
     </div>
   );
 };

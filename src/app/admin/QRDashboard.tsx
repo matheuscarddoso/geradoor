@@ -60,7 +60,7 @@ function StatCard({
   return (
     <div className="p-5 space-y-1">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-3xl font-semibold tracking-tight">{value.toLocaleString("pt-BR")}</p>
+      <p className="text-2xl font-semibold tracking-tight">{value.toLocaleString("pt-BR")}</p>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
   );

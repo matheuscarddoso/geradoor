@@ -19,18 +19,33 @@ import { cn } from "@/lib/utils";
 const FRAME_W = 920;
 const FRAME_H = 2000;
 
-/** Abertura da tela dentro do PNG, em pixels da imagem. */
-const SCREEN = { x: 93, y: 201, w: 734, h: 1598 };
+/**
+ * Abertura da tela dentro do PNG, em pixels da imagem.
+ *
+ * A transição do bezel para a tela tem um pixel suavizado em cada borda —
+ * alpha 74 nas laterais, 192 e 137 em cima e embaixo. A tela precisa passar
+ * POR BAIXO desse pixel: parando na primeira coluna totalmente transparente,
+ * o fundo do painel aparece através dos 29% de transparência e desenha um fio
+ * claro contornando o aparelho.
+ *
+ * Vertical já cobria (201..1798). Horizontal parava em 93..826 e deixava as
+ * colunas 92 e 827 de fora — daí o desencaixe.
+ */
+const SCREEN = { x: 92, y: 200, w: 736, h: 1600 };
 
 /**
- * Raio do canto da tela, medido na curvatura da abertura: 129px.
+ * Recorte da tela pela máscara extraída do próprio PNG.
  *
- * Escrito como raio percentual de dois eixos (horizontal / vertical). Como a
- * porcentagem de cada eixo é relativa à dimensão daquele eixo, o par abaixo
- * reproduz exatamente um raio circular de 129px em qualquer escala de render —
- * um valor único em % viraria uma elipse.
+ * `border-radius` foi abandonado aqui: a tela do iPhone é um squircle, de
+ * curvatura contínua, e o CSS só desenha arco de círculo. O melhor ajuste
+ * circular deu 119px com 2,54px de erro médio, e o conteúdo vazava no meio
+ * da curva — nenhum raio único encaixa.
+ *
+ * A máscara é a região transparente do PNG isolada por flood fill (a área
+ * fora do aparelho também é transparente, mas não se conecta à tela), com a
+ * opacidade complementar da borda suavizada para não serrilhar.
  */
-const SCREEN_RADIUS = `${(129 / SCREEN.w) * 100}% / ${(129 / SCREEN.h) * 100}%`;
+const SCREEN_MASK = "url(/iphone-screen-mask.png)";
 
 /** Fração do aparelho que permanece visível antes do corte. */
 const VISIBLE = 0.62;
@@ -40,25 +55,40 @@ const pct = (value: number, total: number) => `${(value / total) * 100}%`;
 interface PhoneFrameProps {
   children: React.ReactNode;
   className?: string;
+  /**
+   * Recorte do aparelho.
+   *
+   * "fade" mostra metade e dissolve no corte — serve quando o frame está solto
+   * sobre o fundo da página. "inteiro" desenha o aparelho todo e deixa quem
+   * contém decidir onde cortar, que é o caso do painel com overflow-hidden:
+   * dois recortes ao mesmo tempo brigam e o fade aparece no meio do painel.
+   */
+  recorte?: "fade" | "inteiro";
 }
 
-const PhoneFrame: React.FC<PhoneFrameProps> = ({ children, className }) => {
+const PhoneFrame: React.FC<PhoneFrameProps> = ({
+  children,
+  className,
+  recorte = "fade",
+}) => {
+  const inteiro = recorte === "inteiro";
+  const visivel = inteiro ? 1 : VISIBLE;
   // O fade precisa ser mask, não gradiente sobreposto: sobreposição só
   // funciona contra um fundo de cor conhecida, e esta página tem textura.
-  const fade =
-    "linear-gradient(to bottom, #000 0%, #000 70%, rgba(0,0,0,0.85) 84%, transparent 100%)";
+  const fade = inteiro
+    ? "none"
+    : "linear-gradient(to bottom, #000 0%, #000 70%, rgba(0,0,0,0.85) 84%, transparent 100%)";
 
   return (
     <div
       className={cn("relative select-none", className)}
-      style={{ aspectRatio: `${FRAME_W} / ${FRAME_H * VISIBLE}` }}
+      style={{ aspectRatio: `${FRAME_W} / ${FRAME_H * visivel}` }}
     >
       <div
         className="absolute inset-x-0 top-0 overflow-hidden"
         style={{
-          aspectRatio: `${FRAME_W} / ${FRAME_H * VISIBLE}`,
-          maskImage: fade,
-          WebkitMaskImage: fade,
+          aspectRatio: `${FRAME_W} / ${FRAME_H * visivel}`,
+          ...(inteiro ? {} : { maskImage: fade, WebkitMaskImage: fade }),
         }}
       >
         {/* Caixa do aparelho inteiro, ancorada no topo. O que passa do corte
@@ -75,7 +105,10 @@ const PhoneFrame: React.FC<PhoneFrameProps> = ({ children, className }) => {
               top: pct(SCREEN.y, FRAME_H),
               width: pct(SCREEN.w, FRAME_W),
               height: pct(SCREEN.h, FRAME_H),
-              borderRadius: SCREEN_RADIUS,
+              maskImage: SCREEN_MASK,
+              WebkitMaskImage: SCREEN_MASK,
+              maskSize: "100% 100%",
+              WebkitMaskSize: "100% 100%",
               // Container de consulta: o conteúdo da tela dimensiona tudo em
               // cqw, então tipografia e espaçamento acompanham o frame em
               // qualquer tamanho, em vez de quebrar a proporção em px fixo.

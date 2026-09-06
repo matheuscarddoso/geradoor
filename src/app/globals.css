@@ -13,8 +13,13 @@ body {
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
+    /* Paleta do design system. Todos neutros (saturação 0). */
+    --subtle: 0 0% 50%;        /* #7F7F7F */
+    --strong: 0 0% 16%;        /* #292929 */
+    --bg-selected: 0 0% 96%;   /* #F5F5F5 */
+
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --foreground: 0 0% 16%;    /* strong #292929 */
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
@@ -23,14 +28,14 @@ body {
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 0 0% 96%;              /* bg-selected #F5F5F5 */
+    --muted-foreground: 0 0% 50%;   /* subtle #7F7F7F */
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
+    --border: 0 0% 95%;             /* #F2F2F2 */
+    --input: 0 0% 95%;              /* #F2F2F2 */
     --ring: 240 10% 3.9%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -49,8 +54,14 @@ body {
     --pattern: url("data:image/svg+xml;utf8,%3Csvg viewBox=%220 0 2000 1400%22 xmlns=%22http:%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cmask id=%22b%22 x=%220%22 y=%220%22 width=%222000%22 height=%221400%22%3E%3Cpath fill=%22url(%23a)%22 d=%22M0 0h2000v1400H0z%22%2F%3E%3C%2Fmask%3E%3Cg style=%22transform-origin:center center%22 stroke=%22%23dddddd78%22 stroke-width=%22.6%22 mask=%22url(%23b)%22%3E%3Cpath fill=%22none%22 d=%22M0 0h260v260H0zM260 0h260v260H260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd09%22 d=%22M520 0h260v260H520z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M780 0h260v260H780zM1040 0h260v260h-260zM1300 0h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd62%22 d=%22M1560 0h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1820 0h260v260h-260zM2080 0h260v260h-260zM2340 0h260v260h-260zM0 260h260v260H0zM260 260h260v260H260zM520 260h260v260H520zM780 260h260v260H780z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd1a%22 d=%22M1040 260h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1300 260h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd0f%22 d=%22M1560 260h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1820 260h260v260h-260zM2080 260h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd01%22 d=%22M2340 260h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M0 520h260v260H0z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd4c%22 d=%22M260 520h260v260H260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd14%22 d=%22M520 520h260v260H520z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M780 520h260v260H780zM1040 520h260v260h-260zM1300 520h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd2f%22 d=%22M1560 520h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1820 520h260v260h-260zM2080 520h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd1c%22 d=%22M2340 520h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M0 780h260v260H0zM260 780h260v260H260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd3b%22 d=%22M520 780h260v260H520z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M780 780h260v260H780z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd0d%22 d=%22M1040 780h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1300 780h260v260h-260zM1560 780h260v260h-260zM1820 780h260v260h-260zM2080 780h260v260h-260zM2340 780h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd69%22 d=%22M0 1040h260v260H0z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M260 1040h260v260H260zM520 1040h260v260H520zM780 1040h260v260H780z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd2b%22 d=%22M1040 1040h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M1300 1040h260v260h-260zM1560 1040h260v260h-260zM1820 1040h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd00%22 d=%22M2080 1040h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M2340 1040h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd77%22 d=%22M0 1300h260v260H0z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M260 1300h260v260H260zM520 1300h260v260H520zM780 1300h260v260H780zM1040 1300h260v260h-260zM1300 1300h260v260h-260zM1560 1300h260v260h-260zM1820 1300h260v260h-260zM2080 1300h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd5c%22 d=%22M2340 1300h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M0 1560h260v260H0z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd38%22 d=%22M260 1560h260v260H260z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22%23dddddd71%22 d=%22M520 1560h260v260H520z%22 stroke-width=%22.78%22%2F%3E%3Cpath fill=%22none%22 d=%22M780 1560h260v260H780zM1040 1560h260v260h-260zM1300 1560h260v260h-260zM1560 1560h260v260h-260zM1820 1560h260v260h-260zM2080 1560h260v260h-260zM2340 1560h260v260h-260z%22 stroke-width=%22.78%22%2F%3E%3C%2Fg%3E%3Cpath fill=%22%23f3f3f3%22 filter=%22url(%23c)%22 opacity=%22.8%22 d=%22M0 0h2000v1400H0z%22%2F%3E%3Cdefs%3E%3CradialGradient id=%22a%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22%2F%3E%3Cstop offset=%22100%25%22 stop-color=%22%23fff%22 stop-opacity=%220%22%2F%3E%3C%2FradialGradient%3E%3Cfilter id=%22c%22 x=%22-800%22 y=%22-560%22 width=%222800%22 height=%221960%22 filterUnits=%22userSpaceOnUse%22 primitiveUnits=%22userSpaceOnUse%22 color-interpolation-filters=%22linearRGB%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.15%22 numOctaves=%224%22 seed=%2215%22 stitchTiles=%22no-stitch%22 x=%220%22 y=%220%22 width=%222000%22 height=%221400%22 result=%22turbulence%22%2F%3E%3CfeSpecularLighting surfaceScale=%2210%22 specularConstant=%22.61%22 specularExponent=%2220%22 lighting-color=%22%23fff%22 x=%220%22 y=%220%22 width=%222000%22 height=%221400%22 in=%22turbulence%22 result=%22specularLighting%22%3E%3CfeDistantLight azimuth=%223%22 elevation=%22100%22%2F%3E%3C%2FfeSpecularLighting%3E%3C%2Ffilter%3E%3C%2Fdefs%3E%3C%2Fsvg%3E");
   }
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    /* O spec só define a paleta clara. Estes são os pares equivalentes no
+       escuro, mantendo as mesmas relações de contraste entre os níveis. */
+    --subtle: 0 0% 54%;
+    --strong: 0 0% 93%;
+    --bg-selected: 0 0% 11%;
+
+    --background: 0 0% 6%;
+    --foreground: 0 0% 93%;         /* strong */
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
@@ -59,14 +70,14 @@ body {
     --primary-foreground: 240 5.9% 10%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 0 0% 11%;              /* bg-selected */
+    --muted-foreground: 0 0% 54%;   /* subtle */
     --accent: 240 3.7% 15.9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 240 4.9% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -194,4 +205,115 @@ body {
       -webkit-backdrop-filter: none;
     }
   }
+}
+
+/* =========================================================================
+   Base tipográfica e de ícones do design system
+   ========================================================================= */
+@layer base {
+  /*
+   * A raiz fica em 16px de propósito. O Tailwind expressa TODO o espaçamento
+   * em rem, então baixar a raiz para 13px encolheria padding, margem e gap em
+   * 19% no site inteiro. O tamanho base do spec entra no body, em pixel.
+   */
+  body {
+    font-size: 13px;
+    /* SF Pro só tem os pesos regular e medium no spec; nada de bold. */
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* O spec limita a dois pesos. Qualquer semibold ou bold vira medium. */
+  .font-semibold,
+  .font-bold {
+    font-weight: 500;
+  }
+
+}
+
+/*
+ * Traço de 1px nos ícones, o desenho do Nucleo.
+ *
+ * `vector-effect: non-scaling-stroke` torna o valor literal: sem ele, um
+ * ícone de viewBox 24 renderizado a 16px teria traço de 0,67px. Com ele, 1
+ * significa 1 pixel de tela em qualquer tamanho.
+ *
+ * Fora de @layer de propósito: a classe `lucide` é injetada em runtime pela
+ * biblioteca e nunca aparece no código-fonte, então o Tailwind não a detecta
+ * e remove a regra se ela estiver dentro de uma layer.
+ */
+svg.lucide {
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* =========================================================================
+   Responsivo
+   ========================================================================= */
+
+/*
+ * O Safari do iOS dá zoom no viewport ao focar um campo com fonte menor que
+ * 16px, e não há como desativar sem travar o zoom por gesto — o que quebra
+ * acessibilidade. A saída é o campo ter 16px no toque.
+ *
+ * Isto virou necessário quando a escala do design system passou `text-base`
+ * de 16px para 14px: antes os campos não zoomavam por acidente.
+ */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * Alvo de toque de 44px nos controles só-ícone.
+ *
+ * Aplicado apenas a ponteiro grosso: no mouse, 36px é confortável e crescer
+ * deixaria o topo pesado. `pointer: coarse` isola dedo de cursor.
+ */
+@media (pointer: coarse) {
+  [data-touch-target] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/*
+ * Alterna conteúdo entre ponteiro fino e grosso.
+ *
+ * Existe porque atalho de teclado não tem como ser acionado no toque: o
+ * teclado do celular só aparece com um campo focado, e o campo do resultado é
+ * somente leitura. Sem isto, a página fica estática no telefone.
+ */
+.apenas-mouse {
+  display: inline;
+}
+.apenas-toque {
+  display: none;
+}
+@media (pointer: coarse) {
+  .apenas-mouse {
+    display: none;
+  }
+  .apenas-toque {
+    display: inline;
+  }
+}
+
+/*
+ * Switch no padrão do iOS.
+ *
+ * Medidas do UISwitch nativo: trilho 51x31, botão de 27 com 2 de recuo, o que
+ * dá 20 de curso. Verdes oficiais do sistema, um por tema.
+ */
+:root {
+  --ios-switch-on: #34c759;
+  --ios-switch-off: #e9e9ea;
+}
+.dark {
+  --ios-switch-on: #30d158;
+  --ios-switch-off: #39393d;
 }

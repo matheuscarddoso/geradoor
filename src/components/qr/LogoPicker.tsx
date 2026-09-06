@@ -99,18 +99,15 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
   const clear = () => onChange({ ...value, src: null, presetId: null });
 
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-background/60">
-      <div className="flex items-center justify-between gap-3 px-3.5 py-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <ImagePlus className="w-4 h-4 shrink-0 text-zinc-400" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium tracking-tight leading-none">
-              Logo no centro
-            </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 truncate">
-              Sua marca dentro do código
-            </p>
-          </div>
+    <div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-none tracking-tight">
+            Logo no centro
+          </p>
+          <p className="mt-1 truncate text-xs text-subtle">
+            Sua marca dentro do código
+          </p>
         </div>
         <Switch
           checked={open}
@@ -134,9 +131,9 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
             }}
             className="overflow-hidden"
           >
-            <div className="px-3.5 pb-3.5 pt-1 space-y-4 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="space-y-4 pt-4">
               {/* Upload + preview */}
-              <div className="flex items-center gap-3 pt-3">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}

@@ -63,7 +63,7 @@ export default async function AdminPage() {
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tighter">Admin</h1>
+            <h1 className="text-xl font-medium tracking-tight">Admin</h1>
             <p className="text-sm text-zinc-500 mt-1">Visão completa do banco de dados</p>
           </div>
           <LogoutButton />

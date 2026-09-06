@@ -13,7 +13,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/", priority: 1, changeFrequency: "monthly" as const },
     { path: "/cnpj", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/cartao-de-credito", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "/telefone", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/qr-code", priority: 0.8, changeFrequency: "monthly" as const },
+    { path: "/instagram", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/whatsapp", priority: 0.8, changeFrequency: "monthly" as const },
   ].map(({ path, priority, changeFrequency }) => ({
     url: absolute(path),

@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { SITE, jsonLd } from "@/lib/seo";
+import { AppShell } from "@/components/shell/AppShell";
 import { GeistSans } from "geist/font";
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { PageTransition } from "@/components/PageTransition";
-import { AnimatePresence } from "framer-motion";
 
 export const metadata: Metadata = {
   title: {
@@ -97,15 +96,14 @@ export default function RootLayout({
       <body className={`${GeistSans.className} bg-background`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          /* Dark-first: o padrão é escuro, não o tema do sistema. */
+          defaultTheme="dark"
+          /* Sem "system": o valor de `theme` passa a ser sempre "dark" ou
+             "light", nunca um terceiro estado que o Tailwind não reconhece. */
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <AnimatePresence mode="wait">
-            <PageTransition>
-              {children}
-            </PageTransition>
-          </AnimatePresence>
+          <AppShell>{children}</AppShell>
           <Analytics />
           <SpeedInsights />
           <Toaster />

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -12,8 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner";
-import { motion } from 'framer-motion';
-import NavbarSection from '@/components/NavbarSection';
+import { PageHeader } from '@/components/shell/AppShell';
+import { useRecentes } from '@/lib/recentes';
 import { generateCreditCard } from '../utils/credit_card_gen';
 import { Clipboard } from 'lucide-react';
 
@@ -28,19 +27,26 @@ const CartaoDeCreditoGenerator: React.FC = () => {
   });
   const [selectedBrand, setSelectedBrand] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
-  const {theme, setTheme} = useTheme();
+  const { registrar } = useRecentes();
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme || "dark");
-      handleGenerate();
-    }
-  }, [theme]);  
+    // Gera o primeiro valor ao montar. Antes isto convivia com uma
+    // manipulação manual da classe de tema no <html>, que brigava com o
+    // next-themes; a dependência era [theme], então trocar o tema regerava o
+    // valor sem motivo. Agora depende só da montagem.
+    handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);  
 
   const handleGenerate = () => {
     const newCard = generateCreditCard(selectedBrand === 'all' ? undefined : selectedBrand);
     setCardData(newCard);
+    // Só os quatro últimos dígitos no histórico: a sidebar fica visível na
+    // tela inteira e número de cartão completo ali é exposição desnecessária.
+    registrar({
+      tipo: "cartao",
+      label: `•••• ${newCard.number.replace(/\D/g, "").slice(-4)}`,
+    });
   };
 
 
@@ -60,28 +66,13 @@ const CartaoDeCreditoGenerator: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
-        className="pattern absolute inset-0 -z-10 h-full w-full" 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      ></motion.div>
-      <NavbarSection />
-      <motion.div
-        className="max-w-screen-md w-full h-full flex flex-col space-y-2 items-center justify-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <div className="flex flex-col items-center justify-center space-y-3 my-5">
-          <h1 className="text-4xl font-semibold tracking-tighter text-center">Gerador de<br/>Cartão de Crédito</h1>
-          <p className="text-lg text-zinc-700 dark:text-zinc-400 font-normal leading-6 tracking-tighter text-center">
-            Selecione uma bandeira e gere números<br />de cartão de crédito válidos instantaneamente.
-          </p>
-        </div>
+    <div className="w-full max-w-md">
+      <PageHeader
+        title="Gerador de Cartão de Crédito"
+        description="Números válidos pelo algoritmo de Luhn, para testar checkout e antifraude. Não funcionam em compras reais."
+      />
 
-        <div className="flex flex-col space-y-4 w-full max-w-[350px] mx-auto">
+      <div className="flex w-full flex-col space-y-4">
           <Select onValueChange={setSelectedBrand}>
             <SelectTrigger>
               <SelectValue placeholder="Todas as bandeiras" />
@@ -161,8 +152,7 @@ const CartaoDeCreditoGenerator: React.FC = () => {
               Bandeira: {cardData.brand} • {cardData.securityCodeName}: {cardData.securityCode}
             </div>
           </div>
-        </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

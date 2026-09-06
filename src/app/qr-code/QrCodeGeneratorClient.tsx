@@ -1,22 +1,24 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/shell/AppShell";
+import { useRecentes } from "@/lib/recentes";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import NavbarSection from "@/components/NavbarSection";
 import { Copy, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import LogoPicker, { DEFAULT_LOGO, type LogoConfig } from "@/components/qr/LogoPicker";
+import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import DecorativeQR from "@/components/qr/DecorativeQR";
 import { parseLink } from "@/lib/link";
 
 const PLACEHOLDER_URL = "https://geradoor.com";
 const QR_SIZE = 180;
+const QUIET_ZONE = 4;
 
 const QRCodeGenerator: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
@@ -24,14 +26,7 @@ const QRCodeGenerator: React.FC = () => {
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
   const [logo, setLogo] = useState<LogoConfig>(DEFAULT_LOGO);
   const [touched, setTouched] = useState(false);
-  const { theme } = useTheme();
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      document.documentElement.classList.remove("light", "dark");
-      document.documentElement.classList.add(theme || "dark");
-    }
-  }, [theme]);
+  const { registrar } = useRecentes();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -71,7 +66,9 @@ const QRCodeGenerator: React.FC = () => {
       if (!response.ok) throw new Error("Erro ao criar QR Code");
 
       const data = await response.json();
-      setQrCodeValue(baseUrl + data.shortcode);
+      const criado = baseUrl + data.shortcode;
+      setQrCodeValue(criado);
+      registrar({ tipo: "qrcode", label: criado, href: "/qr-code" });
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
@@ -81,57 +78,23 @@ const QRCodeGenerator: React.FC = () => {
     }
   };
 
-  const downloadQRCode = (filetype: string) => {
-    const svgElement = document.querySelector(".qrcode-svg");
+  const [baixando, setBaixando] = useState<QrFormat | null>(null);
 
-    if (!svgElement) {
-      toast.error("QR Code não encontrado!");
-      return;
-    }
-
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    if (filetype === "svg") {
-      const blob = new Blob([svgData], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "qrcode.svg";
-      link.click();
-      URL.revokeObjectURL(url);
-    } else {
-      const img = new Image();
-      img.onload = () => {
-        const scale = 4;
-        const size = 200;
-        canvas.width = size * scale;
-        canvas.height = size * scale;
-        ctx?.scale(scale, scale);
-        ctx?.drawImage(img, 0, 0, size, size);
-
-        if (filetype === "png") {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              const link = document.createElement("a");
-              link.href = url;
-              link.download = "qrcode.png";
-              link.click();
-              URL.revokeObjectURL(url);
-            }
-          }, "image/png");
-        } else if (filetype === "pdf") {
-          import("jspdf").then((jsPDF) => {
-            const pdf = new jsPDF.default();
-            const imgData = canvas.toDataURL("image/png");
-            pdf.addImage(imgData, "PNG", 10, 10, 180, 180);
-            pdf.save("qrcode.pdf");
-          });
-        }
-      };
-      img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  const handleDownload = async (format: QrFormat) => {
+    try {
+      setBaixando(format);
+      await downloadQrCode({
+        element: document.querySelector<SVGElement>(".qrcode-svg"),
+        format,
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof QrDownloadError
+          ? error.message
+          : "Não foi possível baixar o QR Code"
+      );
+    } finally {
+      setBaixando(null);
     }
   };
 
@@ -142,33 +105,17 @@ const QRCodeGenerator: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
-        className="pattern absolute inset-0 -z-10 h-full w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
+    /* Mesmo wireframe do /whatsapp: a página recebe a área crua do shell
+       (SEM_MOLDURA) e o painel da direita encosta na borda. */
+    <div className="flex h-full min-h-[620px] w-full">
+      <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
+        <div className="w-full max-w-md">
+      <PageHeader
+        title="Gerador de QR Code"
+        description="Crie um QR Code a partir de qualquer link, com a sua logo no centro. Baixe em PNG, PDF ou SVG."
       />
-      <NavbarSection />
 
-      <motion.div
-        className="max-w-screen-md w-full h-full flex items-center justify-center overflow-y-auto py-24"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-      >
-        <div className="w-full my-auto flex flex-col md:flex-row gap-10 md:gap-16 items-center">
-
-          {/* Left — form (always visible) */}
-          <div className="flex-1 flex flex-col space-y-4 w-full">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-semibold tracking-tighter">Gerador de QRCode</h1>
-              <p className="text-lg text-zinc-700 dark:text-zinc-400 font-normal leading-6 tracking-tighter">
-                Preencha o link que deseja
-                <br />
-                para criar um QRCode
-              </p>
-            </div>
+      <div className="flex w-full flex-col space-y-4">
             <div className="space-y-1.5">
               <Input
                 type="url"
@@ -215,8 +162,20 @@ const QRCodeGenerator: React.FC = () => {
             </Button>
           </div>
 
-          {/* Right — QR panel (desktop only) */}
-          <div className="hidden md:flex flex-1 flex-col items-center gap-4">
+      </div>
+      </div>
+
+      {/* Painel do QR: altura toda, encostado na borda direita */}
+      <div className="hidden w-[46%] shrink-0 py-3 pe-3 md:block">
+        <div className="relative flex h-full w-full flex-col items-center justify-center gap-5 overflow-hidden rounded-2xl">
+          {/* eslint-disable-next-line @next/next/no-img-element -- fundo decorativo */}
+          <img
+            src="/preview-bg.webp"
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
+          />
+          <div className="relative flex flex-col items-center gap-5">
 
             {/* QR code — decorativo enquanto não foi criado */}
             <div className="relative overflow-hidden">
@@ -226,6 +185,9 @@ const QRCodeGenerator: React.FC = () => {
                     value={qrCodeValue}
                     size={QR_SIZE}
                     className="qrcode-svg"
+                    /* 4 módulos de quiet zone, como pede a especificação.
+                       O padrão do qrcode.react é 0. */
+                    marginSize={QUIET_ZONE}
                     /* Nível H recupera ~30% dos módulos e é o que permite cobrir
                        o centro com o logo. Sem logo, mantém o nível padrão para
                        não alterar a densidade dos códigos já existentes. */
@@ -302,9 +264,9 @@ const QRCodeGenerator: React.FC = () => {
               {qrCodeValue && (
                 <motion.div
                   className="flex flex-col items-center gap-3 w-full"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, transform: "translateY(6px)" }}
+                  animate={{ opacity: 1, transform: "translateY(0px)" }}
+                  exit={{ opacity: 0, transform: "translateY(6px)" }}
                   transition={{ duration: 0.3 }}
                 >
                   <div className="flex items-center gap-1">
@@ -321,18 +283,16 @@ const QRCodeGenerator: React.FC = () => {
                     </button>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => downloadQRCode("png")}>PNG</Button>
-                    <Button variant="outline" size="sm" onClick={() => downloadQRCode("pdf")}>PDF</Button>
-                    <Button variant="outline" size="sm" onClick={() => downloadQRCode("svg")}>SVG</Button>
+                    <Button variant="outline" size="sm" disabled={baixando !== null} onClick={() => handleDownload("png")}>PNG</Button>
+                    <Button variant="outline" size="sm" disabled={baixando !== null} onClick={() => handleDownload("pdf")}>PDF</Button>
+                    <Button variant="outline" size="sm" disabled={baixando !== null} onClick={() => handleDownload("svg")}>SVG</Button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
-
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

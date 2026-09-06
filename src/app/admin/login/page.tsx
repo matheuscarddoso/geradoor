@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader } from "lucide-react";
@@ -35,21 +34,15 @@ export default function AdminLoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center w-screen h-screen relative overflow-hidden px-8">
-      <motion.div
+      <div
         className="pattern absolute inset-0 -z-10 h-full w-full"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
       />
 
-      <motion.div
+      <div
         className="w-full max-w-[320px] flex flex-col space-y-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
       >
         <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tighter">Admin</h1>
+          <h1 className="text-xl font-medium tracking-tight">Admin</h1>
           <p className="text-sm text-zinc-500">Acesso restrito</p>
         </div>
 
@@ -81,7 +74,7 @@ export default function AdminLoginPage() {
             {loading ? <Loader className="w-4 h-4 animate-spin" /> : "Entrar"}
           </Button>
         </form>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -13,8 +13,10 @@ import { GeistSans } from "geist/font";
  */
 import { GeistMono } from "geist/font/mono";
 import { Toaster } from "@/components/ui/sonner"
-import "dialkit/styles.css";
 import "./globals.css";
+// Depois do globals: o preflight do Tailwind zera estilos de elemento e
+// achataria o controle se viesse por último.
+import "dialkit/styles.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from '@vercel/speed-insights/next';

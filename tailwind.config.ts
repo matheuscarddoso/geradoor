@@ -13,6 +13,9 @@ export default {
   		// Os nomes do Tailwind foram remapeados em vez de criados novos, para as
   		// ocorrências existentes continuarem válidas. Acima de 24px deixa de
   		// existir de propósito: o que sair da escala quebra visivelmente.
+  		transitionTimingFunction: {
+  			ios: 'cubic-bezier(0.32, 0.72, 0, 1)'
+  		},
   		fontSize: {
   			xs: ['12px', { lineHeight: '16px' }],
   			sm: ['13px', { lineHeight: '18px' }],

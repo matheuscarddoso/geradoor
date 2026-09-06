@@ -21,13 +21,27 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   const escuro = resolvedTheme === "dark";
 
+  /*
+   * O rótulo TAMBÉM depende da montagem, não só o ícone.
+   *
+   * No servidor `resolvedTheme` é undefined, então `escuro` é false e o
+   * aria-label sai como "Ativar tema escuro"; no cliente vira "Ativar tema
+   * claro". React acusa divergência de hidratação em atributo, que ele não
+   * corrige sozinho. Antes de montar, o botão é neutro.
+   */
+  const rotulo = !montado
+    ? "Alternar tema"
+    : escuro
+      ? "Ativar tema claro"
+      : "Ativar tema escuro";
+
   return (
     <button
       type="button"
       data-touch-target
       onClick={() => setTheme(escuro ? "light" : "dark")}
-      aria-label={escuro ? "Ativar tema claro" : "Ativar tema escuro"}
-      title={escuro ? "Tema claro" : "Tema escuro"}
+      aria-label={rotulo}
+      title={rotulo}
       className={cn(
         "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
         "text-zinc-500 transition-colors duration-150",

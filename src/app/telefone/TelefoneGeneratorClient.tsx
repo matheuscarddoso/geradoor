@@ -61,34 +61,39 @@ const TelefoneGenerator: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-[300px]">
       <PageHeader
         title="Gerador de Telefone"
         description="Celulares com DDD real de cada estado, para testar cadastros e máscaras de formulário."
       />
 
       <div className="flex w-full flex-col gap-3">
-        <Select value={uf} onValueChange={handleUf}>
-          <SelectTrigger aria-label="Estado">
-            <SelectValue placeholder="Todos os estados" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os estados</SelectItem>
-            {UFS.map((item) => (
-              <SelectItem key={item.sigla} value={item.sigla}>
-                {item.nome} ({item.ddds.join(", ")})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* UF e número na mesma linha, cada um do tamanho do seu conteúdo */}
+        <div className="flex gap-2">
+          <Select value={uf} onValueChange={handleUf}>
+            <SelectTrigger aria-label="Estado" className="w-[104px] shrink-0 px-3">
+              {/* O gatilho mostra a sigla; a lista mantém o nome completo com
+                  os DDDs. "São Paulo (11, 12, 13...)" não caberia aqui. */}
+              <SelectValue>{uf === "all" ? "Todos" : uf}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os estados</SelectItem>
+              {UFS.map((item) => (
+                <SelectItem key={item.sigla} value={item.sigla}>
+                  {item.nome} ({item.ddds.join(", ")})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Input
-          readOnly
-          type="text"
-          placeholder="Telefone"
-          className="bg-background text-center"
-          value={exibido}
-        />
+          <Input
+            readOnly
+            type="text"
+            placeholder="Telefone"
+            className="min-w-0 flex-1 bg-background text-center"
+            value={exibido}
+          />
+        </div>
 
         <div className="flex items-center justify-between gap-3 py-1">
           <Label htmlFor="formatar" className="text-sm font-normal text-subtle">

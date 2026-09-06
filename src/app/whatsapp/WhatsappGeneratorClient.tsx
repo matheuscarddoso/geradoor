@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/AppShell";
+import { MarcaSvg } from "@/components/MarcaSvg";
 import { useRecentes } from "@/lib/recentes";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
@@ -183,6 +184,7 @@ const WhatsappLinkGenerator: React.FC = () => {
       <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
           <PageHeader
+            icone={<MarcaSvg id="whatsapp" />}
             title="Gerador de link do WhatsApp"
             description="Crie um link wa.me com a mensagem já preenchida. Quem clicar abre a conversa direto com você."
           />
@@ -237,10 +239,17 @@ const WhatsappLinkGenerator: React.FC = () => {
         </DialogTrigger>
         <DialogContent>
           {loadingQrCode ? (
-            <div className="flex flex-col items-center gap-4 py-8">
-              <Loader className="h-5 w-5 animate-spin text-subtle" />
-              <p className="text-sm text-subtle">Criando seu link...</p>
-            </div>
+            /* O DialogTitle precisa existir em TODO estado: o Radix o usa como
+               nome acessível do diálogo e avisa quando falta. Antes ele vivia
+               só no ramo de sucesso, e o modal abria sem título nenhum
+               enquanto carregava. */
+            <>
+              <Loader className="mx-auto h-11 w-11 animate-spin p-2 text-subtle" />
+              <DialogHeader>
+                <DialogTitle>Criando seu link</DialogTitle>
+                <DialogDescription>Estamos gerando o link e o QR Code do seu WhatsApp.</DialogDescription>
+              </DialogHeader>
+            </>
           ) : (
             <>
               <DialogSelo variante="sucesso" />

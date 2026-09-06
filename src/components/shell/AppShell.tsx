@@ -103,12 +103,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 export function PageHeader({
   title,
   description,
+  icone,
 }: {
   title: string;
   description: string;
+  /** Marca opcional acima do título, alinhada com ele. */
+  icone?: React.ReactNode;
 }) {
   return (
     <div className="mb-6">
+      {icone && <div className="mb-4 text-foreground">{icone}</div>}
       <h1 className="text-xl font-medium leading-none tracking-tight">{title}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{description}</p>
     </div>

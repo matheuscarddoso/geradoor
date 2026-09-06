@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shell/AppShell";
+import { MarcaSvg } from "@/components/MarcaSvg";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
 import { PerfilPreview } from "@/components/instagram/PerfilPreview";
 import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
@@ -157,6 +158,7 @@ const InstagramGenerator: React.FC = () => {
       <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
           <PageHeader
+            icone={<MarcaSvg id="instagram" />}
             title="Gerador de QR Code do Instagram"
             description="Crie um QR Code que abre o seu perfil. Basta informar o @ — quem escanear cai direto na sua página."
           />
@@ -232,10 +234,17 @@ const InstagramGenerator: React.FC = () => {
               </DialogTrigger>
               <DialogContent>
                 {carregando ? (
-                  <div className="flex flex-col items-center gap-4 py-8">
-                    <Loader className="h-5 w-5 animate-spin text-subtle" />
-                    <p className="text-sm text-subtle">Criando seu QR Code...</p>
-                  </div>
+                  /* O DialogTitle precisa existir em TODO estado: o Radix o
+                     usa como nome acessível do diálogo e avisa quando falta.
+                     Antes ele vivia só no ramo de sucesso, e o modal abria sem
+                     título nenhum enquanto carregava. */
+                  <>
+                    <Loader className="mx-auto h-11 w-11 animate-spin p-2 text-subtle" />
+                    <DialogHeader>
+                      <DialogTitle>Criando seu QR Code</DialogTitle>
+                      <DialogDescription>Estamos gerando o código do seu perfil.</DialogDescription>
+                    </DialogHeader>
+                  </>
                 ) : (
                   <>
                     <DialogSelo variante="sucesso" />

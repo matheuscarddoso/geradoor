@@ -26,7 +26,7 @@ const Switch = React.forwardRef<
   <SwitchPrimitives.Root
     className={cn(
       "peer relative inline-flex h-[24px] w-[40px] shrink-0 cursor-pointer items-center rounded-full p-[1.5px]",
-      "transition-colors duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
+      "transition-colors duration-200 ease-ios",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "bg-[var(--ios-switch-off)] data-[state=checked]:bg-[var(--ios-switch-on)]",
@@ -38,7 +38,7 @@ const Switch = React.forwardRef<
     <SwitchPrimitives.Thumb
       className={cn(
         "pointer-events-none block h-[21px] w-[21px] rounded-full bg-white",
-        "transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
+        "transition-transform duration-200 ease-ios",
         "shadow-[0_2px_5px_rgba(0,0,0,0.15),0_2px_1px_rgba(0,0,0,0.06)]",
         "data-[state=unchecked]:translate-x-0 data-[state=checked]:translate-x-[16px]"
       )}

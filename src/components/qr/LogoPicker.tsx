@@ -277,8 +277,15 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                     className="overflow-hidden"
                   >
                     <div className="space-y-3.5 pt-0.5">
-                      {/* Slider do dialkit: já traz rótulo, valor e unidade,
-                          então substitui o bloco de label + span + controle. */}
+                      {/*
+                        A classe `dialkit-root` é obrigatória: é nela que o
+                        pacote declara todas as variáveis de cor e tamanho do
+                        controle. Sem ela o Slider renderiza com tudo
+                        indefinido e some da tela. Normalmente vem do
+                        componente DialRoot, que aqui não usamos — só o
+                        Slider avulso.
+                      */}
+                      <div className="dialkit-root">
                       <Slider
                         label="Tamanho"
                         value={Math.round(value.scale * 100)}
@@ -290,6 +297,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                         step={1}
                         unit="%"
                       />
+                      </div>
 
                       <div className="flex items-center justify-between gap-3">
                         <label

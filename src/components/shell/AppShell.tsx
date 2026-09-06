@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="flex shrink-0 items-center gap-2 rounded-xl px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-selected"
         >
           <MaximizeIcon ref={logoRef} size={18} className="flex items-center" />
-          <span className="text-sm font-medium tracking-tight">Geradoor</span>
+          <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
         </Link>
 
         {/* As abas do topo saíram: a sidebar já lista tudo, e duplicar a

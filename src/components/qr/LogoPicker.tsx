@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ImagePlus, Trash2, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "dialkit";
 import { cn } from "@/lib/utils";
 import {
   ACCEPTED_LOGO_TYPES,
@@ -277,30 +277,19 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                     className="overflow-hidden"
                   >
                     <div className="space-y-3.5 pt-0.5">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label
-                            htmlFor="logo-scale"
-                            className="text-xs text-zinc-500 dark:text-zinc-400"
-                          >
-                            Tamanho
-                          </label>
-                          <span className="text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
-                            {Math.round(value.scale * 100)}%
-                          </span>
-                        </div>
-                        <Slider
-                          id="logo-scale"
-                          min={MIN_SCALE * 100}
-                          max={MAX_SCALE * 100}
-                          step={1}
-                          value={[value.scale * 100]}
-                          onValueChange={([next]) =>
-                            onChange({ ...value, scale: next / 100 })
-                          }
-                          aria-label="Tamanho do logo"
-                        />
-                      </div>
+                      {/* Slider do dialkit: já traz rótulo, valor e unidade,
+                          então substitui o bloco de label + span + controle. */}
+                      <Slider
+                        label="Tamanho"
+                        value={Math.round(value.scale * 100)}
+                        onChange={(proximo) =>
+                          onChange({ ...value, scale: proximo / 100 })
+                        }
+                        min={MIN_SCALE * 100}
+                        max={MAX_SCALE * 100}
+                        step={1}
+                        unit="%"
+                      />
 
                       <div className="flex items-center justify-between gap-3">
                         <label

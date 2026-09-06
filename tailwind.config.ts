@@ -25,6 +25,7 @@ export default {
   		// licencia a fonte para web fora das plataformas dela, então nos demais
   		// sistemas cai na Geist, que é a mais próxima em desenho e métrica.
   		fontFamily: {
+  			logo: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
   			sans: [
   				'-apple-system',
   				'BlinkMacSystemFont',

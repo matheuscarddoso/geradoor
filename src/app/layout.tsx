@@ -2,7 +2,18 @@ import type { Metadata } from "next";
 import { SITE, jsonLd } from "@/lib/seo";
 import { AppShell } from "@/components/shell/AppShell";
 import { GeistSans } from "geist/font";
+/*
+ * A marca deveria usar Geist Pixel, mas o pacote `geist` — inclusive na 1.7.2,
+ * a mais nova — só publica Sans e Mono, e não existe pacote separado no npm.
+ * A Vercel distribui a Pixel como download em vercel.com/font.
+ *
+ * Geist Mono entra no lugar por ora. Para trocar, basta colocar o .woff2 em
+ * src/app/fonts e apontar esta constante para ele com next/font/local: tudo
+ * que usa a marca lê da variável --font-logo, num lugar só.
+ */
+import { GeistMono } from "geist/font/mono";
 import { Toaster } from "@/components/ui/sonner"
+import "dialkit/styles.css";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
@@ -93,7 +104,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: jsonLd(siteSchema) }}
         />
       </head>
-      <body className={`${GeistSans.className} bg-background`}>
+      <body className={`${GeistSans.className} ${GeistMono.variable} bg-background`}>
         <ThemeProvider
           attribute="class"
           /* Dark-first: o padrão é escuro, não o tema do sistema. */

@@ -320,9 +320,12 @@ const InstagramGenerator: React.FC = () => {
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 h-full w-full select-none object-cover"
           />
+          {/* Centralizado nos dois eixos. A 56% da largura o aparelho inteiro
+              cabe na altura do painel sem cortar, então `recorte="inteiro"`
+              desenha o device completo e nada é aparado. */}
           <PhoneFrame
             recorte="inteiro"
-            className="absolute bottom-[-10%] left-1/2 w-[64%] -translate-x-1/2"
+            className="absolute left-1/2 top-1/2 w-[56%] -translate-x-1/2 -translate-y-1/2"
           >
             <PerfilPreview usuario={perfil.usuario ?? ""} />
           </PhoneFrame>

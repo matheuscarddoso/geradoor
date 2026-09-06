@@ -337,9 +337,12 @@ const WhatsappLinkGenerator: React.FC = () => {
               conforme a altura do painel. `recorte="inteiro"` desliga o fade
               do próprio frame — dois recortes juntos deixariam o esmaecido
               no meio do painel em vez de na borda. */}
+          {/* Centralizado nos dois eixos. A 56% da largura o aparelho inteiro
+              cabe na altura do painel sem cortar, então `recorte="inteiro"`
+              desenha o device completo e nada é aparado. */}
           <PhoneFrame
             recorte="inteiro"
-            className="absolute bottom-[-10%] left-1/2 w-[64%] -translate-x-1/2"
+            className="absolute left-1/2 top-1/2 w-[56%] -translate-x-1/2 -translate-y-1/2"
           >
             <IMessagePreview phone={phone ?? ""} message={message ?? ""} />
           </PhoneFrame>

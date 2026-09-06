@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/AppShell";
 import { MarcaSvg } from "@/components/MarcaSvg";
 import { useRecentes } from "@/lib/recentes";
+import { hrefRecente, useQrDeRecente } from "@/lib/qrRecente";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
 import { PhoneInput } from "@/components/PhoneInput";
@@ -39,21 +40,31 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { rasterizeSvgMarkup } from "@/lib/image";
 import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
+import {
+  LOGO_DEFAULT_SCALE,
+  LogoScaleSlider,
+} from "@/components/qr/LogoScaleSlider";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import Link from "next/link";
-import IMessagePreview from "@/components/whatsapp/IMessagePreview";
+import WhatsappChatPreview from "@/components/whatsapp/WhatsappChatPreview";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
+import { cn } from "@/lib/utils";
 
 /** Lado do QR renderizado nas duas telas. */
 const QR_RENDER_SIZE = 200;
-/** Lado do logo como fração da imagem. */
-const LOGO_SCALE = 0.22;
 
 const WhatsappLinkGenerator: React.FC = () => {
   const [phone, setPhone] = useState<string | null>("");
   const [message, setMessage] = useState<string | null>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>("");
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
+  const [modalAberto, setModalAberto] = useState(false);
+
+  // Clicar num recente reabre este modal com o QR daquele item.
+  const { aoFechar: limparQrDaUrl } = useQrDeRecente((valor) => {
+    setQrCodeValue(valor);
+    setModalAberto(true);
+  });
   // resolvedTheme, não theme: o segundo devolve o valor escolhido, que pode
   // ser "system", enquanto as cores do QR precisam do tema efetivo.
   const { resolvedTheme } = useTheme();
@@ -83,7 +94,11 @@ const WhatsappLinkGenerator: React.FC = () => {
       const data = await response.json();
       const criado = baseUrl + data.shortcode;
       setQrCodeValue(criado);
-      registrar({ tipo: "whatsapp", label: criado, href: "/whatsapp" });
+      registrar({
+        tipo: "whatsapp",
+        label: criado,
+        href: hrefRecente("/whatsapp", data.shortcode),
+      });
       setLoadingQrCode(false);
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
@@ -105,6 +120,7 @@ const WhatsappLinkGenerator: React.FC = () => {
 
   const [baixando, setBaixando] = useState<QrFormat | null>(null);
   const [usarLogo, setUsarLogo] = useState(true);
+  const [logoScale, setLogoScale] = useState(LOGO_DEFAULT_SCALE);
   const { registrar } = useRecentes();
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
 
@@ -139,14 +155,15 @@ const WhatsappLinkGenerator: React.FC = () => {
   /**
    * Nível H recupera cerca de 30% dos módulos e é o que permite cobrir o
    * centro. Sem logo o nível volta ao padrão, para não mudar a densidade dos
-   * códigos já gerados. A 22% da imagem o logo ocupa ~9% da área do código.
+   * códigos já gerados. No teto do slider, 30% do lado, o logo cobre 9% da
+   * área do código — bem dentro do que o nível H recupera.
    */
   const logoAtivo = usarLogo && logoSrc !== null;
   const imageSettings = logoAtivo
     ? {
         src: logoSrc,
-        height: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
-        width: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
+        height: Math.round(QR_RENDER_SIZE * logoScale),
+        width: Math.round(QR_RENDER_SIZE * logoScale),
         excavate: true,
       }
     : undefined;
@@ -231,7 +248,31 @@ const WhatsappLinkGenerator: React.FC = () => {
           />
         </div>
 
-        <Dialog>
+        {/* O tamanho só faz sentido com o logo aplicado. A altura anima por
+            grid-template-rows, em CSS: uma revelação simples não justifica
+            carregar uma biblioteca de animação nesta página. O `inert` tira o
+            controle do caminho do Tab enquanto ele está recolhido. */}
+        <div
+          inert={!logoAtivo}
+          className={cn(
+            "grid transition-all duration-200 ease-out motion-reduce:transition-none",
+            logoAtivo ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="pt-4">
+              <LogoScaleSlider scale={logoScale} onScaleChange={setLogoScale} />
+            </div>
+          </div>
+        </div>
+
+        <Dialog
+          open={modalAberto}
+          onOpenChange={(aberto) => {
+            setModalAberto(aberto);
+            if (!aberto) limparQrDaUrl();
+          }}
+        >
         <DialogTrigger asChild>
         <Button className="w-full mt-4" onClick={handleGenerate} disabled={phone == ""}>
         Gerar meu link
@@ -353,7 +394,7 @@ const WhatsappLinkGenerator: React.FC = () => {
             recorte="inteiro"
             className="absolute left-1/2 top-1/2 w-[56%] -translate-x-1/2 -translate-y-1/2"
           >
-            <IMessagePreview phone={phone ?? ""} message={message ?? ""} />
+            <WhatsappChatPreview phone={phone ?? ""} message={message ?? ""} />
           </PhoneFrame>
         </div>
       </div>

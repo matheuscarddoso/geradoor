@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { ROTAS } from "@/lib/rotas";
 import { useRecentes } from "@/lib/recentes";
+import { hrefDeRestauracao } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
 
 function Secao({ children }: { children: React.ReactNode }) {
@@ -68,6 +69,9 @@ export function Sidebar({ className }: { className?: string }) {
           </div>
           <ul className="flex flex-col gap-0.5">
             {recentes.map((item) => {
+              // Reconstrói o destino para reabrir o resultado, inclusive nos
+              // itens gravados antes de a restauração existir.
+              const destino = hrefDeRestauracao(item);
               const conteudo = (
                 <>
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-300 dark:bg-zinc-600" />
@@ -78,9 +82,9 @@ export function Sidebar({ className }: { className?: string }) {
                 "flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-left text-sm text-zinc-500 dark:text-zinc-400";
               return (
                 <li key={item.id}>
-                  {item.href ? (
+                  {destino ? (
                     <Link
-                      href={item.href}
+                      href={destino}
                       className={cn(
                         estilo,
                         "transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground dark:hover:bg-zinc-900 dark:hover:text-zinc-100"

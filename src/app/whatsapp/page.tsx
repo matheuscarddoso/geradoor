@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import WhatsappGeneratorClient from "./WhatsappGeneratorClient";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
@@ -36,7 +37,9 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
-      <WhatsappGeneratorClient />
+      <Suspense>
+        <WhatsappGeneratorClient />
+      </Suspense>
     </>
   );
 }

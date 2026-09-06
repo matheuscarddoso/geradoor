@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/AppShell";
 import { useRecentes } from "@/lib/recentes";
+import { hrefRecente, useQrDeRecente } from "@/lib/qrRecente";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
@@ -15,6 +16,26 @@ import LogoPicker, { DEFAULT_LOGO, type LogoConfig } from "@/components/qr/LogoP
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import DecorativeQR from "@/components/qr/DecorativeQR";
 import { parseLink } from "@/lib/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DialogSelo,
+  DialogDestaque,
+  DialogSuperficie,
+  DialogAcoes,
+} from "@/components/ui/dialog-parts";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 
 const PLACEHOLDER_URL = "https://geradoor.com";
 const QR_SIZE = 180;
@@ -24,6 +45,14 @@ const QRCodeGenerator: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
+
+  const [modalAberto, setModalAberto] = useState(false);
+
+  // Clicar num recente reabre o modal de sucesso com aquele QR.
+  const { aoFechar: limparQrDaUrl } = useQrDeRecente((valor) => {
+    setQrCodeValue(valor);
+    setModalAberto(true);
+  });
   const [logo, setLogo] = useState<LogoConfig>(DEFAULT_LOGO);
   const [touched, setTouched] = useState(false);
   const { registrar } = useRecentes();
@@ -68,7 +97,12 @@ const QRCodeGenerator: React.FC = () => {
       const data = await response.json();
       const criado = baseUrl + data.shortcode;
       setQrCodeValue(criado);
-      registrar({ tipo: "qrcode", label: criado, href: "/qr-code" });
+      registrar({
+        tipo: "qrcode",
+        label: criado,
+        href: hrefRecente("/qr-code", data.shortcode),
+      });
+      setModalAberto(true);
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
@@ -84,7 +118,13 @@ const QRCodeGenerator: React.FC = () => {
     try {
       setBaixando(format);
       await downloadQrCode({
-        element: document.querySelector<SVGElement>(".qrcode-svg"),
+        // O QR existe em dois lugares: no painel lateral e no modal. O painel
+        // é `hidden md:block`, então no celular ele tem área zero e o arquivo
+        // sairia em branco. Pega-se o que de fato está renderizado.
+        element:
+          Array.from(document.querySelectorAll<SVGElement>(".qrcode-svg")).find(
+            (el) => el.getBoundingClientRect().width > 0
+          ) ?? null,
         format,
       });
     } catch (error) {
@@ -160,6 +200,93 @@ const QRCodeGenerator: React.FC = () => {
             >
               {loadingQrCode ? <Loader className="animate-spin h-4 w-4" /> : "Criar QRCode"}
             </Button>
+
+            {/* Modal de sucesso, igual ao do WhatsApp e do Instagram. Abre ao
+                criar e também ao clicar num recente. O painel lateral segue
+                mostrando o QR, mas só existe a partir do breakpoint md — sem o
+                modal, no celular não havia nenhuma confirmação visível. */}
+            <Dialog
+              open={modalAberto}
+              onOpenChange={(aberto) => {
+                setModalAberto(aberto);
+                if (!aberto) limparQrDaUrl();
+              }}
+            >
+              <DialogContent>
+                <DialogSelo variante="sucesso" />
+
+                <DialogHeader>
+                  <DialogTitle>QR Code criado</DialogTitle>
+                  <DialogDescription>
+                    Quem escanear vai direto para o link que você encurtou.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <DialogDestaque>
+                  <a
+                    href={qrCodeValue ?? ""}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="truncate hover:underline"
+                  >
+                    {qrCodeValue}
+                  </a>
+                </DialogDestaque>
+
+                <DialogSuperficie className="flex justify-center py-5">
+                  <QRCodeSVG
+                    className="qrcode-svg"
+                    value={qrCodeValue ?? ""}
+                    size={QR_SIZE}
+                    marginSize={QUIET_ZONE}
+                    level={logo.src ? "H" : "L"}
+                    imageSettings={
+                      logo.src
+                        ? {
+                            src: logo.src,
+                            height: Math.round(QR_SIZE * logo.scale),
+                            width: Math.round(QR_SIZE * logo.scale),
+                            excavate: true,
+                          }
+                        : undefined
+                    }
+                  />
+                </DialogSuperficie>
+
+                <DialogAcoes>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="secondary" disabled={baixando !== null}>
+                        {baixando ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            Baixar
+                            <ChevronDown className="ms-1 h-4 w-4 opacity-60" />
+                          </>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="min-w-[9rem]">
+                      <DropdownMenuItem onClick={() => handleDownload("png")}>
+                        PNG
+                        <span className="ms-auto text-xs text-subtle">imagem</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload("pdf")}>
+                        PDF
+                        <span className="ms-auto text-xs text-subtle">impressão</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownload("svg")}>
+                        SVG
+                        <span className="ms-auto text-xs text-subtle">vetor</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button onClick={copyLink}>Copiar link</Button>
+                </DialogAcoes>
+              </DialogContent>
+            </Dialog>
           </div>
 
       </div>

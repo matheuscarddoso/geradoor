@@ -5,7 +5,10 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ImagePlus, Trash2, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "dialkit";
+import {
+  LOGO_DEFAULT_SCALE,
+  LogoScaleSlider,
+} from "./LogoScaleSlider";
 import { cn } from "@/lib/utils";
 import {
   ACCEPTED_LOGO_TYPES,
@@ -28,19 +31,10 @@ export interface LogoConfig {
 
 export const DEFAULT_LOGO: LogoConfig = {
   src: null,
-  scale: 0.22,
+  scale: LOGO_DEFAULT_SCALE,
   excavate: true,
   presetId: null,
 };
-
-/**
- * Limite superior do tamanho do logo.
- *
- * Mesmo com correção de erro nível H (recupera ~30% dos módulos), passar de
- * 30% da área faz leitores começarem a falhar. O slider não deixa chegar lá.
- */
-const MIN_SCALE = 0.12;
-const MAX_SCALE = 0.3;
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -277,27 +271,10 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                     className="overflow-hidden"
                   >
                     <div className="space-y-3.5 pt-0.5">
-                      {/*
-                        A classe `dialkit-root` é obrigatória: é nela que o
-                        pacote declara todas as variáveis de cor e tamanho do
-                        controle. Sem ela o Slider renderiza com tudo
-                        indefinido e some da tela. Normalmente vem do
-                        componente DialRoot, que aqui não usamos — só o
-                        Slider avulso.
-                      */}
-                      <div className="dialkit-root">
-                      <Slider
-                        label="Tamanho"
-                        value={Math.round(value.scale * 100)}
-                        onChange={(proximo) =>
-                          onChange({ ...value, scale: proximo / 100 })
-                        }
-                        min={MIN_SCALE * 100}
-                        max={MAX_SCALE * 100}
-                        step={1}
-                        unit="%"
+                      <LogoScaleSlider
+                        scale={value.scale}
+                        onScaleChange={(scale) => onChange({ ...value, scale })}
                       />
-                      </div>
 
                       <div className="flex items-center justify-between gap-3">
                         <label

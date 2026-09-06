@@ -27,7 +27,7 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
 
   return (
     <div
-      className="imsg flex h-full w-full flex-col"
+      className="ios flex h-full w-full flex-col"
       style={{ fontFamily: "-apple-system, system-ui, sans-serif" }}
     >
       {/* Barra de status */}
@@ -37,11 +37,11 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
       >
         <span
           className="font-semibold"
-          style={{ fontSize: pt(15), color: "var(--imsg-received-text)" }}
+          style={{ fontSize: pt(15), color: "var(--ios-text)" }}
         >
           10:51
         </span>
-        <span style={{ fontSize: pt(13), color: "var(--imsg-received-text)" }}>
+        <span style={{ fontSize: pt(13), color: "var(--ios-text)" }}>
           ıı|ı 79
         </span>
       </div>
@@ -52,14 +52,14 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
         style={{ padding: `${pt(6)} ${pt(18)} 0` }}
       >
         <span
-          className="imsg-glass flex items-center justify-center rounded-full"
+          className="ios-glass flex items-center justify-center rounded-full"
           style={{ width: pt(40), height: pt(40) }}
         >
           <svg
             viewBox="0 0 24 24"
             style={{ width: pt(17), height: pt(17) }}
             fill="none"
-            stroke="var(--imsg-received-text)"
+            stroke="var(--ios-text)"
             strokeWidth="2.2"
             strokeLinecap="round"
             aria-hidden="true"
@@ -69,26 +69,26 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
         </span>
 
         <span
-          className="imsg-glass rounded-full font-semibold"
+          className="ios-glass rounded-full font-semibold"
           style={{
             padding: `${pt(7)} ${pt(16)}`,
             fontSize: pt(13),
             letterSpacing: "0.08em",
-            color: "var(--imsg-received-text)",
+            color: "var(--ios-text)",
           }}
         >
           SELFIE
         </span>
 
         <span
-          className="imsg-glass flex items-center justify-center rounded-full"
+          className="ios-glass flex items-center justify-center rounded-full"
           style={{ width: pt(40), height: pt(40) }}
         >
           <svg
             viewBox="0 0 24 24"
             style={{ width: pt(18), height: pt(18) }}
             fill="none"
-            stroke="var(--imsg-received-text)"
+            stroke="var(--ios-text)"
             strokeWidth="1.9"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -156,14 +156,14 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
           ].map(([rotulo, d]) => (
             <div
               key={rotulo}
-              className="imsg-glass flex flex-col items-center justify-center"
+              className="ios-glass flex flex-col items-center justify-center"
               style={{ borderRadius: pt(14), padding: `${pt(13)} ${pt(4)}`, gap: pt(7) }}
             >
               <svg
                 viewBox="0 0 24 24"
                 style={{ width: pt(19), height: pt(19) }}
                 fill="none"
-                stroke="var(--imsg-received-text)"
+                stroke="var(--ios-text)"
                 strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -173,7 +173,7 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
               </svg>
               <span
                 className="truncate font-medium"
-                style={{ fontSize: pt(11), color: "var(--imsg-received-text)" }}
+                style={{ fontSize: pt(11), color: "var(--ios-text)" }}
               >
                 {rotulo}
               </span>
@@ -185,12 +185,12 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
       {/* Refazer */}
       <div className="flex shrink-0 justify-center" style={{ paddingBottom: pt(30) }}>
         <span
-          className="imsg-glass flex items-center rounded-full font-semibold"
+          className="ios-glass flex items-center rounded-full font-semibold"
           style={{
             gap: pt(8),
             padding: `${pt(12)} ${pt(26)}`,
             fontSize: pt(15),
-            color: "var(--imsg-received-text)",
+            color: "var(--ios-text)",
           }}
         >
           <svg

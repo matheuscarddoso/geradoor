@@ -8,7 +8,7 @@
 // translateX/translateY constam da lista de transforms do framer-motion.
 
 import type { Transition } from "framer-motion";
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation, useReducedMotion } from "framer-motion";
 import type { HTMLAttributes } from "react";
 import { forwardRef, useCallback, useImperativeHandle, useRef } from "react";
 
@@ -21,9 +21,17 @@ export interface MaximizeIconHandle {
 
 const DEFAULT_TRANSITION: Transition = {
   type: "spring",
-  stiffness: 250,
-  damping: 25,
+  stiffness: 400,
+  damping: 22,
 };
+
+/**
+ * Deslocamento de cada canto, em unidades do viewBox de 24.
+ *
+ * Eram 2, o que a 18px na navbar virava 1,5px de movimento real — perto de
+ * invisível. 3 unidades dão 2,25px, que já se lê sem virar sacudida.
+ */
+const TRAVEL = 3;
 
 interface MaximizeIconProps extends HTMLAttributes<HTMLDivElement> {
   size?: number;
@@ -33,11 +41,14 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 28, ...props }, ref) => {
     const controls = useAnimation();
     const isControlledRef = useRef(false);
+    // Faltava respeitar prefers-reduced-motion: a logo se mexia mesmo para
+    // quem pediu o contrário no sistema.
+    const reduzirMovimento = useReducedMotion();
 
     useImperativeHandle(ref, () => {
       isControlledRef.current = true;
       return {
-        startAnimation: () => controls.start("animate"),
+        startAnimation: () => controls.start(reduzirMovimento ? "normal" : "animate"),
         stopAnimation: () => controls.start("normal"),
       };
     });
@@ -47,10 +58,10 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
         if (isControlledRef.current) {
           onMouseEnter?.(e);
         } else {
-          controls.start("animate");
+          controls.start(reduzirMovimento ? "normal" : "animate");
         }
       },
-      [controls, onMouseEnter]
+      [controls, onMouseEnter, reduzirMovimento]
     );
 
     const handleMouseLeave = useCallback(
@@ -86,7 +97,10 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
             transition={DEFAULT_TRANSITION}
             variants={{
               normal: { translateX: "0%", translateY: "0%" },
-              animate: { translateX: "-2px", translateY: "-2px" },
+              animate: {
+                translateX: `${-TRAVEL}px`,
+                translateY: `${-TRAVEL}px`,
+              },
             }}
           />
 
@@ -96,7 +110,10 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
             transition={DEFAULT_TRANSITION}
             variants={{
               normal: { translateX: "0%", translateY: "0%" },
-              animate: { translateX: "2px", translateY: "-2px" },
+              animate: {
+                translateX: `${TRAVEL}px`,
+                translateY: `${-TRAVEL}px`,
+              },
             }}
           />
 
@@ -106,7 +123,10 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
             transition={DEFAULT_TRANSITION}
             variants={{
               normal: { translateX: "0%", translateY: "0%" },
-              animate: { translateX: "-2px", translateY: "2px" },
+              animate: {
+                translateX: `${-TRAVEL}px`,
+                translateY: `${TRAVEL}px`,
+              },
             }}
           />
 
@@ -116,7 +136,10 @@ const MaximizeIcon = forwardRef<MaximizeIconHandle, MaximizeIconProps>(
             transition={DEFAULT_TRANSITION}
             variants={{
               normal: { translateX: "0%", translateY: "0%" },
-              animate: { translateX: "2px", translateY: "2px" },
+              animate: {
+                translateX: `${TRAVEL}px`,
+                translateY: `${TRAVEL}px`,
+              },
             }}
           />
         </svg>

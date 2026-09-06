@@ -37,22 +37,34 @@ import { MarcaSvg } from "@/components/MarcaSvg";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
 import { PerfilPreview } from "@/components/instagram/PerfilPreview";
 import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
+import {
+  LOGO_DEFAULT_SCALE,
+  LogoScaleSlider,
+} from "@/components/qr/LogoScaleSlider";
 import { rasterizeSvgMarkup } from "@/lib/image";
 import { MAX_ARROBA, parseArroba, perfilUrl } from "@/lib/instagram";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import { useRecentes } from "@/lib/recentes";
+import { hrefRecente, useQrDeRecente } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
 
 const QR_RENDER_SIZE = 200;
-const LOGO_SCALE = 0.22;
 
 const InstagramGenerator: React.FC = () => {
   const [arroba, setArroba] = useState("");
   const [tocado, setTocado] = useState(false);
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
+
+  // Clicar num recente reabre este modal com o QR daquele item.
+  const { aoFechar: limparQrDaUrl } = useQrDeRecente((valor) => {
+    setQrCodeValue(valor);
+    setModalAberto(true);
+  });
   const [baixando, setBaixando] = useState<QrFormat | null>(null);
   const [usarLogo, setUsarLogo] = useState(true);
+  const [logoScale, setLogoScale] = useState(LOGO_DEFAULT_SCALE);
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const { resolvedTheme } = useTheme();
   const { registrar } = useRecentes();
@@ -90,8 +102,8 @@ const InstagramGenerator: React.FC = () => {
   const imageSettings = logoAtivo
     ? {
         src: logoSrc,
-        height: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
-        width: Math.round(QR_RENDER_SIZE * LOGO_SCALE),
+        height: Math.round(QR_RENDER_SIZE * logoScale),
+        width: Math.round(QR_RENDER_SIZE * logoScale),
         excavate: true,
       }
     : undefined;
@@ -118,7 +130,11 @@ const InstagramGenerator: React.FC = () => {
       const dados = await resposta.json();
       const criado = baseUrl + dados.shortcode;
       setQrCodeValue(criado);
-      registrar({ tipo: "instagram", label: `@${perfil.usuario}`, href: "/instagram" });
+      registrar({
+        tipo: "instagram",
+        label: `@${perfil.usuario}`,
+        href: hrefRecente("/instagram", dados.shortcode),
+      });
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
@@ -222,7 +238,31 @@ const InstagramGenerator: React.FC = () => {
               />
             </div>
 
-            <Dialog>
+            {/* O tamanho só faz sentido com o logo aplicado. A altura anima por
+                grid-template-rows, em CSS: uma revelação simples não justifica
+                carregar uma biblioteca de animação nesta página. O `inert` tira o
+                controle do caminho do Tab enquanto ele está recolhido. */}
+            <div
+              inert={!logoAtivo}
+              className={cn(
+                "grid transition-all duration-200 ease-out motion-reduce:transition-none",
+                logoAtivo ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+              )}
+            >
+              <div className="overflow-hidden">
+                <div className="pt-4">
+                  <LogoScaleSlider scale={logoScale} onScaleChange={setLogoScale} />
+                </div>
+              </div>
+            </div>
+
+            <Dialog
+              open={modalAberto}
+              onOpenChange={(aberto) => {
+                setModalAberto(aberto);
+                if (!aberto) limparQrDaUrl();
+              }}
+            >
               <DialogTrigger asChild>
                 <Button
                   className="mt-4 w-full"

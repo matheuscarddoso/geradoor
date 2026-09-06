@@ -56,16 +56,25 @@ const CPFGenerator: React.FC = () => {
         description="Números aleatórios com dígitos verificadores válidos, para testar sistemas e formulários."
       />
 
-      <div className="flex w-full flex-col gap-3">
+      <div
+        className="mx-auto flex flex-col items-center gap-3"
+        style={{ width: "calc(11.25ch + 3.5rem)" }}
+      >
         <Input
           readOnly
           type="text"
           placeholder="CPF"
-          className="bg-background text-center"
+          title="Clique para copiar"
+          className="w-full cursor-pointer bg-background text-center"
           value={formatCPF(cpf)}
+          onClick={(evento) => {
+            if (!cpf) return;
+            evento.currentTarget.select();
+            copyToClipboard();
+          }}
         />
 
-        <Button onClick={copyToClipboard}>
+        <Button className="w-full" onClick={copyToClipboard}>
           {copied ? "Copiado!" : "Copiar CPF"}
         </Button>
 

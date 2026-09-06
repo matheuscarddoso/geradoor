@@ -56,16 +56,25 @@ const CNPJGenerator: React.FC = () => {
         description="Números aleatórios com dígitos verificadores válidos, para testar cadastros e integrações."
       />
 
-      <div className="flex w-full flex-col gap-3">
+      <div
+        className="mx-auto flex flex-col items-center gap-3"
+        style={{ width: "calc(14.5ch + 3.5rem)" }}
+      >
         <Input
           readOnly
           type="text"
           placeholder="CNPJ"
-          className="bg-background text-center"
+          title="Clique para copiar"
+          className="w-full cursor-pointer bg-background text-center"
           value={formatCNPJ(cnpj)}
+          onClick={(evento) => {
+            if (!cnpj) return;
+            evento.currentTarget.select();
+            copyToClipboard();
+          }}
         />
 
-        <Button onClick={copyToClipboard}>
+        <Button className="w-full" onClick={copyToClipboard}>
           {copied ? "Copiado!" : "Copiar CNPJ"}
         </Button>
 

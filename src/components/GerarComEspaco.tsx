@@ -9,6 +9,12 @@ import { Space } from "lucide-react";
  * acionável, já que a barra de espaço não existe ali. No mouse continua com
  * cara de legenda e o atalho segue funcionando pela página inteira.
  *
+ * O `self-center` no lugar de `mx-auto`: nas telas de CPF e CNPJ a coluna tem a
+ * largura do valor gerado, que é menor que esta legenda. Margem automática em
+ * item de flex vira zero quando o espaço livre é negativo — e ainda cancela o
+ * alinhamento do container —, então a legenda vazaria toda para um lado só.
+ * Com `self-center` ela transborda igual dos dois lados e segue centrada.
+ *
  * Ser botão também resolve o foco de teclado: com ele focado, espaço aciona
  * pela via nativa; com o foco em qualquer outro lugar, pelo listener global.
  * Nunca pelos dois ao mesmo tempo, porque o hook ignora alvos acionáveis.
@@ -18,7 +24,7 @@ export function GerarComEspaco({ onGerar }: { onGerar: () => void }) {
     <button
       type="button"
       onClick={onGerar}
-      className="mx-auto block text-center text-xs text-subtle transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 rounded-full px-2 py-1"
+      className="block shrink-0 self-center whitespace-nowrap text-center text-xs text-subtle transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 rounded-full px-2 py-1"
     >
       <span className="apenas-mouse">
         Pressione

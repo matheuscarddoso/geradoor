@@ -114,93 +114,159 @@ body {
   background-image: var(--pattern);
 };
 /* =========================================================================
-   Prévia do app Mensagens do iOS (/whatsapp)
-   Paletas oficiais dos dois modos. Acompanha o tema do site via .dark.
+   Cromo do iOS para os mockups (/instagram)
+   Era `.imsg`, da prévia do iMessage que foi substituída pela do WhatsApp.
+   O nome mudou porque o que sobrou aqui não é de nenhum app: é a superfície
+   de vidro e a cor de texto do sistema, que o mockup do Instagram usa.
    ========================================================================= */
 @layer components {
-  .imsg {
-    --imsg-bg: #ffffff;
-    --imsg-received: #e9e9eb;
-    --imsg-received-text: #000000;
-    --imsg-sent: #007aff;
-    --imsg-sent-text: #ffffff;
-    --imsg-secondary: #8e8e93;
-    --imsg-glass: rgba(255, 255, 255, 0.72);
-    --imsg-glass-edge: rgba(0, 0, 0, 0.06);
-    --imsg-hairline: rgba(0, 0, 0, 0.12);
-    --imsg-edge: rgba(255, 255, 255, 0.5);
+  .ios {
+    --ios-bg: #ffffff;
+    --ios-text: #000000;
+    --ios-secondary: #8e8e93;
+    --ios-glass: rgba(255, 255, 255, 0.72);
+    --ios-glass-edge: rgba(0, 0, 0, 0.06);
+    --ios-edge: rgba(255, 255, 255, 0.5);
 
-    background: var(--imsg-bg);
+    background: var(--ios-bg);
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
       system-ui, sans-serif;
   }
 
-  .dark .imsg {
-    --imsg-bg: #000000;
-    --imsg-received: #262628;
-    --imsg-received-text: #ffffff;
-    --imsg-sent: #0a84ff;
-    --imsg-sent-text: #ffffff;
-    --imsg-secondary: #8e8e93;
-    --imsg-glass: rgba(58, 58, 60, 0.6);
-    --imsg-glass-edge: rgba(255, 255, 255, 0.14);
-    --imsg-hairline: rgba(255, 255, 255, 0.14);
-    --imsg-edge: rgba(255, 255, 255, 0.11);
+  .dark .ios {
+    --ios-bg: #000000;
+    --ios-text: #ffffff;
+    --ios-secondary: #8e8e93;
+    --ios-glass: rgba(58, 58, 60, 0.6);
+    --ios-glass-edge: rgba(255, 255, 255, 0.14);
+    --ios-edge: rgba(255, 255, 255, 0.11);
   }
 
   /* Material flutuante do iOS 26.
-     Não existe mais barra sólida: os controles flutuam sobre a conversa, que
-     corre por baixo deles. Blur mais saturação é o teto do que a web faz —
-     o Liquid Glass real refrata, e CSS não expõe isso. */
-  .imsg-glass {
-    background: var(--imsg-glass);
+     Blur mais saturação é o teto do que a web faz — o Liquid Glass real
+     refrata, e CSS não expõe isso. */
+  .ios-glass {
+    background: var(--ios-glass);
     backdrop-filter: blur(18px) saturate(180%);
     -webkit-backdrop-filter: blur(18px) saturate(180%);
-    border: 0.5px solid var(--imsg-glass-edge);
+    border: 0.5px solid var(--ios-glass-edge);
     box-shadow:
       0 1px 5px rgba(0, 0, 0, 0.1),
       0 0 0.5px rgba(0, 0, 0, 0.06),
-      inset 0 0.5px 0 0 var(--imsg-edge);
-  }
-
-  /* Borda de rolagem: o conteúdo se dissolve ao passar sob os controles,
-     em vez de cruzar uma linha divisória de 1px. */
-  .imsg-scroll-edge {
-    background: linear-gradient(
-      to bottom,
-      var(--imsg-bg) 0%,
-      color-mix(in srgb, var(--imsg-bg) 55%, transparent) 62%,
-      transparent 100%
-    );
-  }
-
-  .imsg-bubble {
-    position: relative;
-    max-width: 74%;
-    padding: 7px 13px 8px;
-    border-radius: 18px;
-    font-size: 15px;
-    line-height: 20px;
-    letter-spacing: -0.01em;
-    word-break: break-word;
-  }
-
-  .imsg-bubble--sent {
-    background: var(--imsg-sent);
-    color: var(--imsg-sent-text);
-    margin-left: auto;
-  }
-
-  .imsg-bubble--received {
-    background: var(--imsg-received);
-    color: var(--imsg-received-text);
-    margin-right: auto;
+      inset 0 0.5px 0 0 var(--ios-edge);
   }
 
   /* Quem pede menos transparência recebe superfície sólida, não fosca. */
   @media (prefers-reduced-transparency: reduce) {
-    .imsg-glass {
-      background: color-mix(in srgb, var(--imsg-bg) 88%, var(--imsg-secondary));
+    .ios-glass {
+      background: color-mix(in srgb, var(--ios-bg) 88%, var(--ios-secondary));
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+  }
+}
+
+/* =========================================================================
+   Prévia da conversa do WhatsApp no iOS (/whatsapp)
+   Cores extraídas da captura de referência; o papel de parede é o próprio
+   arquivo do app. Acompanha o tema do site via .dark.
+   ========================================================================= */
+@layer components {
+  .wa {
+    --wa-header: rgba(247, 253, 246, 0.92);
+    --wa-header-text: #0b0b0a;
+    --wa-icon: #0b0b0a;
+    --wa-hairline: rgba(0, 0, 0, 0.14);
+    --wa-sent: #d0ffcf;
+    --wa-sent-text: #0b141a;
+    --wa-bubble-meta: rgba(0, 0, 0, 0.45);
+    --wa-meta: rgba(0, 0, 0, 0.5);
+    --wa-tick: #53bdeb;
+    --wa-datepill: rgba(255, 255, 255, 0.92);
+    --wa-datepill-text: rgba(0, 0, 0, 0.55);
+    --wa-inputbar: rgba(246, 246, 246, 0.94);
+    --wa-field: #ffffff;
+    --wa-field-edge: rgba(0, 0, 0, 0.1);
+    --wa-avatar-bg: #cfd4d1;
+    --wa-avatar-fg: #ffffff;
+    --wa-home-indicator: rgba(0, 0, 0, 0.85);
+    --wa-wallpaper: url("/wa-chat-bg-light.webp");
+
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      system-ui, sans-serif;
+  }
+
+  .dark .wa {
+    --wa-header: rgba(31, 44, 51, 0.94);
+    --wa-header-text: #e9edef;
+    --wa-icon: #e9edef;
+    --wa-hairline: rgba(255, 255, 255, 0.1);
+    --wa-sent: #005c4b;
+    --wa-sent-text: #e9edef;
+    --wa-bubble-meta: rgba(233, 237, 239, 0.6);
+    --wa-meta: rgba(233, 237, 239, 0.6);
+    --wa-tick: #53bdeb;
+    --wa-datepill: rgba(32, 44, 51, 0.92);
+    --wa-datepill-text: rgba(233, 237, 239, 0.6);
+    --wa-inputbar: rgba(31, 44, 51, 0.94);
+    --wa-field: #2a3942;
+    --wa-field-edge: rgba(255, 255, 255, 0.06);
+    --wa-avatar-bg: #3b4a54;
+    --wa-avatar-fg: #8696a0;
+    --wa-home-indicator: rgba(233, 237, 239, 0.85);
+    --wa-wallpaper: url("/wa-chat-bg-dark.webp");
+  }
+
+  /* O papel de parede do WhatsApp não é ladrilho: é uma arte única esticada
+     para cobrir a tela. `cover` mantém a proporção e corta o excedente, que é
+     o comportamento do app. */
+  .wa-wallpaper {
+    background-image: var(--wa-wallpaper);
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* A barra de navegação é translúcida sobre a conversa, que corre por baixo.
+     A linha de 0,5pt embaixo é o que separa as duas — sem ela, com papel de
+     parede claro, o header se dissolve no chat. */
+  .wa-header {
+    background: var(--wa-header);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: inset 0 -0.5px 0 0 var(--wa-hairline);
+  }
+
+  .wa-inputbar {
+    background: var(--wa-inputbar);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: inset 0 0.5px 0 0 var(--wa-hairline);
+  }
+
+  .wa-field {
+    background: var(--wa-field);
+    border: 0.5px solid var(--wa-field-edge);
+    color: var(--wa-meta);
+  }
+
+  .wa-bubble {
+    background: var(--wa-sent);
+    color: var(--wa-sent-text);
+    word-break: break-word;
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  }
+
+  .wa-datepill {
+    background: var(--wa-datepill);
+    color: var(--wa-datepill-text);
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+    font-weight: 500;
+  }
+
+  /* Quem pede menos transparência recebe superfície sólida, não fosca. */
+  @media (prefers-reduced-transparency: reduce) {
+    .wa-header,
+    .wa-inputbar {
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
     }

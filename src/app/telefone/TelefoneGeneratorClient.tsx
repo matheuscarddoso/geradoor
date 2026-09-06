@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,8 @@ const TelefoneGenerator: React.FC = () => {
   const [uf, setUf] = useState<string>("all");
   const [formatado, setFormatado] = useState<boolean>(true);
   const [copiado, setCopiado] = useState<boolean>(false);
+  const gatilhoUf = useRef<HTMLButtonElement>(null);
+  const escolhaPorPonteiro = useRef(false);
   const { registrar } = useRecentes();
 
   const exibido = formatado ? formatarTelefone(telefone) : telefone;
@@ -51,6 +53,18 @@ const TelefoneGenerator: React.FC = () => {
     registrar({ tipo: "telefone", label: formatarTelefone(novo) });
   };
 
+  // O Radix devolve o foco ao gatilho quando o select fecha. Com o foco ali,
+  // a barra de espaço reabre a lista em vez de gerar outro número — o atalho
+  // da página sumia justo depois de escolher o estado. Num clique não há para
+  // onde devolver o foco, então ele sai; no teclado ele fica, senão a navegação
+  // por Tab perderia o lugar.
+  const aoFecharUf = (evento: Event) => {
+    if (!escolhaPorPonteiro.current) return;
+    evento.preventDefault();
+    escolhaPorPonteiro.current = false;
+    gatilhoUf.current?.blur();
+  };
+
   const copiar = () => {
     if (!telefone) return;
     // Copia o que está na tela: quem desligou a formatação quer o número cru.
@@ -71,12 +85,24 @@ const TelefoneGenerator: React.FC = () => {
         {/* UF e número na mesma linha, cada um do tamanho do seu conteúdo */}
         <div className="flex gap-2">
           <Select value={uf} onValueChange={handleUf}>
-            <SelectTrigger aria-label="Estado" className="w-[104px] shrink-0 px-3">
+            <SelectTrigger
+              ref={gatilhoUf}
+              aria-label="Estado"
+              className="w-[104px] shrink-0 px-3"
+            >
               {/* O gatilho mostra a sigla; a lista mantém o nome completo com
                   os DDDs. "São Paulo (11, 12, 13...)" não caberia aqui. */}
               <SelectValue>{uf === "all" ? "Todos" : uf}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent
+              onPointerDown={() => {
+                escolhaPorPonteiro.current = true;
+              }}
+              onKeyDown={() => {
+                escolhaPorPonteiro.current = false;
+              }}
+              onCloseAutoFocus={aoFecharUf}
+            >
               <SelectItem value="all">Todos os estados</SelectItem>
               {UFS.map((item) => (
                 <SelectItem key={item.sigla} value={item.sigla}>
@@ -90,8 +116,14 @@ const TelefoneGenerator: React.FC = () => {
             readOnly
             type="text"
             placeholder="Telefone"
-            className="min-w-0 flex-1 bg-background text-center"
+            title="Clique para copiar"
+            className="min-w-0 flex-1 cursor-pointer bg-background text-center"
             value={exibido}
+            onClick={(evento) => {
+              if (!telefone) return;
+              evento.currentTarget.select();
+              copiar();
+            }}
           />
         </div>
 

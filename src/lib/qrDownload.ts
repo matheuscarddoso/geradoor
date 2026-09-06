@@ -110,8 +110,11 @@ export async function downloadQrCode({
   }
 
   // PDF entra por import dinâmico: jspdf pesa e só é usado aqui.
-  const { default: JsPDF } = await import("jspdf");
-  const pdf = new JsPDF();
+  // Export nomeado, que é a API documentada e tem o mesmo formato em toda
+  // condição de resolução do pacote (browser, node, bundler). O `default`
+  // funciona no browser, mas não é o construtor em todas elas.
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF();
   const side = 180;
   const offset = (210 - side) / 2; // centraliza na largura A4
   pdf.addImage(canvas.toDataURL("image/png"), "PNG", offset, offset, side, side);

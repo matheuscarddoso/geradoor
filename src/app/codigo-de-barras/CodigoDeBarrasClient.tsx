@@ -1061,6 +1061,8 @@ export default function CodigoDeBarrasClient() {
     [layout, faixa, bytesDaArte]
   );
   const erros = avisos.filter((aviso) => aviso.gravidade === "erro");
+  const temSelecao = codigosSelecionados.length > 0;
+  const primeiroErro = erros[0];
 
   /**
    * Quais campos estão errados, para o contorno vermelho aparecer neles.
@@ -1408,6 +1410,14 @@ export default function CodigoDeBarrasClient() {
           </p>
         </div>
 
+        {/* Propriedades do documento: só com nada selecionado.
+
+            É o comportamento do Figma — o painel da direita fala do documento
+            quando nada está escolhido, e do objeto quando algo está. Sem isso,
+            quem seleciona um código precisa rolar por cinco seções que não
+            têm relação com o que está na mão. */}
+        {!temSelecao && (
+          <>
         <Secao
           titulo="Página"
           acao={
@@ -1805,6 +1815,8 @@ export default function CodigoDeBarrasClient() {
           </div>
         </Secao>
 
+          </>
+        )}
         {codigosSelecionados.length > 1 && (
           <Secao
             refSecao={inspetorRef}
@@ -2140,7 +2152,7 @@ export default function CodigoDeBarrasClient() {
           </>
         )}
 
-        {avisos.length > 0 && (
+        {!temSelecao && avisos.length > 0 && (
           <Secao titulo="Conferência">
             <ul className="space-y-1.5">
               {avisos.map((aviso, indice) => (
@@ -2251,10 +2263,19 @@ export default function CodigoDeBarrasClient() {
                   evento.target.value = "";
                 }}
               />
-              <Dica>
-                A amostra é uma página só, para conferir no papel antes de rodar a faixa inteira.
-                Passe o leitor nela.
-              </Dica>
+              {/* Com a conferência escondida pela seleção, o motivo do botão
+                  travado tem que aparecer aqui: botão desabilitado sem
+                  explicação é um beco sem saída. */}
+              {temSelecao && primeiroErro ? (
+                <p className="text-[11px] leading-relaxed text-destructive">
+                  {primeiroErro.mensagem}
+                </p>
+              ) : (
+                <Dica>
+                  A amostra é uma página só, para conferir no papel antes de rodar a faixa inteira.
+                  Passe o leitor nela.
+                </Dica>
+              )}
             </>
           )}
         </div>

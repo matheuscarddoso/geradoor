@@ -209,3 +209,28 @@ export function cursorDaAlca(alca: Alca, rotacao: number): string {
   const setor = Math.round(normalizarAngulo(graus + 90) / 45) % 4;
   return CURSORES[setor] ?? "ew-resize";
 }
+
+/**
+ * Trava a medida no eixo, ou na diagonal exata.
+ *
+ * É o Shift da régua: numa folha de formulário quase toda medida que interessa
+ * é de um eixo só, e à mão livre a linha sai sempre um pouco torta — aí o
+ * número lido é a hipotenusa, não a distância que se queria medir. Os 45°
+ * entram porque uma diagonal exata também é medida legítima, e é o que o
+ * Figma faz.
+ */
+export function travarMedida(inicio: Ponto, fim: Ponto): Ponto {
+  const dx = fim.x - inicio.x;
+  const dy = fim.y - inicio.y;
+  const ax = Math.abs(dx);
+  const ay = Math.abs(dy);
+
+  // Perto da diagonal, vale a diagonal: projeta no menor dos dois para a
+  // linha ficar exatamente a 45°.
+  const diagonal = Math.min(ax, ay) / Math.max(ax, ay, 1e-9) > Math.tan(Math.PI / 8);
+  if (diagonal) {
+    const lado = (ax + ay) / 2;
+    return { x: inicio.x + Math.sign(dx) * lado, y: inicio.y + Math.sign(dy) * lado };
+  }
+  return ax >= ay ? { x: fim.x, y: inicio.y } : { x: inicio.x, y: fim.y };
+}

@@ -18,6 +18,7 @@ import {
   girarCodigo,
   moverCodigo,
   redimensionarCodigo,
+  travarMedida,
   type Alca,
 } from "@/lib/barcodeGestos";
 
@@ -192,5 +193,33 @@ describe("cursor da alça", () => {
     const norte = ALCAS.find((a) => a.id === "n")!;
     expect(cursorDaAlca(norte, 0)).toBe("ns-resize");
     expect(cursorDaAlca(norte, 90)).toBe("ew-resize");
+  });
+});
+
+describe("travar a medida com Shift", () => {
+  const inicio = { x: 10, y: 10 };
+
+  it("achata na horizontal quando o gesto foi mais horizontal", () => {
+    // Sem isto o número lido é a hipotenusa, não a distância que se queria
+    // medir — e numa folha de formulário quase toda medida é de um eixo só.
+    expect(travarMedida(inicio, { x: 110, y: 18 })).toEqual({ x: 110, y: 10 });
+  });
+
+  it("achata na vertical quando o gesto foi mais vertical", () => {
+    expect(travarMedida(inicio, { x: 16, y: 90 })).toEqual({ x: 10, y: 90 });
+  });
+
+  it("perto da diagonal, trava em 45° exatos", () => {
+    const p = travarMedida(inicio, { x: 60, y: 56 });
+    expect(Math.abs(p.x - inicio.x)).toBeCloseTo(Math.abs(p.y - inicio.y), 9);
+  });
+
+  it("respeita o sentido do arrasto", () => {
+    expect(travarMedida(inicio, { x: -50, y: 12 })).toEqual({ x: -50, y: 10 });
+    expect(travarMedida(inicio, { x: 12, y: -50 })).toEqual({ x: 10, y: -50 });
+  });
+
+  it("aguenta gesto de tamanho zero", () => {
+    expect(travarMedida(inicio, inicio)).toEqual(inicio);
   });
 });

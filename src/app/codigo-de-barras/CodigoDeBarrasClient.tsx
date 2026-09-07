@@ -1015,6 +1015,35 @@ export default function CodigoDeBarrasClient() {
     [comoUmaEntrada]
   );
 
+  /**
+   * Duplica sem deslocar, para o gesto de Alt+arrasto.
+   *
+   * Devolve os ids das cópias na mesma ordem dos originais, e não desloca
+   * nada: quem move é o arrasto que começou. Deslocar aqui faria a cópia
+   * saltar antes de a mão pedir.
+   */
+  const duplicarParaArrastar = useCallback(
+    (ids: readonly string[]): string[] => {
+      const originais = layoutRef.current.codigos.filter((c) => ids.includes(c.id));
+      if (originais.length === 0) return [];
+      const clones = originais.map((codigo) => ({ ...codigo, id: novoId() }));
+      if (layoutRef.current.codigos.length + clones.length > LIMITES.codigosMaximo) {
+        // Sem o aviso, o gesto degradaria para um simples mover e a pessoa
+        // ficaria esperando uma cópia que não veio.
+        toast.error(
+          `A folha chegou no limite de ${LIMITES.codigosMaximo} códigos. Apague algum para duplicar.`
+        );
+        return [];
+      }
+      historicoRef.current.aplicar((atual: Layout) => ({
+        ...atual,
+        codigos: [...atual.codigos, ...clones],
+      }));
+      return clones.map((c) => c.id);
+    },
+    []
+  );
+
   /** Duplica um conjunto deslocado, e deixa as cópias selecionadas. */
   const duplicarConjunto = useCallback(
     (originais: readonly Codigo[]) => {
@@ -1400,6 +1429,7 @@ export default function CodigoDeBarrasClient() {
           aoSelecionar={setSelecionados}
           aoAlterar={alterarPorGesto}
           aoIniciarGesto={iniciarGestoNoHistorico}
+          aoDuplicarArrastando={duplicarParaArrastar}
           aoTerminarGesto={terminarGestoNoHistorico}
           abortarGesto={abortarGesto}
           escala={escala}

@@ -22,6 +22,7 @@ import {
   girarCodigo,
   moverCodigo,
   redimensionarCodigo,
+  travarMedida,
   type Alca,
 } from "@/lib/barcodeGestos";
 import {
@@ -217,6 +218,14 @@ interface Props {
   aoAlterar: (mudancas: ReadonlyArray<{ id: string; mudanca: Partial<Codigo> }>) => void;
   /** Avisa que um gesto começou, para o histórico tratá-lo como uma unidade. */
   aoIniciarGesto: () => void;
+  /**
+   * Alt ao começar a arrastar: duplica antes de mover, como no Figma.
+   *
+   * Devolve os ids das cópias, que passam a ser o que o gesto arrasta — o
+   * original fica onde estava. É o caminho mais rápido para a segunda fileira
+   * de etiquetas.
+   */
+  aoDuplicarArrastando: (ids: readonly string[]) => string[];
   /** Avisa que o gesto terminou. */
   aoTerminarGesto: () => void;
   /**
@@ -270,6 +279,7 @@ function PreviaFolhaBase({
   aoSelecionar,
   aoAlterar,
   aoIniciarGesto,
+  aoDuplicarArrastando,
   aoTerminarGesto,
   abortarGesto,
   escala,
@@ -355,8 +365,9 @@ function PreviaFolhaBase({
     const tolerancia = IMA_PX / escala;
 
     if (atual.tipo === "medir") {
-      gesto.current = { ...atual, fim: ponteiro };
-      setMedida({ inicio: atual.inicio, fim: ponteiro });
+      const fim = modificadores.shift ? travarMedida(atual.inicio, ponteiro) : ponteiro;
+      gesto.current = { ...atual, fim };
+      setMedida({ inicio: atual.inicio, fim });
       return;
     }
 
@@ -386,6 +397,21 @@ function PreviaFolhaBase({
       const referencia = moverCodigo(primeiro, bruto, modificadores);
       let deslocamento = { x: referencia.x - primeiro.x, y: referencia.y - primeiro.y };
 
+      /**
+       * Qual eixo o Shift travou.
+       *
+       * O ímã não pode mexer nele. Sem esta trava o alinhamento arrastava a
+       * caixa alguns décimos para fora do eixo — o Shift ficava "meio
+       * cravado", que é pior que não ter, porque a mão confia nele.
+       */
+      const travado: "x" | "y" | null = modificadores.shift
+        ? deslocamento.x === 0 && deslocamento.y !== 0
+          ? "x"
+          : deslocamento.y === 0 && deslocamento.x !== 0
+            ? "y"
+            : null
+        : null;
+
       if (!semIma) {
         const movidas = atual.iniciais.map((codigo) =>
           caixaEnvolvente({
@@ -404,10 +430,12 @@ function PreviaFolhaBase({
           layout.pagina,
           tolerancia
         );
-        setGuias(alinhamento.guias);
+        // A guia do eixo travado também sai de cena: desenhar uma linha que
+        // o gesto não vai seguir promete um alinhamento que não acontece.
+        setGuias(travado ? alinhamento.guias.filter((g) => g.eixo !== travado) : alinhamento.guias);
         deslocamento = {
-          x: deslocamento.x + alinhamento.ajuste.x,
-          y: deslocamento.y + alinhamento.ajuste.y,
+          x: travado === "x" ? deslocamento.x : deslocamento.x + alinhamento.ajuste.x,
+          y: travado === "y" ? deslocamento.y : deslocamento.y + alinhamento.ajuste.y,
         };
 
         // Vão igual só entra onde o ímã de borda não pegou: com os dois
@@ -427,6 +455,7 @@ function PreviaFolhaBase({
         const achados: Espacamento[] = [];
         if (caixaFinal) {
           for (const eixo of ["x", "y"] as const) {
+            if (eixo === travado) continue;
             if (alinhamento.ajuste[eixo] !== 0) continue;
             const espaco = detectarEspacamento(caixaFinal, vizinhas, eixo, tolerancia);
             if (!espaco) continue;
@@ -669,13 +698,35 @@ function PreviaFolhaBase({
                 const ponteiro = paraPagina(evento);
                 if (!ponteiro) return;
                 const proxima = selecionarPorClique(evento, codigo.id);
-                aoSelecionar(proxima);
                 // Arrasta tudo que está selecionado, não só o que foi clicado.
-                const iniciais = layout.codigos.filter((outro) =>
-                  proxima.includes(outro.id)
-                );
-                if (iniciais.length === 0) return;
-                iniciarGesto(evento, { tipo: "mover", iniciais, ponteiroInicial: ponteiro });
+                const originais = layout.codigos.filter((outro) => proxima.includes(outro.id));
+                if (originais.length === 0) return;
+
+                // Alt duplica e passa a arrastar as cópias, deixando os
+                // originais no lugar — o gesto de fazer a segunda fileira.
+                if (evento.altKey) {
+                  // Abre a transação antes de duplicar para os dois — a cópia
+                  // e o arrasto dela — caírem numa entrada só de desfazer. É
+                  // um gesto na mão de quem usa, e tem de ser um Cmd+Z.
+                  aoIniciarGesto();
+                  const copias = aoDuplicarArrastando(originais.map((o) => o.id));
+                  if (copias.length > 0) {
+                    aoSelecionar(copias);
+                    iniciarGesto(evento, {
+                      tipo: "mover",
+                      iniciais: originais.map((o, i) => ({ ...o, id: copias[i] ?? o.id })),
+                      ponteiroInicial: ponteiro,
+                    });
+                    return;
+                  }
+                }
+
+                aoSelecionar(proxima);
+                iniciarGesto(evento, {
+                  tipo: "mover",
+                  iniciais: originais,
+                  ponteiroInicial: ponteiro,
+                });
               }}
               onPointerMove={seguirGesto}
               onPointerUp={terminarGesto}

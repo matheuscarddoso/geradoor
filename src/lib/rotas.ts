@@ -1,4 +1,5 @@
 import {
+  Barcode,
   Building2,
   CreditCard,
   IdCard,
@@ -65,6 +66,14 @@ export const ROTAS: Rota[] = [
     descricao: "QR Code que abre o seu perfil",
     termos: ["insta", "perfil", "arroba", "@", "bio"],
     icon: Instagram,
+  },
+  {
+    href: "/codigo-de-barras",
+    label: "Código de Barras",
+    labelCurto: "Barras",
+    descricao: "Gerar PDF numerado em Code 128",
+    termos: ["code 128", "barcode", "etiqueta", "formulário", "numeração", "gráfica", "pdf"],
+    icon: Barcode,
   },
   {
     href: "/whatsapp",

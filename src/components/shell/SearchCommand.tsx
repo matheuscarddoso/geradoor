@@ -52,20 +52,24 @@ export function SearchCommand({ className }: { className?: string }) {
       <button
         type="button"
         onClick={() => setAberto(true)}
+        // Superfície preenchida em vez de contorno, e o atalho como texto
+        // simples: é o desenho da busca do Figma, onde o campo é fundo e não
+        // moldura. Sem borda o topo fica com uma linha a menos disputando a
+        // atenção com a folha.
         className={cn(
-          "flex h-9 items-center gap-2 rounded-xl border border-zinc-200 px-3",
-          "text-sm text-zinc-500 transition-colors duration-150",
-          "hover:border-zinc-300 hover:text-foreground",
-          "dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-zinc-700",
+          "flex h-8 items-center gap-2 rounded-lg bg-zinc-100/80 px-2.5",
+          "text-[13px] text-zinc-500 transition-colors duration-150",
+          "hover:bg-zinc-100 hover:text-zinc-700",
+          "dark:bg-zinc-800/60 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
           className
         )}
       >
-        <Search className="h-4 w-4 shrink-0" />
+        <Search className="h-3.5 w-3.5 shrink-0 opacity-70" />
         <span className="flex-1 truncate text-left">Buscar</span>
-        <kbd className="ms-4 hidden shrink-0 rounded border sm:inline-block border-zinc-200 px-1.5 py-0.5 font-sans text-xs text-zinc-400 dark:border-zinc-700">
+        <span className="ms-3 hidden shrink-0 font-sans text-[11px] tabular-nums text-zinc-400 sm:inline dark:text-zinc-500">
           {mac ? "⌘" : "Ctrl"}K
-        </kbd>
+        </span>
       </button>
 
       <CommandDialog open={aberto} onOpenChange={setAberto}>

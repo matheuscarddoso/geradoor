@@ -87,6 +87,7 @@ import {
   type Codigo,
   type Faixa,
   type Layout,
+  type Ponto,
 } from "@/lib/barcodeLayout";
 import { baixar } from "@/lib/baixarArquivo";
 import type { Progresso } from "@/lib/barcodePdf";
@@ -369,6 +370,7 @@ export default function CodigoDeBarrasClient() {
   const historicoRef = useRef(historico);
   historicoRef.current = historico;
 
+
   /**
    * Mede o custo real da arte dentro do PDF e guarda junto dela.
    *
@@ -430,6 +432,103 @@ export default function CodigoDeBarrasClient() {
     if (pronto) gravarLayout(layout);
   }, [layout, pronto]);
 
+  /**
+   * A folga de pan em volta da folha, em pixels.
+   *
+   * É o `100vmax` do CSS lido de volta em número: o zoom ancorado precisa dela
+   * porque a folga **não** escala junto com a folha. Tratar o conteúdo como se
+   * escalasse inteiro faz o ponto sob o cursor escorregar.
+   */
+  const folgaDoCanvas = () => Math.max(window.innerWidth, window.innerHeight);
+
+  /** Põe a folha no meio da área visível. */
+  const centralizarFolha = useCallback(() => {
+    const rolo = roloRef.current;
+    if (!rolo) return;
+    rolo.scrollLeft = (rolo.scrollWidth - rolo.clientWidth) / 2;
+    rolo.scrollTop = (rolo.scrollHeight - rolo.clientHeight) / 2;
+  }, []);
+  const centralizarFolhaRef = useRef(centralizarFolha);
+  centralizarFolhaRef.current = centralizarFolha;
+
+  /**
+   * Volta a folha para o meio da tela, no tamanho que couber.
+   *
+   * Recentraliza sempre, e não só quando a escala muda: com a folga de pan
+   * grande dá para levar a folha para fora da tela, e "encaixar" é justamente
+   * o caminho de volta. Antes isto era um `setEscalaManual(false)`, que não
+   * fazia nada quando o modo já era automático — e aí a folha ficava perdida.
+   */
+  const encaixarNaTela = useCallback(() => {
+    setEscalaManual(false);
+    requestAnimationFrame(() => {
+      centralizarFolhaRef.current();
+      // Um segundo quadro porque a escala nova só chega ao DOM depois do
+      // render que o `setEscalaManual` disparou.
+      requestAnimationFrame(() => centralizarFolhaRef.current());
+    });
+  }, []);
+
+  /**
+   * Muda a escala mantendo um ponto da tela parado.
+   *
+   * Sem âncora, usa o centro da área — o que se espera de zoom por menu ou por
+   * tecla. A pinça passa a posição do cursor, que é o que se espera dela.
+   *
+   * A conta desfaz e refaz a projeção: do rolamento tira o ponto da folha em
+   * milímetros, e desse ponto tira o rolamento novo. Multiplicar o rolamento
+   * pela razão das escalas seria mais curto e estaria errado, porque a folga
+   * de pan é constante e entraria multiplicada.
+   */
+  const aplicarZoom = useCallback((proxima: number | ((atual: number) => number), ancoraTela?: Ponto) => {
+    const rolo = roloRef.current;
+    setEscalaManual(true);
+    setEscala((atual) => {
+      const bruta = typeof proxima === "function" ? proxima(atual) : proxima;
+      const alvo = Math.min(8, Math.max(0.4, bruta));
+      if (!rolo || alvo === atual) return alvo;
+
+      const folga = folgaDoCanvas();
+      const ancora = ancoraTela ?? { x: rolo.clientWidth / 2, y: rolo.clientHeight / 2 };
+      const mmX = (rolo.scrollLeft + ancora.x - folga) / atual;
+      const mmY = (rolo.scrollTop + ancora.y - folga) / atual;
+
+      // No quadro seguinte, quando o conteúdo já tem o tamanho novo.
+      requestAnimationFrame(() => {
+        rolo.scrollLeft = folga + mmX * alvo - ancora.x;
+        rolo.scrollTop = folga + mmY * alvo - ancora.y;
+      });
+      return alvo;
+    });
+  }, []);
+
+  /**
+   * Pinça de trackpad e Ctrl com a roda.
+   *
+   * O navegador manda pinça como `wheel` com `ctrlKey`. Sem o modificador o
+   * evento passa direto, e o pan de dois dedos fica sendo a rolagem nativa —
+   * mais suave que qualquer coisa reimplementada em JavaScript.
+   */
+  useEffect(() => {
+    const rolo = roloRef.current;
+    if (!rolo) return;
+    const aoRolar = (evento: WheelEvent) => {
+      if (!evento.ctrlKey && !evento.metaKey) return;
+      evento.preventDefault();
+      const caixa = rolo.getBoundingClientRect();
+      aplicarZoom(
+        // O divisor calibra a sensibilidade: com 180 um único passo de roda
+        // dava 1,9× de zoom. Com 400 dá 1,35×, e a pinça — que manda muitos
+        // deltas pequenos — segue contínua.
+        (atual) => atual * Math.exp(-evento.deltaY / 400),
+        { x: evento.clientX - caixa.x, y: evento.clientY - caixa.y }
+      );
+    };
+    // `passive: false` porque o `preventDefault` da pinça precisa valer.
+    rolo.addEventListener("wheel", aoRolar, { passive: false });
+    return () => rolo.removeEventListener("wheel", aoRolar);
+  }, [aplicarZoom]);
+
   // Encaixa a folha na área disponível enquanto o operador não escolheu um
   // zoom: trocar o tamanho da página não deve deixar a folha fora da tela.
   useEffect(() => {
@@ -449,10 +548,16 @@ export default function CodigoDeBarrasClient() {
       );
     };
     encaixar();
-    const observador = new ResizeObserver(encaixar);
+    // Com a folga de pan, o conteúdo é sempre maior que a área: centralizar
+    // deixou de ser trabalho do layout e passou a ser do rolamento.
+    requestAnimationFrame(centralizarFolha);
+    const observador = new ResizeObserver(() => {
+      encaixar();
+      requestAnimationFrame(centralizarFolha);
+    });
     observador.observe(area);
     return () => observador.disconnect();
-  }, [layout.pagina.largura, layout.pagina.altura, escalaManual]);
+  }, [layout.pagina.largura, layout.pagina.altura, escalaManual, centralizarFolha]);
 
   const atualizarCodigo = useCallback(
     (id: string, mudanca: Partial<Codigo>) => {
@@ -551,46 +656,11 @@ export default function CodigoDeBarrasClient() {
     };
   }, []);
 
-  /**
-   * Zoom com pinça de trackpad, ancorado no cursor.
-   *
-   * O navegador manda pinça como `wheel` com `ctrlKey`; roda de mouse com Ctrl
-   * chega igual, e nos dois casos a intenção é a mesma. Sem `ctrlKey` o evento
-   * passa direto e o pan de dois dedos fica sendo a rolagem nativa, que é mais
-   * suave que qualquer coisa reimplementada em JavaScript.
-   */
-  useEffect(() => {
-    const rolo = roloRef.current;
-    if (!rolo) return;
-    const aoRolar = (evento: WheelEvent) => {
-      if (!evento.ctrlKey && !evento.metaKey) return;
-      evento.preventDefault();
-      const caixa = rolo.getBoundingClientRect();
-      const cursor = { x: evento.clientX - caixa.x, y: evento.clientY - caixa.y };
-      // Ponto do conteúdo sob o cursor, antes de mudar a escala.
-      const antesX = rolo.scrollLeft + cursor.x;
-      const antesY = rolo.scrollTop + cursor.y;
-      setEscalaManual(true);
-      setEscala((atual) => {
-        // O divisor calibra a sensibilidade: com 180, um único passo de roda
-        // de mouse (deltaY 120) dava 1,9× de zoom, o que passa longe do alvo.
-        // Com 400 o mesmo passo dá 1,35×, e a pinça de trackpad — que manda
-        // muitos deltas pequenos — segue contínua.
-        const proxima = Math.min(8, Math.max(0.4, atual * Math.exp(-evento.deltaY / 400)));
-        // Reposiciona a rolagem para o mesmo ponto seguir debaixo do cursor.
-        // No próximo quadro, quando o conteúdo já tem o tamanho novo.
-        const razao = proxima / atual;
-        requestAnimationFrame(() => {
-          rolo.scrollLeft = antesX * razao - cursor.x;
-          rolo.scrollTop = antesY * razao - cursor.y;
-        });
-        return proxima;
-      });
-    };
-    // `passive: false` porque o `preventDefault` da pinça precisa valer.
-    rolo.addEventListener("wheel", aoRolar, { passive: false });
-    return () => rolo.removeEventListener("wheel", aoRolar);
-  }, []);
+  // Os atalhos são assinados uma vez; zoom e encaixe chegam por ref.
+  const aplicarZoomRef = useRef(aplicarZoom);
+  aplicarZoomRef.current = aplicarZoom;
+  const encaixarNaTelaRef = useRef(encaixarNaTela);
+  encaixarNaTelaRef.current = encaixarNaTela;
 
   /** Arrasta a vista: mão, espaço ou botão do meio. */
   const iniciarArrastoDaVista = (evento: React.PointerEvent) => {
@@ -776,15 +846,13 @@ export default function CodigoDeBarrasClient() {
           return;
 
         case "zoom-mais":
-          setEscalaManual(true);
-          setEscala((atual) => Math.min(8, atual * 1.25));
+          aplicarZoomRef.current((atual) => atual * 1.25);
           return;
         case "zoom-menos":
-          setEscalaManual(true);
-          setEscala((atual) => Math.max(0.4, atual / 1.25));
+          aplicarZoomRef.current((atual) => atual / 1.25);
           return;
         case "zoom-encaixar":
-          setEscalaManual(false);
+          encaixarNaTelaRef.current();
           return;
 
         case "modo-mover":
@@ -1132,10 +1200,15 @@ export default function CodigoDeBarrasClient() {
           onPointerUp={terminarArrastoDaVista}
           onPointerCancel={terminarArrastoDaVista}
           className={cn(
-            "grid h-full w-full place-content-center overflow-auto p-[6vmin]",
+            "h-full w-full overflow-auto",
             maoAtiva && "cursor-grab active:cursor-grabbing"
           )}
         >
+        {/* A folga de um viewport inteiro em cada direção é o que faz o pan
+            valer a pena: dá para levar a folha para fora da tela e voltar,
+            como em qualquer canvas. `w-max` impede o contêiner de esticar e
+            achatar a folga. */}
+        <div className="w-max p-[100vmax]">
         <div
           className="grid shrink-0"
           style={
@@ -1176,6 +1249,7 @@ export default function CodigoDeBarrasClient() {
           unidade={unidade}
         />
           </div>
+        </div>
         </div>
         </div>
 
@@ -1311,7 +1385,7 @@ export default function CodigoDeBarrasClient() {
               <DropdownMenuContent align="end" className="min-w-[9rem]">
                 <DropdownMenuItem
                   className="justify-between text-xs"
-                  onClick={() => setEscalaManual(false)}
+                  onClick={encaixarNaTela}
                 >
                   Encaixar na tela
                   <span className="font-mono text-[10px] text-muted-foreground">0</span>
@@ -1320,10 +1394,7 @@ export default function CodigoDeBarrasClient() {
                   <DropdownMenuItem
                     key={porcento}
                     className="text-xs"
-                    onClick={() => {
-                      setEscalaManual(true);
-                      setEscala(porcento / PX_POR_MM_A_100);
-                    }}
+                    onClick={() => aplicarZoom(porcento / PX_POR_MM_A_100)}
                   >
                     {porcento}%
                   </DropdownMenuItem>

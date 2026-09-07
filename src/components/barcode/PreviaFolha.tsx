@@ -4,12 +4,11 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { barrasNormalizadas, codificarCode128 } from "@/lib/code128";
 import {
   FONTE_DO_NUMERO,
-  MODULOS_ZONA_SILENCIO,
+  girarPonto,
   PT_POR_MM,
   caixaEnvolvente,
   centroDoCodigo,
   ehAnguloReto,
-  moduloEmMm,
   normalizarAngulo,
   textoDoCodigo,
   type Codigo,
@@ -42,11 +41,43 @@ import { formatarNaUnidade, medidaEmTexto, type Unidade } from "@/lib/unidades";
  * precisa se distinguir das barras pretas sobre papel branco, onde nenhum
  * cinza tem contraste suficiente para ler como estado, e não como conteúdo.
  */
-const COR_SELECAO = "#2563eb";
+/**
+ * O azul de seleção do Figma.
+ *
+ * Não é escolha estética: quem vai usar isto já opera Figma há anos, e a
+ * seleção é o sinal mais repetido de um editor. Manter a mesma cor, as mesmas
+ * quatro alças de canto e o mesmo selo de medida é o que faz a ferramenta não
+ * precisar ser aprendida de novo.
+ */
+const COR_SELECAO = "#0d99ff";
 
-/** Lado da alça e distância da alça de rotação, em pixels de tela. */
+/** Medidas do cromo de seleção, em pixels de tela — constantes em qualquer zoom. */
 const ALCA_PX = 7;
-const ROTACAO_PX = 22;
+/** Lado da área que gira, logo fora de cada canto. */
+const ZONA_ROTACAO_PX = 14;
+/** Espessura da faixa que redimensiona ao longo de cada aresta. */
+const ZONA_ARESTA_PX = 8;
+const CORPO_ROTULO_PX = 11;
+
+/**
+ * Cursor de rotação, desenhado à mão porque o CSS não tem um.
+ *
+ * Traço branco por fora e preto por dentro para o cursor ser visível tanto
+ * sobre o papel branco quanto sobre as barras. O Figma usa exatamente esta
+ * gramática, e é o que sinaliza "aqui gira" sem precisar de alça visível.
+ */
+/** As quatro alças visíveis. */
+const CANTOS = ALCAS.filter((a) => a.sx !== 0 && a.sy !== 0);
+/** As quatro faixas invisíveis, uma por aresta. */
+const ARESTAS = ALCAS.filter((a) => a.sx === 0 || a.sy === 0);
+
+const CURSOR_ROTACAO =
+  `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E` +
+  `%3Cg fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E` +
+  `%3Cpath d='M12 5.5a6.5 6.5 0 1 1-6.5 6.5'/%3E%3Cpath d='M8.5 8.5 12 5.5 15 9'/%3E%3C/g%3E` +
+  `%3Cg fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E` +
+  `%3Cpath d='M12 5.5a6.5 6.5 0 1 1-6.5 6.5'/%3E%3Cpath d='M8.5 8.5 12 5.5 15 9'/%3E%3C/g%3E` +
+  `%3C/svg%3E") 12 12, crosshair`;
 
 /**
  * A que distância, em pixels de tela, o código gruda numa guia.
@@ -258,8 +289,6 @@ function PreviaFolhaBase({
   }, [modo]);
 
   const { largura, altura } = layout.pagina;
-  const alcaMm = ALCA_PX / escala;
-  const rotacaoMm = ROTACAO_PX / escala;
 
   /**
    * Converte a posição do ponteiro em milímetros de papel.
@@ -635,20 +664,39 @@ function PreviaFolhaBase({
           </g>
         ))}
 
-      {/* Moldura do grupo: é a referência do alinhamento em conjunto. */}
+      {/* Moldura do grupo, com o selo da medida. Sem alças: escalar um grupo
+          com códigos em ângulos diferentes exigiria cisalhar as barras, e
+          barra cisalhada é código que leitor nenhum lê. */}
       {manipulando && caixaDoGrupo && (
-        <rect
-          x={caixaDoGrupo.x}
-          y={caixaDoGrupo.y}
-          width={caixaDoGrupo.largura}
-          height={caixaDoGrupo.altura}
-          fill="none"
-          stroke={COR_SELECAO}
-          strokeWidth={1.5}
-          strokeDasharray="4 3"
-          vectorEffect="non-scaling-stroke"
-          pointerEvents="none"
-        />
+        <g pointerEvents="none">
+          <rect
+            x={caixaDoGrupo.x}
+            y={caixaDoGrupo.y}
+            width={caixaDoGrupo.largura}
+            height={caixaDoGrupo.altura}
+            fill="none"
+            stroke={COR_SELECAO}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
+          />
+          <SeloDeMedida
+            caixa={caixaDoGrupo}
+            escala={escala}
+            texto={`${formatarNaUnidade(caixaDoGrupo.largura, unidade)} × ${formatarNaUnidade(
+              caixaDoGrupo.altura,
+              unidade
+            )}`}
+          />
+          <text
+            x={caixaDoGrupo.x}
+            y={caixaDoGrupo.y - (CORPO_ROTULO_PX / escala) * 0.45}
+            fontFamily="var(--font-geist-mono), ui-monospace, monospace"
+            fontSize={CORPO_ROTULO_PX / escala}
+            fill={COR_SELECAO}
+          >
+            {conjunto.length} códigos
+          </text>
+        </g>
       )}
 
       {/* Guias de alinhamento, desenhadas só durante o gesto. */}
@@ -686,109 +734,245 @@ function PreviaFolhaBase({
       {/* A seleção sai por último para as alças ficarem acima de qualquer
           outro código, independentemente da ordem da lista. */}
       {manipulando && codigoSelecionado && (
-        <g transform={giro(codigoSelecionado)}>
-          {(() => {
-            const codigo = codigoSelecionado;
-            const folga = moduloEmMm(codigo.comprimento, layout.digitos) * MODULOS_ZONA_SILENCIO;
-            const centro = centroDoCodigo(codigo);
-            const alcaAnguloBase = -normalizarAngulo(codigo.rotacao);
-            return (
-              <>
-                {/* Zona de silêncio: a área branca que o leitor precisa nas
-                    duas pontas. Só na seleção, para não poluir a folha. */}
-                <rect
-                  x={codigo.x - folga}
-                  y={codigo.y}
-                  width={codigo.comprimento + folga * 2}
-                  height={codigo.altura}
-                  fill="none"
-                  stroke={COR_SELECAO}
-                  strokeOpacity={0.35}
-                  strokeWidth={1}
-                  strokeDasharray="3 3"
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
-                />
-
-                <rect
-                  x={codigo.x}
-                  y={codigo.y}
-                  width={codigo.comprimento}
-                  height={codigo.altura}
-                  fill="none"
-                  stroke={COR_SELECAO}
-                  strokeWidth={1.5}
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
-                />
-
-                {/* Haste e alça de rotação, acima da aresta de cima. */}
-                <line
-                  x1={centro.x}
-                  y1={codigo.y}
-                  x2={centro.x}
-                  y2={codigo.y - rotacaoMm}
-                  stroke={COR_SELECAO}
-                  strokeWidth={1}
-                  vectorEffect="non-scaling-stroke"
-                  pointerEvents="none"
-                />
-                <circle
-                  cx={centro.x}
-                  cy={codigo.y - rotacaoMm}
-                  r={alcaMm * 0.75}
-                  fill="#fff"
-                  stroke={COR_SELECAO}
-                  strokeWidth={1.5}
-                  vectorEffect="non-scaling-stroke"
-                  style={{ cursor: "grab" }}
-                  onPointerDown={(evento) => {
-                    const ponteiro = paraPagina(evento);
-                    if (!ponteiro) return;
-                    iniciarGesto(evento, {
-                      tipo: "girar",
-                      inicial: codigo,
-                      anguloInicial: anguloDoPonteiro(ponteiro, centroDoCodigo(codigo)),
-                    });
-                  }}
-                  onPointerMove={seguirGesto}
-                  onPointerUp={terminarGesto}
-                  onPointerCancel={terminarGesto}
-                />
-
-                {ALCAS.map((alca) => {
-                  const cx = centro.x + (alca.sx * codigo.comprimento) / 2;
-                  const cy = centro.y + (alca.sy * codigo.altura) / 2;
-                  return (
-                    <rect
-                      key={alca.id}
-                      x={cx - alcaMm / 2}
-                      y={cy - alcaMm / 2}
-                      width={alcaMm}
-                      height={alcaMm}
-                      fill="#fff"
-                      stroke={COR_SELECAO}
-                      strokeWidth={1.5}
-                      vectorEffect="non-scaling-stroke"
-                      // A alça gira junto com o código, então o cursor tem que
-                      // girar também: no referencial da tela, a seta é a que
-                      // corresponde à direção já rotacionada.
-                      style={{ cursor: cursorDaAlca(alca, -alcaAnguloBase) }}
-                      onPointerDown={(evento) =>
-                        iniciarGesto(evento, { tipo: "redimensionar", inicial: codigo, alca })
-                      }
-                      onPointerMove={seguirGesto}
-                      onPointerUp={terminarGesto}
-                      onPointerCancel={terminarGesto}
-                    />
-                  );
-                })}
-              </>
-            );
-          })()}
-        </g>
+        <CromoDeSelecao
+          codigo={codigoSelecionado}
+          escala={escala}
+          unidade={unidade}
+          girando={gestoAtivo === "girar"}
+          rotulo={`Código ${layout.codigos.indexOf(codigoSelecionado) + 1}`}
+          aoRedimensionar={(evento, alca) =>
+            iniciarGesto(evento, { tipo: "redimensionar", inicial: codigoSelecionado, alca })
+          }
+          aoGirar={(evento) => {
+            const ponteiro = paraPagina(evento);
+            if (!ponteiro) return;
+            iniciarGesto(evento, {
+              tipo: "girar",
+              inicial: codigoSelecionado,
+              anguloInicial: anguloDoPonteiro(ponteiro, centroDoCodigo(codigoSelecionado)),
+            });
+          }}
+          aoSeguir={seguirGesto}
+          aoTerminar={terminarGesto}
+        />
       )}
+
     </svg>
+  );
+}
+
+
+/**
+ * Extensão visual de um código: as barras **mais** o número legível, já
+ * girada.
+ *
+ * O contorno e as alças ficam na caixa das barras, que é o que o modelo
+ * redimensiona. Mas o nome e o selo de medida têm que sair de fora de tudo o
+ * que se vê — senão o selo cai sobre o número impresso, que é exatamente o
+ * dado que o operador está conferindo.
+ */
+function envolventeVisual(codigo: Codigo): Caixa {
+  const barras = caixaEnvolvente(codigo);
+  if (!codigo.texto) return barras;
+
+  const corpo = codigo.textoTamanho / PT_POR_MM;
+  const alturaTexto = corpo * FONTE_DO_NUMERO.alturaDoDigito;
+  const larguraTexto = Math.max(1, String(codigo.textoDigitos || 6).length) * corpo * FONTE_DO_NUMERO.avanco;
+  const meioX = codigo.x + codigo.comprimento / 2;
+  const topo = codigo.textoAcima
+    ? codigo.y - codigo.textoEspaco - alturaTexto
+    : codigo.y + codigo.altura + codigo.textoEspaco;
+
+  const centro = centroDoCodigo(codigo);
+  const cantos = [
+    { x: meioX - larguraTexto / 2, y: topo },
+    { x: meioX + larguraTexto / 2, y: topo },
+    { x: meioX + larguraTexto / 2, y: topo + alturaTexto },
+    { x: meioX - larguraTexto / 2, y: topo + alturaTexto },
+  ].map((ponto) => girarPonto(ponto, centro, codigo.rotacao));
+
+  const xs = [barras.x, barras.x + barras.largura, ...cantos.map((c) => c.x)];
+  const ys = [barras.y, barras.y + barras.altura, ...cantos.map((c) => c.y)];
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, largura: Math.max(...xs) - x, altura: Math.max(...ys) - y };
+}
+
+/**
+ * O selo de medida do Figma: pílula azul, texto branco, sempre horizontal e
+ * logo abaixo da caixa — mesmo com o objeto girado, porque número de leitura
+ * não se lê de lado.
+ */
+function SeloDeMedida({
+  caixa,
+  escala,
+  texto,
+}: {
+  caixa: { x: number; y: number; largura: number; altura: number };
+  escala: number;
+  texto: string;
+}) {
+  const corpo = CORPO_ROTULO_PX / escala;
+  // O SVG não mede texto fora do DOM; meio caractere de erro aqui só folga a
+  // pílula, que é o lado inofensivo.
+  const largura = texto.length * corpo * 0.58 + corpo * 0.9;
+  return (
+    <g pointerEvents="none">
+      <rect
+        x={caixa.x + caixa.largura / 2 - largura / 2}
+        y={caixa.y + caixa.altura + corpo * 0.5}
+        width={largura}
+        height={corpo * 1.7}
+        rx={corpo * 0.35}
+        fill={COR_SELECAO}
+      />
+      <text
+        x={caixa.x + caixa.largura / 2}
+        y={caixa.y + caixa.altura + corpo * 1.68}
+        textAnchor="middle"
+        fontFamily="var(--font-geist-mono), ui-monospace, monospace"
+        fontSize={corpo}
+        fill="#fff"
+      >
+        {texto}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * O cromo de seleção, no desenho do Figma.
+ *
+ * Quatro alças visíveis, nos cantos. As arestas também redimensionam, mas por
+ * faixas invisíveis ao longo da borda — é assim no Figma, e é o que deixa a
+ * seleção limpa sem tirar o gesto. A rotação não tem alça: acontece logo
+ * **fora** de cada canto, onde o cursor troca para a seta circular. Nome
+ * acima, medida em selo abaixo.
+ *
+ * Nome e selo ficam fora do grupo girado de propósito: no Figma eles seguem
+ * horizontais em qualquer ângulo, porque texto de leitura não se lê de lado.
+ */
+function CromoDeSelecao({
+  codigo,
+  escala,
+  unidade,
+  girando,
+  rotulo,
+  aoRedimensionar,
+  aoGirar,
+  aoSeguir,
+  aoTerminar,
+}: {
+  codigo: Codigo;
+  escala: number;
+  unidade: Unidade;
+  girando: boolean;
+  rotulo: string;
+  aoRedimensionar: (evento: React.PointerEvent, alca: Alca) => void;
+  aoGirar: (evento: React.PointerEvent) => void;
+  aoSeguir: (evento: React.PointerEvent) => void;
+  aoTerminar: () => void;
+}) {
+  const alca = ALCA_PX / escala;
+  const zonaRotacao = ZONA_ROTACAO_PX / escala;
+  const zonaAresta = ZONA_ARESTA_PX / escala;
+  const centro = centroDoCodigo(codigo);
+  const { x, y, comprimento, altura } = codigo;
+  const anguloDaTela = normalizarAngulo(codigo.rotacao);
+
+  // O contorno usa a caixa das barras; nome e selo usam a extensão visual,
+  // que inclui o número impresso.
+  const visual = envolventeVisual(codigo);
+  const corpo = CORPO_ROTULO_PX / escala;
+  const medida = girando
+    ? `${Number(codigo.rotacao.toFixed(1))}°`
+    : `${formatarNaUnidade(comprimento, unidade)} × ${formatarNaUnidade(altura, unidade)}`;
+  const eventos = {
+    onPointerMove: aoSeguir,
+    onPointerUp: aoTerminar,
+    onPointerCancel: aoTerminar,
+  };
+
+  return (
+    <>
+      <g transform={`rotate(${codigo.rotacao} ${centro.x} ${centro.y})`}>
+        {/* Zonas que giram: quadrados logo fora de cada canto, por baixo das
+            alças, para o canto em si continuar redimensionando. */}
+        {CANTOS.map(({ id, sx, sy }) => (
+          <rect
+            key={`girar-${id}`}
+            x={centro.x + (sx * comprimento) / 2 - (sx > 0 ? 0 : zonaRotacao)}
+            y={centro.y + (sy * altura) / 2 - (sy > 0 ? 0 : zonaRotacao)}
+            width={zonaRotacao}
+            height={zonaRotacao}
+            fill="transparent"
+            style={{ cursor: CURSOR_ROTACAO }}
+            onPointerDown={aoGirar}
+            {...eventos}
+          />
+        ))}
+
+        <rect
+          x={x}
+          y={y}
+          width={comprimento}
+          height={altura}
+          fill="none"
+          stroke={COR_SELECAO}
+          strokeWidth={1.5}
+          vectorEffect="non-scaling-stroke"
+          pointerEvents="none"
+        />
+
+        {/* Arestas: redimensionam, sem alça desenhada. */}
+        {ARESTAS.map((aresta) => {
+          const horizontal = aresta.sx === 0;
+          return (
+            <rect
+              key={`aresta-${aresta.id}`}
+              x={horizontal ? x : centro.x + (aresta.sx * comprimento) / 2 - zonaAresta / 2}
+              y={horizontal ? centro.y + (aresta.sy * altura) / 2 - zonaAresta / 2 : y}
+              width={horizontal ? comprimento : zonaAresta}
+              height={horizontal ? zonaAresta : altura}
+              fill="transparent"
+              style={{ cursor: cursorDaAlca(aresta, anguloDaTela) }}
+              onPointerDown={(evento) => aoRedimensionar(evento, aresta)}
+              {...eventos}
+            />
+          );
+        })}
+
+        {CANTOS.map((canto) => (
+          <rect
+            key={`canto-${canto.id}`}
+            x={centro.x + (canto.sx * comprimento) / 2 - alca / 2}
+            y={centro.y + (canto.sy * altura) / 2 - alca / 2}
+            width={alca}
+            height={alca}
+            fill="#fff"
+            stroke={COR_SELECAO}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
+            style={{ cursor: cursorDaAlca(canto, anguloDaTela) }}
+            onPointerDown={(evento) => aoRedimensionar(evento, canto)}
+            {...eventos}
+          />
+        ))}
+      </g>
+
+      <text
+        x={visual.x}
+        y={visual.y - corpo * 0.45}
+        fontFamily="var(--font-geist-mono), ui-monospace, monospace"
+        fontSize={corpo}
+        fill={COR_SELECAO}
+        pointerEvents="none"
+      >
+        {rotulo}
+      </text>
+
+      <SeloDeMedida caixa={visual} escala={escala} texto={medida} />
+    </>
   );
 }
 

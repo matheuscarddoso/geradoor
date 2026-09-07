@@ -119,7 +119,12 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <Analytics />
           <SpeedInsights />
-          <Toaster />
+          {/* Em cima, e não no canto de baixo: as ações principais do editor
+              de código de barras — Gerar, Amostra, Exportar — ficam no rodapé
+              do painel da direita, exatamente onde o toast aparecia. Ele
+              engolia o clique de quem carregava a arte e pedia a amostra na
+              sequência. */}
+          <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>

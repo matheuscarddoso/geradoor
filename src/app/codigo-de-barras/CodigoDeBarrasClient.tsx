@@ -140,6 +140,32 @@ const FAIXA_INICIAL: Faixa = { de: 1, ate: 1000, paginasPorArquivo: 1000 };
  */
 const PX_POR_MM_A_100 = 100 / (96 / 25.4);
 
+/** As duas abas do painel, na gramática do Figma. */
+type Aba = "design" | "prototipo";
+
+const ABAS: ReadonlyArray<{ id: Aba; nome: string }> = [
+  { id: "design", nome: "Design" },
+  { id: "prototipo", nome: "Protótipo" },
+];
+
+const CHAVE_DA_ABA = "geradoor:codigo-de-barras:aba";
+
+function lerAba(): Aba {
+  try {
+    return localStorage.getItem(CHAVE_DA_ABA) === "prototipo" ? "prototipo" : "design";
+  } catch {
+    return "design";
+  }
+}
+
+function gravarAba(aba: Aba): void {
+  try {
+    localStorage.setItem(CHAVE_DA_ABA, aba);
+  } catch {
+    // Preferência de exibição não vale interromper nada.
+  }
+}
+
 /**
  * A folha de atalhos.
  *
@@ -397,6 +423,15 @@ export default function CodigoDeBarrasClient() {
   const [confirmandoGeracao, setConfirmandoGeracao] = useState(false);
   const [limpandoEmissoes, setLimpandoEmissoes] = useState(false);
   const [mostrandoAtalhos, setMostrandoAtalhos] = useState(false);
+  const [aba, setAba] = useState<Aba>("design");
+  /**
+   * Número mostrado na prévia, quando o operador escolheu um.
+   *
+   * `null` significa "o início da faixa", que é o padrão. Guardar a escolha em
+   * separado é o que deixa conferir o último número da tiragem sem mexer na
+   * faixa que vai ser impressa.
+   */
+  const [numeroDaPrevia, setNumeroDaPrevia] = useState<number | null>(null);
   const [emissoes, setEmissoes] = useState<Emissao[]>([]);
   const [abortarGesto, setAbortarGesto] = useState(0);
   // Só para escrever o atalho na dica. Fica em estado porque `navigator` não
@@ -500,6 +535,7 @@ export default function CodigoDeBarrasClient() {
     setEhMac(ehPlataformaMac());
     setUnidade(lerUnidade());
     setEmissoes(lerEmissoes());
+    setAba(lerAba());
     setPronto(true);
     return () => {
       ativo = false;
@@ -688,6 +724,15 @@ export default function CodigoDeBarrasClient() {
     gestoEmCurso.current = false;
     historicoRef.current.encerrar();
   }, []);
+
+  /**
+   * O número que a prévia e a amostra mostram.
+   *
+   * Limitado pelos dígitos: um número escolhido com seis dígitos e depois
+   * reduzido para quatro sairia mais largo na tela do que sai no papel, e a
+   * prévia deixaria de valer como conferência.
+   */
+  const numeroVisto = Math.min(numeroDaPrevia ?? faixa.de, 10 ** layout.digitos - 1);
 
   const reguasVisiveis = modo === "medir";
   /** A mão está ativa: pela ferramenta ou pelo espaço pressionado. */
@@ -1347,10 +1392,12 @@ export default function CodigoDeBarrasClient() {
       const { gerarAmostra } = await import("@/lib/barcodePdf");
       const blob = await gerarAmostra(
         layout,
-        faixa.de,
+        // O número visto, não o início da faixa: se a pessoa foi ver o último
+        // número da tiragem, é dele que ela quer a amostra impressa.
+        numeroVisto,
         arte ? { dataUrl: arte.dataUrl, formato: arte.formato } : null
       );
-      baixar(blob, `amostra-${formatarValor(faixa.de, layout.digitos)}.pdf`);
+      baixar(blob, `amostra-${formatarValor(numeroVisto, layout.digitos)}.pdf`);
     } catch (erro) {
       console.error("Falha ao gerar a amostra:", erro);
       toast.error(
@@ -1424,7 +1471,7 @@ export default function CodigoDeBarrasClient() {
         <PreviaFolha
           layout={layout}
           arte={arte}
-          valor={formatarValor(faixa.de, layout.digitos)}
+          valor={formatarValor(numeroVisto, layout.digitos)}
           selecionados={selecionados}
           aoSelecionar={setSelecionados}
           aoAlterar={alterarPorGesto}
@@ -1576,33 +1623,6 @@ export default function CodigoDeBarrasClient() {
               <Keyboard className="h-3.5 w-3.5" />
             </button>
 
-            {/* Zoom no alto do painel, como em qualquer editor: é estado da
-                vista, não ferramenta, e no rodapé disputava espaço com a barra
-                de ferramentas. */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="-me-1 flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-1 font-mono text-[11px] tabular-nums text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                {Math.round(escala * PX_POR_MM_A_100)}%
-                <ChevronDown className="h-3 w-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[9rem]">
-                <DropdownMenuItem
-                  className="justify-between text-xs"
-                  onClick={encaixarNaTela}
-                >
-                  Encaixar na tela
-                  <span className="font-mono text-[10px] text-muted-foreground">0</span>
-                </DropdownMenuItem>
-                {[50, 100, 150, 200, 400].map((porcento) => (
-                  <DropdownMenuItem
-                    key={porcento}
-                    className="text-xs"
-                    onClick={() => aplicarZoom(porcento / PX_POR_MM_A_100)}
-                  >
-                    {porcento}%
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
           <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
             Monte a folha uma vez, gere a numeração inteira em Code 128 e imprima o intervalo que
@@ -1610,6 +1630,58 @@ export default function CodigoDeBarrasClient() {
           </p>
         </div>
 
+        {/* Abas e zoom na mesma linha, como no Figma: Design fala da folha e
+            do que está selecionado; Protótipo, de como a folha é vista. O zoom
+            fica aqui porque é estado da vista, não ferramenta. */}
+        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
+          <div className="flex items-center gap-0.5" role="tablist" aria-label="Painéis">
+            {ABAS.map(({ id, nome }) => (
+              <button
+                key={id}
+                type="button"
+                role="tab"
+                aria-selected={aba === id}
+                onClick={() => {
+                  setAba(id);
+                  gravarAba(id);
+                }}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                  aba === id
+                    ? "bg-muted font-medium text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {nome}
+              </button>
+            ))}
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-1 font-mono text-[11px] tabular-nums text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+              {Math.round(escala * PX_POR_MM_A_100)}%
+              <ChevronDown className="h-3 w-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[9rem]">
+              <DropdownMenuItem className="justify-between text-xs" onClick={encaixarNaTela}>
+                Encaixar na tela
+                <span className="font-mono text-[10px] text-muted-foreground">0</span>
+              </DropdownMenuItem>
+              {[50, 100, 150, 200, 400].map((porcento) => (
+                <DropdownMenuItem
+                  key={porcento}
+                  className="text-xs"
+                  onClick={() => aplicarZoom(porcento / PX_POR_MM_A_100)}
+                >
+                  {porcento}%
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {aba === "design" && (
+          <>
         {/* Propriedades do documento: só com nada selecionado.
 
             É o comportamento do Figma — o painel da direita fala do documento
@@ -1701,142 +1773,6 @@ export default function CodigoDeBarrasClient() {
               }
             />
           </div>
-        </Secao>
-
-        {/* Linha de arte no formato de uma camada: miniatura, opacidade, o
-            olho que mostra ou esconde e o menos que remove. O + do cabeçalho
-            é o que carrega — a mesma gramática de qualquer painel de camada. */}
-        <Secao
-          titulo="Arte de fundo"
-          acao={
-            <button
-              type="button"
-              aria-label="Carregar arte de fundo"
-              title="Carregar PNG ou JPEG"
-              onClick={() => arquivoArteRef.current?.click()}
-              className="grid h-5 w-5 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-          }
-        >
-          <input
-            ref={arquivoArteRef}
-            type="file"
-            accept="image/png,image/jpeg"
-            className="hidden"
-            onChange={(evento) => {
-              void escolherArte(evento.target.files?.[0]);
-              evento.target.value = "";
-            }}
-          />
-
-          {arte ? (
-            <>
-              <div className="flex h-9 items-center gap-2 rounded-md border border-input ps-1.5 pe-1">
-                {/* A miniatura é a própria arte: reconhecer o formulário certo
-                    pelo desenho é mais rápido que ler o nome do arquivo. */}
-                <span className="grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded border border-border bg-white">
-                  {/* `next/image` não serve aqui: a arte é um `data:` URL do
-                      arquivo local do operador, que o otimizador não alcança —
-                      ele precisa de URL estática ou remota. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={arte.dataUrl} alt="" className="h-full w-full object-contain" />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[11px]" title={arte.nome}>
-                  {arte.nome}
-                </span>
-
-                <label className="flex h-7 shrink-0 items-center gap-0.5 rounded ps-1 pe-1 text-[11px] text-muted-foreground focus-within:text-foreground">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    aria-label="Opacidade da arte, em porcento"
-                    value={Math.round(layout.arte.opacidade * 100)}
-                    onChange={(evento) => {
-                      const digitos = evento.target.value.replace(/[^0-9]/g, "");
-                      // Campo vazio é meio de digitar, não "zero por cento":
-                      // apagar para trocar o número não pode sumir com a arte.
-                      if (digitos === "") return;
-                      const porcento = Number(digitos);
-                      if (!Number.isFinite(porcento)) return;
-                      aplicarNoLayout((atual: Layout) => ({
-                        ...atual,
-                        arte: {
-                          ...atual.arte,
-                          opacidade: Math.min(1, Math.max(0, porcento / 100)),
-                        },
-                      }));
-                    }}
-                    onFocus={(evento) => evento.currentTarget.select()}
-                    className="w-7 bg-transparent text-right font-mono text-xs tabular-nums outline-none"
-                  />
-                  %
-                </label>
-
-                <button
-                  type="button"
-                  aria-label={layout.arte.visivel ? "Esconder a arte" : "Mostrar a arte"}
-                  aria-pressed={layout.arte.visivel}
-                  title={layout.arte.visivel ? "Esconder a arte" : "Mostrar a arte"}
-                  onClick={() =>
-                    comoUmaEntrada(() =>
-                      aplicarNoLayout((atual: Layout) => ({
-                        ...atual,
-                        arte: { ...atual.arte, visivel: !atual.arte.visivel },
-                      }))
-                    )
-                  }
-                  className={cn(
-                    "grid h-7 w-7 shrink-0 place-items-center rounded transition-colors hover:bg-muted",
-                    layout.arte.visivel ? "text-foreground" : "text-muted-foreground"
-                  )}
-                >
-                  {layout.arte.visivel ? (
-                    <Eye className="h-3.5 w-3.5" />
-                  ) : (
-                    <EyeOff className="h-3.5 w-3.5" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  aria-label="Remover a arte"
-                  title="Remover a arte"
-                  onClick={removerArte}
-                  className="grid h-7 w-7 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <Minus className="h-3.5 w-3.5" />
-                </button>
-              </div>
-
-              {arteDesalinhada && (
-                <Dica>
-                  A arte é {arte.largura}×{arte.altura} px, proporção diferente da página. Ela vai
-                  ser esticada — ajuste o tamanho da página para bater com o original.
-                </Dica>
-              )}
-
-              {bytesDaArte > 0 && (
-                <Dica>
-                  Ocupa{" "}
-                  <span className="font-mono tabular-nums text-foreground">
-                    {formatarBytes(bytesDaArte)}
-                  </span>{" "}
-                  dentro de cada PDF gerado — entra uma vez por arquivo, não uma por página.
-                  {arte.formato === "PNG" && bytesDaArte > 3 * 1024 * 1024
-                    ? " O PNG é guardado como bitmap, então o custo vem dos pixels, não do tamanho do arquivo. Salvar este mesmo formulário em JPEG derruba isso para uma fração."
-                    : ""}
-                </Dica>
-              )}
-            </>
-          ) : (
-            <Dica>
-              Sem arte, a folha sai só com os códigos. Use o + para carregar o formulário — prefira
-              JPEG, que entra no PDF sem recodificar. O PNG é guardado como bitmap, a cerca de 4
-              bytes por pixel.
-            </Dica>
-          )}
         </Secao>
 
         <Secao titulo="Numeração">
@@ -2457,6 +2393,183 @@ export default function CodigoDeBarrasClient() {
               ))}
             </ul>
           </Secao>
+        )}
+
+          </>
+        )}
+
+        {/* Protótipo: como a folha é vista.
+
+            A arte de fundo mora aqui porque é isso que ela é — o desenho por
+            baixo, contra o qual se confere a posição dos códigos. E o número
+            da prévia também: trocar o que aparece na tela sem mexer na faixa
+            que vai ser impressa. */}
+        {aba === "prototipo" && (
+          <>
+        {/* Linha de arte no formato de uma camada: miniatura, opacidade, o
+            olho que mostra ou esconde e o menos que remove. O + do cabeçalho
+            é o que carrega — a mesma gramática de qualquer painel de camada. */}
+        <Secao
+          titulo="Arte de fundo"
+          acao={
+            <button
+              type="button"
+              aria-label="Carregar arte de fundo"
+              title="Carregar PNG ou JPEG"
+              onClick={() => arquivoArteRef.current?.click()}
+              className="grid h-5 w-5 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          }
+        >
+          <input
+            ref={arquivoArteRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={(evento) => {
+              void escolherArte(evento.target.files?.[0]);
+              evento.target.value = "";
+            }}
+          />
+
+          {arte ? (
+            <>
+              <div className="flex h-9 items-center gap-2 rounded-md border border-input ps-1.5 pe-1">
+                {/* A miniatura é a própria arte: reconhecer o formulário certo
+                    pelo desenho é mais rápido que ler o nome do arquivo. */}
+                <span className="grid h-6 w-6 shrink-0 place-items-center overflow-hidden rounded border border-border bg-white">
+                  {/* `next/image` não serve aqui: a arte é um `data:` URL do
+                      arquivo local do operador, que o otimizador não alcança —
+                      ele precisa de URL estática ou remota. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={arte.dataUrl} alt="" className="h-full w-full object-contain" />
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[11px]" title={arte.nome}>
+                  {arte.nome}
+                </span>
+
+                <label className="flex h-7 shrink-0 items-center gap-0.5 rounded ps-1 pe-1 text-[11px] text-muted-foreground focus-within:text-foreground">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    aria-label="Opacidade da arte, em porcento"
+                    value={Math.round(layout.arte.opacidade * 100)}
+                    onChange={(evento) => {
+                      const digitos = evento.target.value.replace(/[^0-9]/g, "");
+                      // Campo vazio é meio de digitar, não "zero por cento":
+                      // apagar para trocar o número não pode sumir com a arte.
+                      if (digitos === "") return;
+                      const porcento = Number(digitos);
+                      if (!Number.isFinite(porcento)) return;
+                      aplicarNoLayout((atual: Layout) => ({
+                        ...atual,
+                        arte: {
+                          ...atual.arte,
+                          opacidade: Math.min(1, Math.max(0, porcento / 100)),
+                        },
+                      }));
+                    }}
+                    onFocus={(evento) => evento.currentTarget.select()}
+                    className="w-7 bg-transparent text-right font-mono text-xs tabular-nums outline-none"
+                  />
+                  %
+                </label>
+
+                <button
+                  type="button"
+                  aria-label={layout.arte.visivel ? "Esconder a arte" : "Mostrar a arte"}
+                  aria-pressed={layout.arte.visivel}
+                  title={layout.arte.visivel ? "Esconder a arte" : "Mostrar a arte"}
+                  onClick={() =>
+                    comoUmaEntrada(() =>
+                      aplicarNoLayout((atual: Layout) => ({
+                        ...atual,
+                        arte: { ...atual.arte, visivel: !atual.arte.visivel },
+                      }))
+                    )
+                  }
+                  className={cn(
+                    "grid h-7 w-7 shrink-0 place-items-center rounded transition-colors hover:bg-muted",
+                    layout.arte.visivel ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  {layout.arte.visivel ? (
+                    <Eye className="h-3.5 w-3.5" />
+                  ) : (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  aria-label="Remover a arte"
+                  title="Remover a arte"
+                  onClick={removerArte}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {arteDesalinhada && (
+                <Dica>
+                  A arte é {arte.largura}×{arte.altura} px, proporção diferente da página. Ela vai
+                  ser esticada — ajuste o tamanho da página para bater com o original.
+                </Dica>
+              )}
+
+              {bytesDaArte > 0 && (
+                <Dica>
+                  Ocupa{" "}
+                  <span className="font-mono tabular-nums text-foreground">
+                    {formatarBytes(bytesDaArte)}
+                  </span>{" "}
+                  dentro de cada PDF gerado — entra uma vez por arquivo, não uma por página.
+                  {arte.formato === "PNG" && bytesDaArte > 3 * 1024 * 1024
+                    ? " O PNG é guardado como bitmap, então o custo vem dos pixels, não do tamanho do arquivo. Salvar este mesmo formulário em JPEG derruba isso para uma fração."
+                    : ""}
+                </Dica>
+              )}
+            </>
+          ) : (
+            <Dica>
+              Sem arte, a folha sai só com os códigos. Use o + para carregar o formulário — prefira
+              JPEG, que entra no PDF sem recodificar. O PNG é guardado como bitmap, a cerca de 4
+              bytes por pixel.
+            </Dica>
+          )}
+        </Secao>
+
+            <Secao titulo="Número da prévia">
+              <div className="grid grid-cols-2 gap-2">
+                <CampoNumero
+                  rotulo="número"
+                  rotuloAcessivel="número mostrado na prévia"
+                  valor={numeroVisto}
+                  casas={0}
+                  passo={1}
+                  min={0}
+                  max={10 ** layout.digitos - 1}
+                  aoMudar={(n) => setNumeroDaPrevia(Math.round(n))}
+                />
+                <button
+                  type="button"
+                  onClick={() => setNumeroDaPrevia(null)}
+                  disabled={numeroDaPrevia === null}
+                  className="h-8 rounded-md border border-input text-[11px] text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Voltar ao início
+                </button>
+              </div>
+              <Dica>
+                Só muda o que a tela mostra; a faixa impressa continua a da aba
+                Design. Serve para ver como fica o último número da tiragem, que
+                tem barras diferentes do primeiro e a mesma largura.
+              </Dica>
+            </Secao>
+          </>
         )}
 
         <div className="mt-auto space-y-2 border-t border-border p-4">

@@ -19,7 +19,13 @@
  *    como "a largura daquilo" na folha.
  */
 
-import { caixaEnvolvente, type Codigo, type Pagina } from "@/lib/barcodeLayout";
+import {
+  caixaEnvolvente,
+  girarPonto,
+  normalizarAngulo,
+  type Codigo,
+  type Pagina,
+} from "@/lib/barcodeLayout";
 
 export interface Caixa {
   x: number;
@@ -350,4 +356,119 @@ export function distribuirConjunto(
       ? { id: codigo.id, x: posicao, y: codigo.y }
       : { id: codigo.id, x: codigo.x, y: posicao };
   });
+}
+
+/**
+ * Gira um conjunto em torno do centro comum.
+ *
+ * Diferente de escalar, girar um grupo é transformação **rígida**: cada código
+ * mantém comprimento e altura, só muda de lugar e soma o mesmo ângulo. Nada
+ * cisalha, nenhuma barra deforma — por isso a rotação em conjunto é segura
+ * onde a escala em conjunto não seria.
+ */
+export function girarConjunto(
+  codigos: readonly Codigo[],
+  graus: number
+): Array<Reposicionamento & { rotacao: number }> {
+  const grupo = caixaDoConjunto(codigos);
+  if (!grupo || codigos.length === 0) return [];
+  const centro = { x: grupo.x + grupo.largura / 2, y: grupo.y + grupo.altura / 2 };
+
+  return codigos.map((codigo) => {
+    // Gira o centro de cada código em volta do centro do grupo, e recoloca o
+    // canto a partir dele: é o que mantém a peça inteira, e não só o canto.
+    const meu = { x: codigo.x + codigo.comprimento / 2, y: codigo.y + codigo.altura / 2 };
+    const girado = girarPonto(meu, centro, graus);
+    return {
+      id: codigo.id,
+      x: duasCasas(girado.x - codigo.comprimento / 2),
+      y: duasCasas(girado.y - codigo.altura / 2),
+      rotacao: normalizarAngulo(codigo.rotacao + graus),
+    };
+  });
+}
+
+export interface Espacamento {
+  eixo: Eixo;
+  /** Quanto somar à posição no eixo para os vãos ficarem iguais, em mm. */
+  ajuste: number;
+  /** O vão que passa a se repetir, em mm. */
+  vao: number;
+  /** Um segmento por vão igual, já com o ajuste aplicado. */
+  marcas: ReadonlyArray<{ de: number; ate: number; posicao: number }>;
+}
+
+/** Vão entre duas caixas no eixo, negativo quando se sobrepõem. */
+const vaoEntre = (a: Caixa, b: Caixa, eixo: Eixo): number =>
+  eixo === "x" ? b.x - (a.x + a.largura) : b.y - (a.y + a.altura);
+
+const deslocada = (caixa: Caixa, eixo: Eixo, delta: number): Caixa =>
+  eixo === "x" ? { ...caixa, x: caixa.x + delta } : { ...caixa, y: caixa.y + delta };
+
+/**
+ * Gruda a caixa em movimento na posição que iguala os vãos com os vizinhos, e
+ * devolve as marcas para desenhar.
+ *
+ * É o aviso que o Figma mostra ao chegar na distância certa entre dois
+ * elementos. **Gruda**, e não só detecta: acertar vão igual na mão é
+ * improvável, e um aviso que aparece por acaso não serve de ferramenta.
+ *
+ * Só considera vizinhos que se sobrepõem no outro eixo — duas etiquetas em
+ * fileira têm vão entre si; uma etiqueta e outra três centímetros abaixo não
+ * têm vão que interesse, e tratar como se tivessem encheria a tela de marca
+ * falsa.
+ *
+ * `tolerancia` é a distância que a caixa pode estar da posição que iguala,
+ * medida na própria caixa — não na diferença entre os vãos, que é o dobro.
+ */
+export function detectarEspacamento(
+  movel: Caixa,
+  outras: readonly Caixa[],
+  eixo: Eixo,
+  tolerancia: number
+): Espacamento | null {
+  const cruzado: Eixo = eixo === "x" ? "y" : "x";
+  const [meuInicio, , meuFim] = pontosDoEixo(movel, cruzado);
+  const alinhadas = outras.filter((caixa) => {
+    const [suaInicio, , suaFim] = pontosDoEixo(caixa, cruzado);
+    return meuInicio < suaFim && meuFim > suaInicio;
+  });
+  if (alinhadas.length < 2) return null;
+
+  const ordenadas = [...alinhadas].sort((a, b) => (eixo === "x" ? a.x - b.x : a.y - b.y));
+  const meuComeco = eixo === "x" ? movel.x : movel.y;
+  const anterior = [...ordenadas]
+    .reverse()
+    .find((c) => (eixo === "x" ? c.x + c.largura : c.y + c.altura) <= meuComeco + tolerancia);
+  const seguinte = ordenadas.find(
+    (c) => (eixo === "x" ? c.x : c.y) >= (eixo === "x" ? movel.x + movel.largura : movel.y + movel.altura) - tolerancia
+  );
+  if (!anterior || !seguinte) return null;
+
+  // Centrar entre os dois vizinhos é o que iguala os dois vãos. O ajuste é
+  // metade da diferença, porque mover a caixa muda os dois vãos em sentidos
+  // opostos.
+  const vaoAntes = vaoEntre(anterior, movel, eixo);
+  const vaoDepois = vaoEntre(movel, seguinte, eixo);
+  if (vaoAntes <= 0.01 || vaoDepois <= 0.01) return null;
+  const ajuste = (vaoDepois - vaoAntes) / 2;
+  if (Math.abs(ajuste) > tolerancia) return null;
+
+  const grudada = deslocada(movel, eixo, ajuste);
+  const vao = vaoEntre(anterior, grudada, eixo);
+
+  const marca = (a: Caixa, b: Caixa) => {
+    const de = eixo === "x" ? a.x + a.largura : a.y + a.altura;
+    const ate = eixo === "x" ? b.x : b.y;
+    const [aInicio, , aFim] = pontosDoEixo(a, cruzado);
+    const [bInicio, , bFim] = pontosDoEixo(b, cruzado);
+    return { de, ate, posicao: (Math.max(aInicio, bInicio) + Math.min(aFim, bFim)) / 2 };
+  };
+
+  return {
+    eixo,
+    ajuste,
+    vao,
+    marcas: [marca(anterior, grudada), marca(grudada, seguinte)],
+  };
 }

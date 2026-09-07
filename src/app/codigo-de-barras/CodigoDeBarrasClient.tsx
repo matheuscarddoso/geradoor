@@ -22,6 +22,7 @@ import {
   Eye,
   EyeOff,
   Hand,
+  Keyboard,
   Maximize2,
   Minus,
   MousePointer2,
@@ -29,6 +30,7 @@ import {
   Lock as Travado,
   Unlock as Destravado,
   Plus,
+  RotateCcw,
   RotateCw,
   Redo2,
   Ruler,
@@ -103,6 +105,7 @@ import {
 import {
   alinharConjunto,
   distribuirConjunto,
+  girarConjunto,
   type Alinhar,
 } from "@/lib/barcodeGuias";
 import {
@@ -115,6 +118,14 @@ import {
   definicaoDaUnidade,
   type Unidade,
 } from "@/lib/unidades";
+import {
+  descreverSobreposicao,
+  gravarEmissoes,
+  lerEmissoes,
+  novaEmissao,
+  sobreposicoes,
+  type Emissao,
+} from "@/lib/barcodeEmissoes";
 import { useHistorico } from "@/lib/useHistorico";
 import { ehPlataformaMac, focoEmCampo, reconhecerAtalho, rotuloDoAtalho } from "@/lib/atalhos";
 import { cn } from "@/lib/utils";
@@ -128,6 +139,68 @@ const FAIXA_INICIAL: Faixa = { de: 1, ate: 1000, paginasPorArquivo: 1000 };
  * 17,86 mm no papel mede 17,86 mm na régua encostada na tela.
  */
 const PX_POR_MM_A_100 = 100 / (96 / 25.4);
+
+/**
+ * A folha de atalhos.
+ *
+ * Existe porque quem opera isto vem do Figma e conhece os gestos, mas não tem
+ * onde conferir os daqui. Um editor sem essa lista obriga a decorar por
+ * tentativa, e quem não decora volta a usar só o mouse.
+ */
+const ATALHOS_DOCUMENTADOS: ReadonlyArray<{
+  grupo: string;
+  itens: ReadonlyArray<readonly [string, string]>;
+}> = [
+  {
+    grupo: "Ferramentas",
+    itens: [
+      ["V", "Mover"],
+      ["H", "Mão (arrastar a vista)"],
+      ["K", "Escalar"],
+      ["M", "Medir"],
+      ["Espaço", "Mão temporária, enquanto segurar"],
+    ],
+  },
+  {
+    grupo: "Seleção",
+    itens: [
+      ["Clique", "Selecionar"],
+      ["Shift+clique", "Somar ou tirar da seleção"],
+      ["Arrastar no papel", "Selecionar por área"],
+      ["Ctrl+A", "Selecionar tudo"],
+      ["Esc", "Desmarcar, ou cancelar o gesto"],
+    ],
+  },
+  {
+    grupo: "Editar",
+    itens: [
+      ["Ctrl+Z", "Desfazer"],
+      ["Ctrl+Shift+Z", "Refazer"],
+      ["Ctrl+D", "Duplicar"],
+      ["Ctrl+C · Ctrl+V", "Copiar e colar"],
+      ["Delete", "Remover"],
+      ["Setas", "Mover 0,1 mm"],
+      ["Shift+setas", "Mover 1 mm"],
+    ],
+  },
+  {
+    grupo: "Durante o gesto",
+    itens: [
+      ["Shift", "Trava proporção, ângulo de 15° ou eixo"],
+      ["Alt", "Redimensiona pelo centro"],
+      ["Ctrl", "Desliga o ímã das guias"],
+    ],
+  },
+  {
+    grupo: "Vista",
+    itens: [
+      ["+ · −", "Zoom"],
+      ["0", "Encaixar na tela"],
+      ["Ctrl+S", "Exportar o layout"],
+      ["?", "Esta lista"],
+    ],
+  },
+];
 
 /** Ferramenta que manipula o desenho: é a que o botão da esquerda aplica. */
 type FerramentaDeManipulacao = "mover" | "mao" | "escala";
@@ -321,6 +394,10 @@ export default function CodigoDeBarrasClient() {
    */
   const [bytesDaArte, setBytesDaArte] = useState(0);
   const [confirmandoPreset, setConfirmandoPreset] = useState(false);
+  const [confirmandoGeracao, setConfirmandoGeracao] = useState(false);
+  const [limpandoEmissoes, setLimpandoEmissoes] = useState(false);
+  const [mostrandoAtalhos, setMostrandoAtalhos] = useState(false);
+  const [emissoes, setEmissoes] = useState<Emissao[]>([]);
   const [abortarGesto, setAbortarGesto] = useState(0);
   // Só para escrever o atalho na dica. Fica em estado porque `navigator` não
   // existe no render do servidor, e a marca da plataforma mudaria a hidratação.
@@ -422,6 +499,7 @@ export default function CodigoDeBarrasClient() {
       });
     setEhMac(ehPlataformaMac());
     setUnidade(lerUnidade());
+    setEmissoes(lerEmissoes());
     setPronto(true);
     return () => {
       ativo = false;
@@ -666,6 +744,10 @@ export default function CodigoDeBarrasClient() {
   const iniciarArrastoDaVista = (evento: React.PointerEvent) => {
     const rolo = roloRef.current;
     if (!rolo) return;
+    // Mesmo motivo do gesto na folha: `preventDefault` impede a troca de foco,
+    // e o campo do painel ficaria com o cursor.
+    const focado = document.activeElement as HTMLElement | null;
+    if (focoEmCampo(focado)) focado?.blur();
     evento.preventDefault();
     (evento.currentTarget as Element).setPointerCapture(evento.pointerId);
     arrastoDaVista.current = {
@@ -855,6 +937,10 @@ export default function CodigoDeBarrasClient() {
           encaixarNaTelaRef.current();
           return;
 
+        case "atalhos":
+          setMostrandoAtalhos((atual) => !atual);
+          return;
+
         case "modo-mover":
         case "modo-mao":
         case "modo-escala": {
@@ -983,6 +1069,25 @@ export default function CodigoDeBarrasClient() {
     [atualizarVarios]
   );
 
+  /**
+   * Gira a seleção em torno do centro comum.
+   *
+   * Aqui é seguro onde escalar não seria: rotação é transformação rígida, cada
+   * código mantém as dimensões e nenhuma barra deforma.
+   */
+  const girarSelecao = useCallback(
+    (graus: number) => {
+      const destinos = girarConjunto(conjuntoRef.current, graus);
+      if (destinos.length === 0) return;
+      comoUmaEntrada(() =>
+        atualizarVarios(
+          destinos.map(({ id, x, y, rotacao }) => ({ id, mudanca: { x, y, rotacao } }))
+        )
+      );
+    },
+    [comoUmaEntrada, atualizarVarios]
+  );
+
   /** Iguala os vãos da seleção no eixo dado. Precisa de três ou mais. */
   const distribuir = useCallback(
     (eixo: "x" | "y") => {
@@ -994,6 +1099,22 @@ export default function CodigoDeBarrasClient() {
     },
     [comoUmaEntrada, atualizarVarios]
   );
+
+  const anotarEmissao = (id: string, nota: string) => {
+    setEmissoes((atual) => {
+      const proxima = atual.map((e) => (e.id === id ? { ...e, nota } : e));
+      gravarEmissoes(proxima);
+      return proxima;
+    });
+  };
+
+  const apagarEmissao = (id: string) => {
+    setEmissoes((atual) => {
+      const proxima = atual.filter((e) => e.id !== id);
+      gravarEmissoes(proxima);
+      return proxima;
+    });
+  };
 
   function adicionarCodigo() {
     const novo = codigoPadrao(layout.pagina, layout.digitos);
@@ -1052,9 +1173,32 @@ export default function CodigoDeBarrasClient() {
     }
   }
 
+  /**
+   * O aviso de sobreposição, junto dos outros.
+   *
+   * Entra como atenção e não como erro de propósito: reemitir um lote perdido
+   * é necessidade real numa gráfica, e travar nisso faria a ferramenta ser
+   * contornada por fora — aí o histórico deixaria de valer para tudo.
+   */
+  const cruzadas = useMemo(
+    () => sobreposicoes(faixa, emissoes),
+    [faixa, emissoes]
+  );
+
   const avisos = useMemo(
-    () => [...avaliarLayout(layout), ...avaliarFaixa(faixa, layout, bytesDaArte)],
-    [layout, faixa, bytesDaArte]
+    () => [
+      ...avaliarLayout(layout),
+      ...avaliarFaixa(faixa, layout, bytesDaArte),
+      ...(cruzadas.length > 0
+        ? [
+            {
+              gravidade: "atencao" as const,
+              mensagem: descreverSobreposicao(faixa, layout.digitos, cruzadas),
+            },
+          ]
+        : []),
+    ],
+    [layout, faixa, bytesDaArte, cruzadas]
   );
   const estimativa = useMemo(
     () => estimarTamanho(layout, faixa, bytesDaArte),
@@ -1120,6 +1264,22 @@ export default function CodigoDeBarrasClient() {
         sinal: controle.signal,
       });
       baixar(resultado.blob, resultado.nome);
+      // Registra só depois de o arquivo sair: uma emissão anotada que não
+      // chegou ao disco faria o aviso de sobreposição mentir para sempre.
+      setEmissoes((atual) => {
+        const proxima = [
+          novaEmissao({
+            faixa,
+            digitos: layout.digitos,
+            arquivo: resultado.nome,
+            paginas: resultado.paginas,
+            arquivos: resultado.arquivos,
+          }),
+          ...atual,
+        ];
+        gravarEmissoes(proxima);
+        return proxima;
+      });
       toast.success(
         resultado.arquivos > 1
           ? `${resultado.paginas.toLocaleString("pt-BR")} páginas em ${resultado.arquivos} arquivos: ${resultado.nome}`
@@ -1375,6 +1535,16 @@ export default function CodigoDeBarrasClient() {
               <Barcode className="h-4 w-4 text-muted-foreground" />
               Gerador de código de barras
             </h1>
+
+            <button
+              type="button"
+              aria-label="Ver os atalhos"
+              title={`Atalhos  ${rotuloDoAtalho("?", ehMac)}`}
+              onClick={() => setMostrandoAtalhos(true)}
+              className="ms-auto grid h-5 w-5 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Keyboard className="h-3.5 w-3.5" />
+            </button>
 
             {/* Zoom no alto do painel, como em qualquer editor: é estado da
                 vista, não ferramenta, e no rodapé disputava espaço com a barra
@@ -1727,6 +1897,66 @@ export default function CodigoDeBarrasClient() {
           </Dica>
         </Secao>
 
+        {/* Emissões: o controle de onde a numeração parou.
+            Vem antes dos códigos porque é o que o operador consulta ao chegar
+            para um serviço novo — a pergunta é "até onde eu já fui", não
+            "como está a folha". */}
+        {emissoes.length > 0 && (
+          <Secao
+            titulo={`Emissões · ${emissoes.length}`}
+            acao={
+              <button
+                type="button"
+                onClick={() => setLimpandoEmissoes(true)}
+                className="text-[11px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Limpar
+              </button>
+            }
+          >
+            <div className="max-h-56 space-y-1.5 overflow-y-auto">
+              {emissoes.map((emissao) => (
+                <div key={emissao.id} className="group rounded-md border border-input p-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] tabular-nums text-foreground">
+                      {formatarValor(emissao.de, emissao.digitos)}–
+                      {formatarValor(emissao.ate, emissao.digitos)}
+                    </span>
+                    <span className="ms-auto shrink-0 text-[10px] text-muted-foreground">
+                      {new Date(emissao.em).toLocaleDateString("pt-BR")}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={`Apagar a emissão ${formatarValor(emissao.de, emissao.digitos)}`}
+                      title="Apagar do histórico"
+                      onClick={() => apagarEmissao(emissao.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground">
+                    {emissao.paginas.toLocaleString("pt-BR")}{" "}
+                    {emissao.paginas === 1 ? "página" : "páginas"} · {emissao.arquivo}
+                  </p>
+                  {/* A anotação é o que liga a faixa ao serviço: sem ela o
+                      aviso de sobreposição diz "de 30/08" e o operador não
+                      lembra de que cliente era. */}
+                  <input
+                    type="text"
+                    value={emissao.nota}
+                    onChange={(evento) => anotarEmissao(emissao.id, evento.target.value)}
+                    placeholder="Cliente ou serviço"
+                    maxLength={120}
+                    aria-label={`Anotação da emissão ${formatarValor(emissao.de, emissao.digitos)}`}
+                    className="mt-1 w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </Secao>
+        )}
+
         <Secao
           titulo={`Códigos na folha · ${layout.codigos.length}`}
           acao={
@@ -1867,6 +2097,27 @@ export default function CodigoDeBarrasClient() {
                 <AlignVerticalSpaceAround className="h-3.5 w-3.5" />
                 Vãos iguais
               </button>
+            </div>
+
+            {/* Girar o conjunto: rígido, então seguro. Escalar o conjunto
+                continua de fora, porque aí sim as barras cisalhariam. */}
+            <div className="grid grid-cols-2 gap-2">
+              {([-90, 90] as const).map((graus) => (
+                <button
+                  key={graus}
+                  type="button"
+                  onClick={() => girarSelecao(graus)}
+                  title={`Girar a seleção ${Math.abs(graus)}° ${graus > 0 ? "no sentido horário" : "no anti-horário"}`}
+                  className="flex h-8 items-center justify-center gap-1.5 rounded-md border border-input text-[11px] text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+                >
+                  {graus > 0 ? (
+                    <RotateCw className="h-3.5 w-3.5" />
+                  ) : (
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  )}
+                  {Math.abs(graus)}°
+                </button>
+              ))}
             </div>
 
             {/* Aplicar a mesma medida a todos é o que uniformiza uma fileira
@@ -2216,7 +2467,7 @@ export default function CodigoDeBarrasClient() {
                 size="sm"
                 className="h-9 w-full gap-2 text-xs"
                 disabled={erros.length > 0}
-                onClick={() => void gerar()}
+                onClick={() => setConfirmandoGeracao(true)}
               >
                 <Download className="h-3.5 w-3.5" />
                 Gerar {totalArquivos > 1 ? ".zip" : "PDF"}
@@ -2280,6 +2531,132 @@ export default function CodigoDeBarrasClient() {
           )}
         </div>
       </aside>
+
+      <AlertDialog open={mostrandoAtalhos} onOpenChange={setMostrandoAtalhos}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Atalhos</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="grid max-h-[60vh] grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2">
+                {ATALHOS_DOCUMENTADOS.map(({ grupo, itens }) => (
+                  <div key={grupo}>
+                    <p className="mb-1.5 text-[11px] font-medium text-foreground">{grupo}</p>
+                    <dl className="space-y-1">
+                      {itens.map(([tecla, acao]) => (
+                        <div key={tecla} className="flex items-baseline gap-2">
+                          <dt className="shrink-0 font-mono text-[10px] text-foreground">
+                            {rotuloDoAtalho(tecla, ehMac)}
+                          </dt>
+                          <dd className="text-[11px] leading-snug text-muted-foreground">
+                            {acao}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                ))}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction>Fechar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Limpar o histórico apaga o controle de onde a numeração parou, que é
+          o dado mais difícil de reconstruir aqui — não sai num clique. */}
+      <AlertDialog open={limpandoEmissoes} onOpenChange={setLimpandoEmissoes}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar o histórico de emissões?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As {emissoes.length} emissões registradas somem, e com elas o aviso de sobreposição.
+              Depois disso a ferramenta não tem mais como avisar que uma faixa já foi impressa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setEmissoes([]);
+                gravarEmissoes([]);
+                setLimpandoEmissoes(false);
+              }}
+            >
+              Apagar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Resumo antes de gerar.
+          O prompt original pedia esta confirmação, e é onde o aviso de
+          sobreposição pertence: no momento em que a decisão é tomada, não
+          numa lista que rola. É também o único lugar em que a instrução de
+          imprimir sem redução é lida — a impressora reduzindo 4% derruba o
+          módulo de 0,26 mm abaixo do mínimo da norma, e a folha inteira falha
+          por um seletor no diálogo de impressão. */}
+      <AlertDialog open={confirmandoGeracao} onOpenChange={setConfirmandoGeracao}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gerar a numeração?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+                  <dt className="text-muted-foreground">Faixa</dt>
+                  <dd className="font-mono tabular-nums text-foreground">
+                    {formatarValor(faixa.de, layout.digitos)} a{" "}
+                    {formatarValor(faixa.ate, layout.digitos)}
+                  </dd>
+                  <dt className="text-muted-foreground">Páginas</dt>
+                  <dd className="font-mono tabular-nums text-foreground">
+                    {totalPaginas.toLocaleString("pt-BR")}
+                  </dd>
+                  <dt className="text-muted-foreground">Códigos por página</dt>
+                  <dd className="font-mono tabular-nums text-foreground">
+                    {layout.codigos.length}
+                  </dd>
+                  <dt className="text-muted-foreground">Arquivos</dt>
+                  <dd className="font-mono tabular-nums text-foreground">
+                    {totalArquivos}
+                    {totalArquivos > 1 ? " (num .zip)" : ""}
+                  </dd>
+                  <dt className="text-muted-foreground">Tamanho estimado</dt>
+                  <dd className="font-mono tabular-nums text-foreground">
+                    {formatarBytes(estimativa.total)}
+                  </dd>
+                </dl>
+
+                {cruzadas.length > 0 && (
+                  <p className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+                    {descreverSobreposicao(faixa, layout.digitos, cruzadas)} Gerar de novo é
+                    normal ao reimprimir um lote perdido — só confira se é isso.
+                  </p>
+                )}
+
+                <p className="rounded-md border border-border bg-muted/50 p-2.5 text-[11px] leading-relaxed">
+                  Ao imprimir, escolha <strong className="text-foreground">tamanho real</strong> ou{" "}
+                  <strong className="text-foreground">100%</strong>. Com &quot;ajustar à
+                  página&quot; a impressora reduz alguns por cento, a barra fica mais fina que o
+                  mínimo do Code 128 e o leitor passa a errar — sem nada na folha denunciando.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmandoGeracao(false);
+                void gerar();
+              }}
+            >
+              Gerar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Aplicar o preset joga fora o posicionamento inteiro, e o autosave
           grava por cima do que estava guardado: não há como voltar atrás. Meia

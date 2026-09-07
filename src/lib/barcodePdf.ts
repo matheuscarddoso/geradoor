@@ -292,6 +292,13 @@ export interface OpcoesGeracao {
   fundo: Fundo | null;
   aoProgredir?: (progresso: Progresso) => void;
   sinal?: AbortSignal;
+  /**
+   * Imprime a régua de calibração no pé da página.
+   *
+   * Só a amostra usa. A folha de produção leva a arte do cliente e não pode
+   * ganhar marca que não estava no formulário.
+   */
+  calibrar?: boolean;
 }
 
 /**
@@ -304,6 +311,7 @@ export async function gerarPdfs({
   fundo,
   aoProgredir,
   sinal,
+  calibrar = false,
 }: OpcoesGeracao): Promise<Resultado> {
   const totalPaginas = faixa.ate - faixa.de + 1;
   const totalArquivos = contarArquivos(faixa);
@@ -412,6 +420,8 @@ export async function gerarPdfs({
         if (codigo.texto) desenharTexto(doc, codigo, valor, fonte);
       }
 
+      if (calibrar) desenharCalibracao(doc, layout.pagina, fonte);
+
       paginasFeitas++;
       if (paginasFeitas % PAGINAS_POR_FATIA === 0) {
         avisar();
@@ -501,6 +511,40 @@ export async function medirArteNoPdf(fundo: Fundo, pagina: Pagina): Promise<numb
   return Math.max(0, comArte.output("arraybuffer").byteLength - base);
 }
 
+/**
+ * Régua de calibração impressa, com a medida escrita ao lado.
+ *
+ * É o teste que não depende de acreditar em ninguém: se a barra impressa não
+ * medir 100 mm na régua de verdade, a impressora está reduzindo. Isso importa
+ * porque "ajustar à página" tira alguns por cento, o módulo de 0,26 mm cai
+ * abaixo do mínimo do Code 128, e a folha inteira passa a falhar no leitor sem
+ * nada denunciando na aparência.
+ *
+ * Só entra na amostra. A folha de produção carrega a arte do cliente e não
+ * pode ganhar marca nenhuma.
+ */
+function desenharCalibracao(doc: jsPDF, pagina: Pagina, fonte: FonteAtiva): void {
+  const comprimento = Math.min(100, pagina.largura - 20);
+  const x = (pagina.largura - comprimento) / 2;
+  const y = pagina.altura - 8;
+  const traco = 2.5;
+
+  doc.setFillColor(0, 0, 0);
+  doc.rect(x, y - 0.4, comprimento, 0.8, "F");
+  // Marcas nas pontas e a cada dez milímetros: dá para conferir com régua
+  // curta se a folha não couber na mesa.
+  for (let d = 0; d <= comprimento; d += 10) {
+    const alto = d === 0 || d === comprimento;
+    doc.rect(x + d - 0.2, y - (alto ? traco : traco / 2), 0.4, alto ? traco : traco / 2, "F");
+  }
+
+  doc.setFont(fonte.familia, "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(0, 0, 0);
+  const legenda = `${comprimento} mm — se nao medir isto na regua, a impressora esta reduzindo. Imprima em tamanho real (100%).`;
+  doc.text(legenda, pagina.largura / 2 - doc.getTextWidth(legenda) / 2, y + 4);
+}
+
 /** Monta um PDF de uma página só, para o operador conferir antes da faixa. */
 export async function gerarAmostra(
   layout: Layout,
@@ -511,6 +555,7 @@ export async function gerarAmostra(
     layout,
     faixa: { de: numero, ate: numero, paginasPorArquivo: 1 },
     fundo,
+    calibrar: true,
   });
   return resultado.blob;
 }

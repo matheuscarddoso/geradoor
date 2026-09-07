@@ -52,7 +52,8 @@ export type Atalho =
   | "modo-mover"
   | "modo-mao"
   | "modo-escala"
-  | "modo-medir";
+  | "modo-medir"
+  | "atalhos";
 
 export interface EventoDeTeclado {
   key: string;
@@ -102,6 +103,8 @@ export function reconhecerAtalho(evento: EventoDeTeclado): Atalho | null {
   if (tecla === "+" || tecla === "=") return "zoom-mais";
   if (tecla === "-" || tecla === "_") return "zoom-menos";
   if (tecla === "0") return "zoom-encaixar";
+  // A lista de atalhos, no lugar onde todo editor a põe.
+  if (tecla === "?" || (evento.shiftKey && tecla === "/")) return "atalhos";
 
   // As letras das ferramentas, como em qualquer editor de canvas.
   if (tecla === "v") return "modo-mover";

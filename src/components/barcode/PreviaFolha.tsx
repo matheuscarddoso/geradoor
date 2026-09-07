@@ -26,12 +26,15 @@ import {
 } from "@/lib/barcodeGestos";
 import {
   calcularAlinhamento,
+  detectarEspacamento,
   interseccionam,
   uniaoDeCaixas,
   type Caixa,
+  type Espacamento,
   type Guia,
 } from "@/lib/barcodeGuias";
 import type { Arte } from "@/lib/barcodeStore";
+import { focoEmCampo } from "@/lib/atalhos";
 import { formatarNaUnidade, medidaEmTexto, type Unidade } from "@/lib/unidades";
 
 /**
@@ -279,6 +282,7 @@ function PreviaFolhaBase({
   const [marquise, setMarquise] = useState<Caixa | null>(null);
   /** Medida no papel, mantida na tela até a próxima ou a troca de modo. */
   const [medida, setMedida] = useState<{ inicio: Ponto; fim: Ponto } | null>(null);
+  const [espacamentos, setEspacamentos] = useState<Espacamento[]>([]);
 
   const barras = useMemo(() => barrasNormalizadas(codificarCode128(valor)), [valor]);
 
@@ -307,6 +311,12 @@ function PreviaFolhaBase({
 
   const iniciarGesto = (evento: React.PointerEvent, novo: Gesto) => {
     evento.stopPropagation();
+    // O `preventDefault` que segura o gesto também bloqueia a troca de foco do
+    // navegador. Sem tirar o foco à mão, quem acabou de digitar no painel
+    // continua com o cursor no campo, e todo atalho de teclado fica morto até
+    // clicar em outra coisa — inclusive o ⌘A e o Delete.
+    const focado = document.activeElement as HTMLElement | null;
+    if (focoEmCampo(focado)) focado?.blur();
     evento.preventDefault();
     (evento.currentTarget as Element).setPointerCapture(evento.pointerId);
     gesto.current = novo;
@@ -399,8 +409,38 @@ function PreviaFolhaBase({
           x: deslocamento.x + alinhamento.ajuste.x,
           y: deslocamento.y + alinhamento.ajuste.y,
         };
+
+        // Vão igual só entra onde o ímã de borda não pegou: com os dois
+        // ativos no mesmo eixo, um desfaria o outro a cada quadro.
+        const vizinhas = layout.codigos
+          .filter((codigo) => !emMovimento.has(codigo.id))
+          .map(caixaEnvolvente);
+        const caixaFinal = uniaoDeCaixas(
+          atual.iniciais.map((codigo) =>
+            caixaEnvolvente({
+              ...codigo,
+              x: codigo.x + deslocamento.x,
+              y: codigo.y + deslocamento.y,
+            })
+          )
+        );
+        const achados: Espacamento[] = [];
+        if (caixaFinal) {
+          for (const eixo of ["x", "y"] as const) {
+            if (alinhamento.ajuste[eixo] !== 0) continue;
+            const espaco = detectarEspacamento(caixaFinal, vizinhas, eixo, tolerancia);
+            if (!espaco) continue;
+            achados.push(espaco);
+            deslocamento = {
+              ...deslocamento,
+              [eixo]: deslocamento[eixo] + espaco.ajuste,
+            };
+          }
+        }
+        setEspacamentos(achados);
       } else {
         setGuias([]);
+        setEspacamentos([]);
       }
 
       aoAlterar(
@@ -496,6 +536,7 @@ function PreviaFolhaBase({
     gesto.current = null;
     setGestoAtivo(null);
     setGuias([]);
+    setEspacamentos([]);
     setMarquise(null);
     if (atual.tipo !== "marquise" && atual.tipo !== "medir") aoTerminarGesto();
     // A medida fica na tela de propósito: quem mediu quer ler o número, não
@@ -508,6 +549,7 @@ function PreviaFolhaBase({
     gesto.current = null;
     setGestoAtivo(null);
     setGuias([]);
+    setEspacamentos([]);
     setMarquise(null);
   }, [abortarGesto]);
 
@@ -699,6 +741,22 @@ function PreviaFolhaBase({
         </g>
       )}
 
+      {/* Vãos iguais: um par de setas por vão, com a medida no meio. É o que
+          confirma que a fileira ficou regular sem conferir número por número
+          no painel. */}
+      {espacamentos.map((espaco, indice) =>
+        espaco.marcas.map((marca, j) => (
+          <MarcaDeVao
+            key={`vao-${indice}-${j}`}
+            eixo={espaco.eixo}
+            marca={marca}
+            vao={espaco.vao}
+            unidade={unidade}
+            escala={escala}
+          />
+        ))
+      )}
+
       {/* Guias de alinhamento, desenhadas só durante o gesto. */}
       {guias.map((guia, indice) => (
         <line
@@ -796,6 +854,67 @@ function envolventeVisual(codigo: Codigo): Caixa {
   const x = Math.min(...xs);
   const y = Math.min(...ys);
   return { x, y, largura: Math.max(...xs) - x, altura: Math.max(...ys) - y };
+}
+
+/**
+ * Uma marca de vão igual: a linha entre duas caixas, com a medida escrita.
+ */
+function MarcaDeVao({
+  eixo,
+  marca,
+  vao,
+  unidade,
+  escala,
+}: {
+  eixo: "x" | "y";
+  marca: { de: number; ate: number; posicao: number };
+  vao: number;
+  unidade: Unidade;
+  escala: number;
+}) {
+  const corpo = 10 / escala;
+  const tique = 3 / escala;
+  const horizontal = eixo === "x";
+  const x1 = horizontal ? marca.de : marca.posicao;
+  const y1 = horizontal ? marca.posicao : marca.de;
+  const x2 = horizontal ? marca.ate : marca.posicao;
+  const y2 = horizontal ? marca.posicao : marca.ate;
+
+  return (
+    <g pointerEvents="none">
+      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={COR_GUIA_CODIGO} strokeWidth={1} vectorEffect="non-scaling-stroke" />
+      {[0, 1].map((ponta) => {
+        const px = ponta === 0 ? x1 : x2;
+        const py = ponta === 0 ? y1 : y2;
+        return (
+          <line
+            key={ponta}
+            x1={horizontal ? px : px - tique}
+            y1={horizontal ? py - tique : py}
+            x2={horizontal ? px : px + tique}
+            y2={horizontal ? py + tique : py}
+            stroke={COR_GUIA_CODIGO}
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        );
+      })}
+      <text
+        x={horizontal ? (x1 + x2) / 2 : x1 + tique * 1.6}
+        y={horizontal ? y1 - tique * 1.3 : (y1 + y2) / 2}
+        textAnchor={horizontal ? "middle" : "start"}
+        dominantBaseline={horizontal ? "auto" : "middle"}
+        fontFamily="var(--font-geist-mono), ui-monospace, monospace"
+        fontSize={corpo}
+        fill={COR_GUIA_CODIGO}
+        stroke="#fff"
+        strokeWidth={corpo * 0.3}
+        paintOrder="stroke"
+      >
+        {formatarNaUnidade(vao, unidade)}
+      </text>
+    </g>
+  );
 }
 
 /**

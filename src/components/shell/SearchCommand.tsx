@@ -11,7 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
 import { useRecentes } from "@/lib/recentes";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ export function SearchCommand({ className }: { className?: string }) {
   const [aberto, setAberto] = useState(false);
   const [mac, setMac] = useState(false);
   const router = useRouter();
+  const rotas = useRotasVisiveis();
   const { recentes } = useRecentes();
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export function SearchCommand({ className }: { className?: string }) {
           <CommandEmpty>Nada encontrado.</CommandEmpty>
 
           <CommandGroup heading="Geradores">
-            {ROTAS_PUBLICAS.map(({ href, label, descricao, termos, icon: Icone }) => (
+            {rotas.map(({ href, label, descricao, termos, icon: Icone }) => (
               <CommandItem
                 key={href}
                 /* value alimenta o filtro do cmdk: junta rótulo, descrição e

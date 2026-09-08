@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
 import { useRecentes } from "@/lib/recentes";
 import { hrefDeRestauracao } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ function Secao({ children }: { children: React.ReactNode }) {
 
 export function Sidebar({ className }: { className?: string }) {
   const caminho = usePathname();
+  const rotas = useRotasVisiveis();
   const { recentes, limpar } = useRecentes();
 
   return (
@@ -29,7 +30,7 @@ export function Sidebar({ className }: { className?: string }) {
     >
       <Secao>Geradores</Secao>
       <nav className="flex flex-col gap-0.5">
-        {ROTAS_PUBLICAS.map(({ href, label, icon: Icone }) => {
+        {rotas.map(({ href, label, icon: Icone }) => {
           const ativa = caminho === href;
           return (
             <Link

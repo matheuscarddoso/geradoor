@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ACESSO_COOKIE,
   ACESSO_MAX_AGE_SECONDS,
+  PISTA_COOKIE,
   ROTA_DE_ENTRADA,
   ROTA_PROTEGIDA,
 } from "@/lib/acessoDaGrafica";
@@ -66,6 +67,9 @@ async function guardarGrafica(req: NextRequest): Promise<NextResponse> {
     entrada.search = "";
     const res = naoIndexar(NextResponse.redirect(entrada));
     if (token) res.cookies.delete(ACESSO_COOKIE);
+    // A pista some junto: menu que oferece o que a pessoa não pode abrir é
+    // pior que menu sem o item.
+    res.cookies.set(PISTA_COOKIE, "", { path: "/", maxAge: 0 });
     return res;
   }
 
@@ -76,6 +80,16 @@ async function guardarGrafica(req: NextRequest): Promise<NextResponse> {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: ROTA_PROTEGIDA,
+      maxAge: ACESSO_MAX_AGE_SECONDS,
+    });
+    // Legível de propósito, e no caminho todo: é o menu, que roda no
+    // navegador e em qualquer página, que precisa dela. Ver o comentário em
+    // `PISTA_COOKIE` — ela não abre nada.
+    res.cookies.set(PISTA_COOKIE, "1", {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
       maxAge: ACESSO_MAX_AGE_SECONDS,
     });
   }

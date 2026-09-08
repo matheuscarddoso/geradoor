@@ -68,12 +68,23 @@ export function timingSafeEqual(a: string, b: string): boolean {
   return mismatch === 0;
 }
 
-/** Emite um cookie de sessão assinado, válido por SESSION_MAX_AGE_SECONDS. */
-export async function createSessionToken(secret: string): Promise<string> {
+/**
+ * Emite um cookie de sessão assinado.
+ *
+ * A validade é parâmetro porque não existe um prazo certo para toda sessão: o
+ * painel de admin dura o turno de trabalho, e o acesso da gráfica dura meses,
+ * porque quem entra lá é uma pessoa só, numa máquina só, e ser mandado para a
+ * tela de senha toda semana é o que faz alguém colar a senha num papel ao lado
+ * do monitor.
+ */
+export async function createSessionToken(
+  secret: string,
+  maxAgeSeconds: number = SESSION_MAX_AGE_SECONDS
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const payload: SessionPayload = {
     iat: now,
-    exp: now + SESSION_MAX_AGE_SECONDS,
+    exp: now + maxAgeSeconds,
   };
   const encoded = toBase64Url(encoder.encode(JSON.stringify(payload)));
   const signature = await sign(secret, encoded);

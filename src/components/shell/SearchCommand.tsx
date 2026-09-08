@@ -11,7 +11,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ROTAS } from "@/lib/rotas";
+import { ROTAS_PUBLICAS } from "@/lib/rotas";
 import { useRecentes } from "@/lib/recentes";
 import { cn } from "@/lib/utils";
 
@@ -78,7 +78,7 @@ export function SearchCommand({ className }: { className?: string }) {
           <CommandEmpty>Nada encontrado.</CommandEmpty>
 
           <CommandGroup heading="Geradores">
-            {ROTAS.map(({ href, label, descricao, termos, icon: Icone }) => (
+            {ROTAS_PUBLICAS.map(({ href, label, descricao, termos, icon: Icone }) => (
               <CommandItem
                 key={href}
                 /* value alimenta o filtro do cmdk: junta rótulo, descrição e

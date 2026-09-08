@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { ROTAS } from "@/lib/rotas";
+import { ROTAS_PUBLICAS } from "@/lib/rotas";
 import { useRecentes } from "@/lib/recentes";
 import { hrefDeRestauracao } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ export function Sidebar({ className }: { className?: string }) {
     >
       <Secao>Geradores</Secao>
       <nav className="flex flex-col gap-0.5">
-        {ROTAS.map(({ href, label, icon: Icone }) => {
+        {ROTAS_PUBLICAS.map(({ href, label, icon: Icone }) => {
           const ativa = caminho === href;
           return (
             <Link

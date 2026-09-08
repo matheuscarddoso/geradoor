@@ -20,6 +20,14 @@ export interface Rota {
   /** Termos alternativos para a busca encontrar. */
   termos: string[];
   icon: LucideIcon;
+  /**
+   * Fora do menu, da busca e do sitemap.
+   *
+   * Ferramenta de uso interno, atrás de senha. Continua sendo uma rota — o
+   * layout precisa saber que é página de ferramenta —, só não é oferecida a
+   * quem chega no site.
+   */
+  privada?: true;
 }
 
 /** Fonte única das ferramentas: topo, sidebar e busca leem daqui. */
@@ -74,6 +82,7 @@ export const ROTAS: Rota[] = [
     descricao: "Gerar PDF numerado em Code 128",
     termos: ["code 128", "barcode", "etiqueta", "formulário", "numeração", "gráfica", "pdf"],
     icon: Barcode,
+    privada: true,
   },
   {
     href: "/whatsapp",
@@ -83,3 +92,6 @@ export const ROTAS: Rota[] = [
     icon: MessageCircle,
   },
 ];
+
+/** O que é oferecido a quem chega: menu, sidebar e busca leem daqui. */
+export const ROTAS_PUBLICAS: Rota[] = ROTAS.filter((rota) => !rota.privada);

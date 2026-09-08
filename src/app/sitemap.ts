@@ -14,7 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/cnpj", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/cartao-de-credito", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/telefone", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/codigo-de-barras", priority: 0.8, changeFrequency: "monthly" as const },
+    // O gerador de código de barras não entra: é de uso interno, atrás de
+    // senha, e responde redirecionamento para quem não tem sessão.
     { path: "/qr-code", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/instagram", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/whatsapp", priority: 0.8, changeFrequency: "monthly" as const },

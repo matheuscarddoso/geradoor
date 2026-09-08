@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  ArrowDownToLine,
+  ArrowUpToLine,
   AlignCenterHorizontal,
   AlignCenterVertical,
   AlignEndHorizontal,
@@ -67,7 +72,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CampoNumero } from "@/components/barcode/CampoNumero";
-import { PreviaFolha, type ModoDaFolha } from "@/components/barcode/PreviaFolha";
+import {
+  PreviaFolha,
+  type ModoDaFolha,
+  type SuperficieDaFolha,
+} from "@/components/barcode/PreviaFolha";
 import { REGUA_PX, Reguas } from "@/components/barcode/Reguas";
 import {
   LIMITES,
@@ -126,9 +135,25 @@ import {
   sobreposicoes,
   type Emissao,
 } from "@/lib/barcodeEmissoes";
+import { FONTES, familiaCss, fontePorId } from "@/lib/fontes";
 import { useHistorico } from "@/lib/useHistorico";
 import { ehPlataformaMac, focoEmCampo, reconhecerAtalho, rotuloDoAtalho } from "@/lib/atalhos";
 import { cn } from "@/lib/utils";
+// As faces do número legível. Ficam aqui, e não no globals, para o resto do
+// site não carregar CSS de fonte que só esta página usa.
+import "./fontes.css";
+
+/**
+ * A moldura dos controles do painel.
+ *
+ * O `SelectTrigger` do site é uma pílula de canto redondo, desenhada para
+ * formulário de página. No painel ele fica lado a lado com os campos
+ * numéricos, e duas molduras diferentes na mesma linha leem como dois tipos de
+ * controle — num painel de dezenas de campos isso é ruído. Aqui todos usam a
+ * mesma altura, o mesmo raio e a mesma borda dos campos.
+ */
+const CONTROLE_DO_PAINEL =
+  "h-8 rounded-md border-input bg-background px-2 text-xs shadow-none focus:ring-0 focus-within:border-foreground/40 [&>svg]:h-3.5 [&>svg]:w-3.5";
 
 const FAIXA_INICIAL: Faixa = { de: 1, ate: 1000, paginasPorArquivo: 1000 };
 
@@ -265,7 +290,7 @@ type BotaoDeAlinhamento = readonly [
  */
 function medidaComum(
   codigos: readonly Codigo[],
-  campo: "comprimento" | "altura" | "rotacao"
+  campo: "comprimento" | "altura" | "rotacao" | "textoTamanho" | "textoEspaco" | "textoEntreletras"
 ): number {
   const primeiro = codigos[0];
   if (!primeiro) return Number.NaN;
@@ -328,6 +353,248 @@ function Secao({
       </div>
       <div className="space-y-2">{children}</div>
     </section>
+  );
+}
+
+/**
+ * Grupo de botões que escolhe um valor entre poucos — o segmentado do Figma.
+ *
+ * Botão em vez de lista suspensa porque as opções são três ou menos e o
+ * desenho de cada uma se lê no ícone: o operador vê o alinhamento sem abrir
+ * nada, e acerta no primeiro clique em vez de dois.
+ */
+function GrupoDeOpcoes<T extends string | boolean>({
+  valor,
+  opcoes,
+  aoEscolher,
+}: {
+  /** `null` quando os selecionados divergem: nenhum botão fica marcado. */
+  valor: T | null;
+  opcoes: readonly { valor: T; rotulo: string; icone: React.ReactNode }[];
+  aoEscolher: (valor: T) => void;
+}) {
+  return (
+    <div className="flex h-8 items-center gap-0.5 rounded-md border border-input p-0.5">
+      {opcoes.map((opcao) => {
+        const ativa = opcao.valor === valor;
+        return (
+          <button
+            key={String(opcao.valor)}
+            type="button"
+            aria-label={opcao.rotulo}
+            aria-pressed={ativa}
+            title={opcao.rotulo}
+            onClick={() => aoEscolher(opcao.valor)}
+            className={cn(
+              "flex h-full flex-1 items-center justify-center rounded-[3px] transition-colors",
+              ativa
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {opcao.icone}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Valor que todos os selecionados compartilham, ou `null` quando divergem.
+ *
+ * Vale para o que não é medida — fonte, peso, alinhamento. O controle fica sem
+ * escolha marcada no caso divergente em vez de mostrar o do primeiro: marcar um
+ * botão faria o painel afirmar algo falso sobre os outros.
+ */
+function valorComum<C extends keyof Codigo>(
+  codigos: readonly Codigo[],
+  campo: C
+): Codigo[C] | null {
+  const primeiro = codigos[0];
+  if (!primeiro) return null;
+  const valor = primeiro[campo];
+  return codigos.every((codigo) => codigo[campo] === valor) ? valor : null;
+}
+
+/**
+ * Tipografia do número legível.
+ *
+ * Serve um código e serve vários: com uma fileira selecionada, cada controle
+ * mostra o valor comum — ou nada, se divergem — e aplicar iguala todos de uma
+ * vez. Uniformizar doze etiquetas é justamente onde ajustar uma por uma seria
+ * pior.
+ */
+function SecaoTipografia({
+  codigos,
+  unidade,
+  aplicar,
+  aplicarComoEntrada,
+  aoIniciarGesto,
+  aoTerminarGesto,
+}: {
+  codigos: readonly Codigo[];
+  unidade: Unidade;
+  /** Muda o valor continuamente: o gesto todo vira uma entrada do histórico. */
+  aplicar: (mudanca: Partial<Codigo>) => void;
+  /** Muda de uma vez — um clique, uma escolha —, já como entrada do histórico. */
+  aplicarComoEntrada: (mudanca: Partial<Codigo>) => void;
+  aoIniciarGesto: () => void;
+  aoTerminarGesto: () => void;
+}) {
+  const varios = codigos.length > 1;
+  const fonte = valorComum(codigos, "textoFonte");
+  const peso = valorComum(codigos, "textoPeso");
+  const alinhamento = valorComum(codigos, "textoAlinhamento");
+  const acima = valorComum(codigos, "textoAcima");
+  const escolhida = fonte === null ? null : fontePorId(fonte);
+
+  return (
+    <Secao titulo="Tipografia">
+      <Select
+        // Sem valor no caso divergente: o `placeholder` diz que divergem, em
+        // vez de o campo mentir a fonte do primeiro.
+        value={fonte ?? ""}
+        onValueChange={(textoFonte) => aplicarComoEntrada({ textoFonte })}
+      >
+        <SelectTrigger className={CONTROLE_DO_PAINEL} aria-label="fonte do número">
+          <SelectValue placeholder={varios ? "Várias fontes" : "Fonte"} />
+        </SelectTrigger>
+        <SelectContent>
+          {FONTES.map((opcao) => (
+            <SelectItem key={opcao.id} value={opcao.id} className="text-xs">
+              {/* Cada nome no próprio desenho: escolhe-se fonte olhando, não
+                  lendo o nome dela. */}
+              <span style={{ fontFamily: familiaCss(opcao.id) }}>{opcao.nome}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Select
+          value={peso === null ? "" : String(peso)}
+          onValueChange={(escolha) =>
+            aplicarComoEntrada({ textoPeso: escolha === "700" ? 700 : 400 })
+          }
+        >
+          <SelectTrigger className={CONTROLE_DO_PAINEL} aria-label="peso da fonte">
+            <SelectValue placeholder="Vários" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="400" className="text-xs">
+              Regular
+            </SelectItem>
+            <SelectItem value="700" className="text-xs">
+              Bold
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <CampoNumero
+          aoIniciarGesto={aoIniciarGesto}
+          aoTerminarGesto={aoTerminarGesto}
+          rotulo="corpo"
+          rotuloAcessivel={varios ? "corpo da fonte de todos os selecionados" : undefined}
+          unidade="pt"
+          valor={medidaComum(codigos, "textoTamanho")}
+          casas={1}
+          passo={0.5}
+          min={3}
+          max={48}
+          aoMudar={(textoTamanho) => aplicar({ textoTamanho })}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <CampoNumero
+          aoIniciarGesto={aoIniciarGesto}
+          aoTerminarGesto={aoTerminarGesto}
+          rotulo="entre"
+          rotuloAcessivel={
+            varios
+              ? "espaço entre as letras de todos os selecionados, em ems"
+              : "espaço entre as letras, em ems"
+          }
+          valor={medidaComum(codigos, "textoEntreletras")}
+          casas={2}
+          passo={0.01}
+          min={-0.2}
+          max={1}
+          aoMudar={(textoEntreletras) => aplicar({ textoEntreletras })}
+        />
+        <CampoDeLayout
+          aoIniciarGesto={aoIniciarGesto}
+          aoTerminarGesto={aoTerminarGesto}
+          rotulo="folga"
+          rotuloAcessivel={varios ? "folga do número de todos os selecionados" : undefined}
+          unidade={unidade}
+          valorMm={medidaComum(codigos, "textoEspaco")}
+          minMm={0}
+          maxMm={20}
+          aoMudarMm={(textoEspaco) => aplicar({ textoEspaco })}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <GrupoDeOpcoes
+          valor={alinhamento}
+          aoEscolher={(textoAlinhamento) => aplicarComoEntrada({ textoAlinhamento })}
+          opcoes={[
+            {
+              valor: "esquerda" as const,
+              rotulo: "alinhar o número à esquerda das barras",
+              icone: <AlignLeft className="h-3.5 w-3.5" />,
+            },
+            {
+              valor: "centro" as const,
+              rotulo: "centrar o número nas barras",
+              icone: <AlignCenter className="h-3.5 w-3.5" />,
+            },
+            {
+              valor: "direita" as const,
+              rotulo: "alinhar o número à direita das barras",
+              icone: <AlignRight className="h-3.5 w-3.5" />,
+            },
+          ]}
+        />
+        <GrupoDeOpcoes
+          valor={acima}
+          aoEscolher={(textoAcima) => aplicarComoEntrada({ textoAcima })}
+          opcoes={[
+            {
+              valor: true,
+              rotulo: "pôr o número acima das barras",
+              icone: <ArrowUpToLine className="h-3.5 w-3.5" />,
+            },
+            {
+              valor: false,
+              rotulo: "pôr o número abaixo das barras",
+              icone: <ArrowDownToLine className="h-3.5 w-3.5" />,
+            },
+          ]}
+        />
+      </div>
+
+      <Dica>
+        {escolhida ? (
+          <>
+            {escolhida.sobre}{" "}
+            {escolhida.mono
+              ? "A prévia usa o mesmo arquivo que vai embutido no PDF."
+              : "Proporcional: a largura do número muda conforme os dígitos."}
+          </>
+        ) : (
+          "Os selecionados usam fontes diferentes. Escolher uma iguala todos."
+        )}
+        {varios && codigos.some((codigo) => !codigo.texto) && (
+          <>
+            {" "}
+            Parte dos selecionados está sem número em texto; o ajuste vale para quando
+            ligar.
+          </>
+        )}
+      </Dica>
+    </Secao>
   );
 }
 
@@ -786,6 +1053,14 @@ export default function CodigoDeBarrasClient() {
   encaixarNaTelaRef.current = encaixarNaTela;
 
   /** Arrasta a vista: mão, espaço ou botão do meio. */
+  /**
+   * Punho da folha, para a mesa em volta dela começar os mesmos gestos.
+   *
+   * O ponteiro fora do papel chega ao contêiner que rola, mas a marquise e a
+   * medida vivem na prévia, que é quem sabe converter tela em milímetro.
+   */
+  const superficieDaFolha = useRef<SuperficieDaFolha | null>(null);
+
   const iniciarArrastoDaVista = (evento: React.PointerEvent) => {
     const rolo = roloRef.current;
     if (!rolo) return;
@@ -1432,11 +1707,29 @@ export default function CodigoDeBarrasClient() {
           ref={roloRef}
           onPointerDown={(evento) => {
             // Mão, espaço, ou botão do meio, que é o pan de sempre.
-            if (maoAtiva || evento.button === 1) iniciarArrastoDaVista(evento);
+            if (maoAtiva || evento.button === 1) {
+              iniciarArrastoDaVista(evento);
+              return;
+            }
+            // A mesa em volta da folha faz parte da área de trabalho, como no
+            // Figma: a laçada começa aqui e o clique seco tira o foco do que
+            // estava selecionado. O gesto é o mesmo de dentro do papel — a
+            // folha só recebe este ponteiro quando ele cai sobre ela, porque
+            // lá o `pointerdown` para de subir.
+            if (evento.button === 0) superficieDaFolha.current?.apontar(evento);
           }}
-          onPointerMove={seguirArrastoDaVista}
-          onPointerUp={terminarArrastoDaVista}
-          onPointerCancel={terminarArrastoDaVista}
+          onPointerMove={(evento) => {
+            seguirArrastoDaVista(evento);
+            superficieDaFolha.current?.seguir(evento);
+          }}
+          onPointerUp={() => {
+            terminarArrastoDaVista();
+            superficieDaFolha.current?.terminar();
+          }}
+          onPointerCancel={() => {
+            terminarArrastoDaVista();
+            superficieDaFolha.current?.terminar();
+          }}
           className={cn(
             "h-full w-full overflow-auto",
             maoAtiva && "cursor-grab active:cursor-grabbing"
@@ -1479,6 +1772,7 @@ export default function CodigoDeBarrasClient() {
           aoDuplicarArrastando={duplicarParaArrastar}
           aoTerminarGesto={terminarGestoNoHistorico}
           abortarGesto={abortarGesto}
+          superficie={superficieDaFolha}
           escala={escala}
           // O espaço pressionado vale como ferramenta Mão para a folha: sem
           // isto a marquise consome o `pointerdown` com `stopPropagation` e o
@@ -1606,78 +1900,82 @@ export default function CodigoDeBarrasClient() {
 
       {/* Painel */}
       <aside className="flex w-full shrink-0 flex-col overflow-y-auto border-t border-border lg:w-[340px] lg:border-e-0 lg:border-s lg:border-t-0">
-        <div className="border-b border-border px-4 py-4">
-          <div className="flex items-start justify-between gap-2">
-            <h1 className="flex items-center gap-2 text-sm font-medium leading-none tracking-tight">
-              <Barcode className="h-4 w-4 text-muted-foreground" />
-              Gerador de código de barras
-            </h1>
+        {/* Cabeçalho e abas numa seção só: o título nomeia a ferramenta, as
+            abas dizem de que o painel fala — Design para a folha e o que está
+            selecionado, Protótipo para como a folha é vista. À direita fica o
+            que é estado da vista: o zoom e a lista de atalhos. */}
+        <div className="border-b border-border px-4 pb-2 pt-3.5">
+          <h1 className="mb-3 flex items-center gap-2 text-sm font-medium leading-none tracking-tight">
+            <Barcode className="h-4 w-4 text-muted-foreground" />
+            Gerador de código de barras
+          </h1>
 
-            <button
-              type="button"
-              aria-label="Ver os atalhos"
-              title={`Atalhos  ${rotuloDoAtalho("?", ehMac)}`}
-              onClick={() => setMostrandoAtalhos(true)}
-              className="ms-auto grid h-5 w-5 shrink-0 place-items-center rounded text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          <div className="flex items-center justify-between gap-2">
+            {/* Os recuos negativos alinham o texto da primeira aba com o do
+                título e a borda do último controle com a da seção: os dois
+                têm folga própria de botão, que sem isso empurraria tudo para
+                dentro. */}
+            <div
+              className="-ms-2.5 flex items-center gap-0.5"
+              role="tablist"
+              aria-label="Painéis"
             >
-              <Keyboard className="h-3.5 w-3.5" />
-            </button>
-
-          </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-            Monte a folha uma vez, gere a numeração inteira em Code 128 e imprima o intervalo que
-            precisar. Nada sai do seu navegador.
-          </p>
-        </div>
-
-        {/* Abas e zoom na mesma linha, como no Figma: Design fala da folha e
-            do que está selecionado; Protótipo, de como a folha é vista. O zoom
-            fica aqui porque é estado da vista, não ferramenta. */}
-        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-          <div className="flex items-center gap-0.5" role="tablist" aria-label="Painéis">
-            {ABAS.map(({ id, nome }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={aba === id}
-                onClick={() => {
-                  setAba(id);
-                  gravarAba(id);
-                }}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-[12px] transition-colors",
-                  aba === id
-                    ? "bg-muted font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {nome}
-              </button>
-            ))}
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-1 font-mono text-[11px] tabular-nums text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-              {Math.round(escala * PX_POR_MM_A_100)}%
-              <ChevronDown className="h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[9rem]">
-              <DropdownMenuItem className="justify-between text-xs" onClick={encaixarNaTela}>
-                Encaixar na tela
-                <span className="font-mono text-[10px] text-muted-foreground">0</span>
-              </DropdownMenuItem>
-              {[50, 100, 150, 200, 400].map((porcento) => (
-                <DropdownMenuItem
-                  key={porcento}
-                  className="text-xs"
-                  onClick={() => aplicarZoom(porcento / PX_POR_MM_A_100)}
+              {ABAS.map(({ id, nome }) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={aba === id}
+                  onClick={() => {
+                    setAba(id);
+                    gravarAba(id);
+                  }}
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-[12px] transition-colors",
+                    aba === id
+                      ? "bg-muted font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {porcento}%
-                </DropdownMenuItem>
+                  {nome}
+                </button>
               ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+
+            <div className="-me-1 flex shrink-0 items-center gap-0.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex shrink-0 items-center gap-0.5 rounded-md px-1.5 py-1 font-mono text-[11px] tabular-nums text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+                  {Math.round(escala * PX_POR_MM_A_100)}%
+                  <ChevronDown className="h-3 w-3" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[9rem]">
+                  <DropdownMenuItem className="justify-between text-xs" onClick={encaixarNaTela}>
+                    Encaixar na tela
+                    <span className="font-mono text-[10px] text-muted-foreground">0</span>
+                  </DropdownMenuItem>
+                  {[50, 100, 150, 200, 400].map((porcento) => (
+                    <DropdownMenuItem
+                      key={porcento}
+                      className="text-xs"
+                      onClick={() => aplicarZoom(porcento / PX_POR_MM_A_100)}
+                    >
+                      {porcento}%
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <button
+                type="button"
+                aria-label="Ver os atalhos"
+                title={`Atalhos  ${rotuloDoAtalho("?", ehMac)}`}
+                onClick={() => setMostrandoAtalhos(true)}
+                className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <Keyboard className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {aba === "design" && (
@@ -1731,7 +2029,7 @@ export default function CodigoDeBarrasClient() {
               }
             }}
           >
-            <SelectTrigger className="h-8 text-xs">
+            <SelectTrigger className={CONTROLE_DO_PAINEL}>
               <SelectValue placeholder="Tamanho" />
             </SelectTrigger>
             <SelectContent>
@@ -2133,6 +2431,20 @@ export default function CodigoDeBarrasClient() {
           </Secao>
         )}
 
+        {/* Tipografia com vários: uniformizar a fileira inteira de uma vez é
+            justamente o caso em que ajustar código por código seria pior. */}
+        {codigosSelecionados.length > 1 &&
+          codigosSelecionados.some((codigo) => codigo.texto) && (
+            <SecaoTipografia
+              codigos={codigosSelecionados}
+              unidade={unidade}
+              aoIniciarGesto={iniciarGestoNoHistorico}
+              aoTerminarGesto={terminarGestoNoHistorico}
+              aplicar={aplicarATodos}
+              aplicarComoEntrada={(mudanca) => comoUmaEntrada(() => aplicarATodos(mudanca))}
+            />
+          )}
+
         {codigoAtivo && (
           <>
             <Secao refSecao={inspetorRef} titulo="Posição">
@@ -2310,53 +2622,18 @@ export default function CodigoDeBarrasClient() {
 
               {codigoAtivo.texto && (
                 <>
-                  <div className="flex h-8 items-center justify-between rounded-md border border-input px-2">
-                    <span className="text-[11px] text-muted-foreground">Número do outro lado</span>
-                    <Switch
-                      checked={codigoAtivo.textoAcima}
-                      onCheckedChange={(textoAcima) =>
-                        comoUmaEntrada(() => atualizarCodigo(codigoAtivo.id, { textoAcima }))
-                      }
-                      aria-label="Pôr o número do lado de cima das barras"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <CampoNumero
-                      aoIniciarGesto={iniciarGestoNoHistorico}
-                      aoTerminarGesto={terminarGestoNoHistorico}
-                      rotulo="díg."
-                      rotuloAcessivel="dígitos mostrados no texto"
-                      valor={codigoAtivo.textoDigitos}
-                      casas={0}
-                      passo={1}
-                      min={0}
-                      max={12}
-                      aoMudar={(textoDigitos) => atualizarCodigo(codigoAtivo.id, { textoDigitos })}
-                    />
-                    <CampoNumero
-                      aoIniciarGesto={iniciarGestoNoHistorico}
-                      aoTerminarGesto={terminarGestoNoHistorico}
-                      rotulo="corpo"
-                      unidade="pt"
-                      valor={codigoAtivo.textoTamanho}
-                      casas={1}
-                      passo={0.5}
-                      min={3}
-                      max={48}
-                      aoMudar={(textoTamanho) => atualizarCodigo(codigoAtivo.id, { textoTamanho })}
-                    />
-                    <CampoDeLayout
-                      aoIniciarGesto={iniciarGestoNoHistorico}
-                      aoTerminarGesto={terminarGestoNoHistorico}
-                      rotulo="folga"
-                      unidade={unidade}
-                      valorMm={codigoAtivo.textoEspaco}
-                      minMm={0}
-                      maxMm={20}
-                      aoMudarMm={(textoEspaco) => atualizarCodigo(codigoAtivo.id, { textoEspaco })}
-                    />
-                  </div>
+                  <CampoNumero
+                    aoIniciarGesto={iniciarGestoNoHistorico}
+                    aoTerminarGesto={terminarGestoNoHistorico}
+                    rotulo="dígitos"
+                    rotuloAcessivel="dígitos mostrados no texto"
+                    valor={codigoAtivo.textoDigitos}
+                    casas={0}
+                    passo={1}
+                    min={0}
+                    max={12}
+                    aoMudar={(textoDigitos) => atualizarCodigo(codigoAtivo.id, { textoDigitos })}
+                  />
 
                   <Dica>
                     As barras sempre codificam o número inteiro; o campo de dígitos só recorta o que
@@ -2366,6 +2643,19 @@ export default function CodigoDeBarrasClient() {
                 </>
               )}
             </Secao>
+
+            {codigoAtivo.texto && (
+              <SecaoTipografia
+                codigos={[codigoAtivo]}
+                unidade={unidade}
+                aoIniciarGesto={iniciarGestoNoHistorico}
+                aoTerminarGesto={terminarGestoNoHistorico}
+                aplicar={(mudanca) => atualizarCodigo(codigoAtivo.id, mudanca)}
+                aplicarComoEntrada={(mudanca) =>
+                  comoUmaEntrada(() => atualizarCodigo(codigoAtivo.id, mudanca))
+                }
+              />
+            )}
           </>
         )}
 

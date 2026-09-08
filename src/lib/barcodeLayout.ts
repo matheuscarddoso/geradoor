@@ -11,6 +11,7 @@
  */
 
 import { MODULO_MINIMO_MM, modulosPorTamanho } from "@/lib/code128";
+import { FONTE_PADRAO, fontePorId, metricaDe, type PesoDaFonte } from "@/lib/fontes";
 
 /**
  * Ângulo em graus, no sentido horário, de 0 a 360.
@@ -25,6 +26,8 @@ import { MODULO_MINIMO_MM, modulosPorTamanho } from "@/lib/code128";
  * quadrilátero — ver `desenharBarras`.
  */
 export type Rotacao = number;
+
+export type AlinhamentoDoTexto = "esquerda" | "centro" | "direita";
 
 /** O ângulo é reto o bastante para as barras seguirem alinhadas aos eixos. */
 export function ehAnguloReto(rotacao: number): boolean {
@@ -59,6 +62,19 @@ export interface Codigo {
   textoTamanho: number;
   /** mm, folga entre a borda das barras e o texto. */
   textoEspaco: number;
+  /** Família do número legível. Ver `FONTES`. */
+  textoFonte: string;
+  /** 400 ou 700. O avanço do dígito muda com o peso em fonte proporcional. */
+  textoPeso: PesoDaFonte;
+  /**
+   * Entreletras, em ems.
+   *
+   * Afasta os dígitos sem mexer no corpo. Numa etiqueta apertada é o que deixa
+   * o número legível sem ele crescer e invadir a barra.
+   */
+  textoEntreletras: number;
+  /** Onde o número se apoia, na largura do código. */
+  textoAlinhamento: AlinhamentoDoTexto;
   /**
    * Põe o texto do lado de cima das barras, em vez de embaixo.
    *
@@ -159,27 +175,6 @@ export const TAMANHOS_PAGINA: ReadonlyArray<{
 export const PT_POR_MM = 72 / 25.4;
 
 export const mmParaPt = (mm: number) => mm * PT_POR_MM;
-
-/**
- * Fonte do número legível impresso ao lado das barras.
- *
- * A Geist Mono é a mesma do resto do site, e monoespaçada — num número de
- * série isso importa: os dígitos não dançam de largura de uma página para a
- * outra, e a coluna de números impressa fica alinhada de cima a baixo.
- *
- * As duas medidas saem das tabelas da própria fonte (`head` e `OS/2` do
- * GeistMono-Regular.ttf, com 1000 unidades por em), não de estimativa:
- * sCapHeight 710 e avanço 600. A altura de caixa alta é o que põe o topo do
- * dígito exatamente na folga pedida abaixo das barras.
- */
-export const FONTE_DO_NUMERO = {
-  familia: "GeistMono",
-  arquivo: "/fonts/GeistMono-Regular.ttf",
-  /** Altura do dígito, em ems. */
-  alturaDoDigito: 0.71,
-  /** Avanço de um caractere, em ems. Constante porque é monoespaçada. */
-  avanco: 0.6,
-} as const;
 
 /**
  * Reserva da Helvetica, para quando a Geist Mono não carrega.
@@ -607,6 +602,10 @@ export function codigoPadrao(pagina: Pagina, digitos: number): Codigo {
     textoTamanho: 8,
     textoEspaco: 0.8,
     textoAcima: false,
+    textoFonte: FONTE_PADRAO,
+    textoPeso: 400,
+    textoEntreletras: 0,
+    textoAlinhamento: "centro",
   };
 }
 
@@ -651,6 +650,10 @@ export function layoutRoe01(): Layout {
       textoEspaco: 0.8,
       // Deitada, a etiqueta do formulário traz o número à direita das barras.
       textoAcima: deitado,
+      textoFonte: FONTE_PADRAO,
+      textoPeso: 400,
+      textoEntreletras: 0,
+      textoAlinhamento: "centro",
     };
   };
 
@@ -742,6 +745,13 @@ export function normalizarLayout(entrada: unknown): Layout {
         textoTamanho: limitar(numeroFinito(c.textoTamanho, 8), 3, 48),
         textoEspaco: limitar(numeroFinito(c.textoEspaco, 0.8), 0, 20),
         textoAcima: c.textoAcima === true,
+        textoFonte: fontePorId(typeof c.textoFonte === "string" ? c.textoFonte : "").id,
+        textoPeso: c.textoPeso === 700 ? 700 : 400,
+        textoEntreletras: limitar(numeroFinito(c.textoEntreletras, 0), -0.2, 1),
+        textoAlinhamento:
+          c.textoAlinhamento === "esquerda" || c.textoAlinhamento === "direita"
+            ? c.textoAlinhamento
+            : "centro",
       };
     })
     .map((codigo) => (veioDaVersao1 ? migrarDaVersao1(codigo) : codigo));

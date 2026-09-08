@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { barrasNormalizadas, codificarCode128 } from "@/lib/code128";
+import { familiaCss, metricaDe } from "@/lib/fontes";
 import {
-  FONTE_DO_NUMERO,
   girarPonto,
   PT_POR_MM,
   caixaEnvolvente,
@@ -241,6 +241,21 @@ interface Props {
   escala: number;
   /** Unidade em que a medida é escrita. */
   unidade: Unidade;
+  /**
+   * Punho para a mesa em volta da folha começar os mesmos gestos.
+   *
+   * Quem recebe o ponteiro fora do papel é o contêiner que rola, que mora no
+   * editor; a lógica do gesto é toda daqui. Sem isto, o de fora precisaria de
+   * uma segunda marquise, que divergiria desta.
+   */
+  superficie?: React.Ref<SuperficieDaFolha>;
+}
+
+/** O que a mesa em volta da folha chama para começar e conduzir um gesto. */
+export interface SuperficieDaFolha {
+  apontar: (evento: React.PointerEvent) => void;
+  seguir: (evento: React.PointerEvent) => void;
+  terminar: () => void;
 }
 
 type Gesto =
@@ -284,6 +299,7 @@ function PreviaFolhaBase({
   abortarGesto,
   escala,
   unidade,
+  superficie,
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gesto = useRef<Gesto | null>(null);
@@ -582,6 +598,51 @@ function PreviaFolhaBase({
     setMarquise(null);
   }, [abortarGesto]);
 
+  /**
+   * Ponteiro no vazio: marquise, ou medida quando a régua está na mão.
+   *
+   * Serve o papel e serve a mesa em volta dele. No Figma a área de trabalho não
+   * termina na borda do quadro: dá para começar a laçada fora e arrastar por
+   * cima, e clicar fora tira o foco do que estava selecionado. Como o
+   * `paraPagina` usa a matriz do SVG, um ponto fora da folha converte igual —
+   * em milímetro negativo ou maior que a página — e nenhuma conta muda.
+   */
+  const apontarNoVazio = (evento: React.PointerEvent) => {
+    const ponteiro = paraPagina(evento);
+    if (!ponteiro) return;
+    if (modo === "medir") {
+      iniciarGesto(evento, { tipo: "medir", inicio: ponteiro, fim: ponteiro });
+      return;
+    }
+    // Na mão, o arrasto pertence ao contêiner que rola a vista.
+    if (modo === "mao") return;
+    // Arrastar no vazio seleciona por área; um clique sem arrasto limpa a
+    // seleção. Quem decide é a distância percorrida, conferida no fim do gesto.
+    iniciarGesto(evento, {
+      tipo: "marquise",
+      inicio: ponteiro,
+      atual: ponteiro,
+      anterior: [...selecionados],
+      somar: evento.shiftKey || evento.metaKey || evento.ctrlKey,
+    });
+    if (!evento.shiftKey && !evento.metaKey && !evento.ctrlKey) aoSelecionar([]);
+  };
+
+  // O contêiner que rola é quem recebe o ponteiro na mesa em volta da folha, e
+  // ele mora no editor. Estes três é o que ele precisa chamar para o gesto ser
+  // exatamente o mesmo de dentro do papel — nada de uma segunda implementação
+  // de marquise que divergiria da primeira na primeira mudança.
+  useImperativeHandle(
+    superficie,
+    () => ({
+      apontar: apontarNoVazio,
+      seguir: seguirGesto,
+      terminar: terminarGesto,
+    }),
+    // Sem lista: cada render devolve as funções da vez, que leem a seleção e o
+    // modo atuais. Guardar as primeiras congelaria a seleção de antes.
+  );
+
   const conjunto = layout.codigos.filter((codigo) => selecionados.includes(codigo.id));
   // Alça de girar e de redimensionar só com um selecionado: escalar um grupo
   // com códigos em ângulos diferentes exigiria cisalhar as barras, e barra
@@ -591,15 +652,35 @@ function PreviaFolhaBase({
   const manipulando = modo === "mover" || modo === "escala";
   const caixaDoGrupo = conjunto.length > 1 ? uniaoDeCaixas(conjunto.map(caixaEnvolvente)) : null;
 
-  /** Texto legível de um código, no referencial local. */
+  /**
+   * Texto legível de um código, no referencial local.
+   *
+   * Ancorado no começo da linha de base, e não no meio: é assim que o PDF
+   * desenha, e o entreletras do SVG sobra depois do último caractere em vez de
+   * deslocar o texto. Centrar aqui e ancorar lá daria posições diferentes na
+   * tela e no papel.
+   */
   const textoLocal = (codigo: Codigo) => {
     const corpo = codigo.textoTamanho / PT_POR_MM;
+    const fonte = metricaDe(codigo.textoFonte, codigo.textoPeso);
+    const digitos = textoDoCodigo(codigo, valor).length;
+    const entreletras = codigo.textoEntreletras * corpo;
+    const largura = digitos * fonte.avanco * corpo + Math.max(0, digitos - 1) * entreletras;
+    const recuo =
+      codigo.textoAlinhamento === "esquerda"
+        ? 0
+        : codigo.textoAlinhamento === "direita"
+          ? codigo.comprimento - largura
+          : (codigo.comprimento - largura) / 2;
     return {
       corpo,
-      x: codigo.x + codigo.comprimento / 2,
+      entreletras,
+      familia: familiaCss(codigo.textoFonte),
+      peso: codigo.textoPeso,
+      x: codigo.x + recuo,
       y: codigo.textoAcima
         ? codigo.y - codigo.textoEspaco
-        : codigo.y + codigo.altura + codigo.textoEspaco + corpo * FONTE_DO_NUMERO.alturaDoDigito,
+        : codigo.y + codigo.altura + codigo.textoEspaco + corpo * fonte.alturaDoDigito,
     };
   };
 
@@ -614,32 +695,19 @@ function PreviaFolhaBase({
       width={largura * escala}
       height={altura * escala}
       viewBox={`0 0 ${largura} ${altura}`}
-      onPointerDown={(evento) => {
-        const ponteiro = paraPagina(evento);
-        if (!ponteiro) return;
-        if (modo === "medir") {
-          iniciarGesto(evento, { tipo: "medir", inicio: ponteiro, fim: ponteiro });
-          return;
-        }
-        // Na mão, o arrasto pertence ao contêiner que rola a vista.
-        if (modo === "mao") return;
-        // Arrastar no papel vazio seleciona por área; um clique sem arrasto
-        // limpa a seleção. Quem decide é a distância percorrida, conferida no
-        // fim do gesto.
-        iniciarGesto(evento, {
-          tipo: "marquise",
-          inicio: ponteiro,
-          atual: ponteiro,
-          anterior: [...selecionados],
-          somar: evento.shiftKey || evento.metaKey || evento.ctrlKey,
-        });
-        if (!evento.shiftKey && !evento.metaKey && !evento.ctrlKey) aoSelecionar([]);
-      }}
+      onPointerDown={apontarNoVazio}
       onPointerMove={seguirGesto}
       onPointerUp={terminarGesto}
       onPointerCancel={terminarGesto}
       className="block shrink-0 touch-none select-none bg-white shadow-[0_1px_2px_rgba(0,0,0,.2),0_12px_32px_-8px_rgba(0,0,0,.35)]"
-      style={{ cursor: modo === "medir" ? "crosshair" : undefined }}
+      style={{
+        cursor: modo === "medir" ? "crosshair" : undefined,
+        // A laçada e a medida podem começar na mesa em volta da folha, e cortá-las
+        // na borda do papel deixaria o operador arrastando um retângulo que ele
+        // não vê. O branco da folha continua sendo o fundo do elemento, então a
+        // borda da área que imprime continua legível.
+        overflow: "visible",
+      }}
       role="img"
       aria-label={`Folha de ${largura} por ${altura} milímetros com ${layout.codigos.length} códigos de barras`}
     >
@@ -674,8 +742,10 @@ function PreviaFolhaBase({
               <text
                 x={texto.x}
                 y={texto.y}
-                textAnchor="middle"
-                fontFamily="var(--font-geist-mono), ui-monospace, monospace"
+                textAnchor="start"
+                fontFamily={texto.familia}
+                fontWeight={texto.peso}
+                letterSpacing={texto.entreletras}
                 fontSize={texto.corpo}
                 fill="#000"
               >
@@ -885,8 +955,13 @@ function envolventeVisual(codigo: Codigo): Caixa {
   if (!codigo.texto) return barras;
 
   const corpo = codigo.textoTamanho / PT_POR_MM;
-  const alturaTexto = corpo * FONTE_DO_NUMERO.alturaDoDigito;
-  const larguraTexto = Math.max(1, String(codigo.textoDigitos || 6).length) * corpo * FONTE_DO_NUMERO.avanco;
+  const fonte = metricaDe(codigo.textoFonte, codigo.textoPeso);
+  // Sem o valor à mão aqui: a contagem de dígitos do modelo é a largura do
+  // texto em qualquer página da tiragem, que é o que a envolvente precisa.
+  const digitos = Math.max(1, codigo.textoDigitos || 6);
+  const entreletras = codigo.textoEntreletras * corpo;
+  const alturaTexto = corpo * fonte.alturaDoDigito;
+  const larguraTexto = digitos * corpo * fonte.avanco + Math.max(0, digitos - 1) * entreletras;
   const meioX = codigo.x + codigo.comprimento / 2;
   const topo = codigo.textoAcima
     ? codigo.y - codigo.textoEspaco - alturaTexto

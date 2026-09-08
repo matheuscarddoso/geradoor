@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { FONTE_PADRAO } from "@/lib/fontes";
 import { centroDoCodigo, girarPonto, type Codigo, type Ponto } from "@/lib/barcodeLayout";
 import {
   ALCAS,
@@ -34,6 +35,10 @@ const base = (rotacao: number): Codigo => ({
   textoTamanho: 8,
   textoEspaco: 0.8,
   textoAcima: false,
+  textoFonte: FONTE_PADRAO,
+  textoPeso: 400,
+  textoEntreletras: 0,
+  textoAlinhamento: "centro",
 });
 
 /** O ponto de uma alça na página, para simular o ponteiro exatamente sobre ela. */

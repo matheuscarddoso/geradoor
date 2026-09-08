@@ -20,7 +20,11 @@ import { Zip, ZipPassThrough } from "fflate";
 import { barrasNormalizadas, codificarCode128, type BarraNormalizada } from "@/lib/code128";
 import {
   FONTE_DE_RESERVA,
-  FONTE_DO_NUMERO,
+  FONTE_PADRAO,
+  metricaDe,
+  type PesoDaFonte,
+} from "@/lib/fontes";
+import {
   centroDoCodigo,
   contarArquivos,
   ehAnguloReto,
@@ -92,25 +96,28 @@ const respirar = (): Promise<void> =>
 const PAGINAS_POR_FATIA = 25;
 
 /**
- * A Geist Mono em base64, buscada uma vez por sessão.
+ * Arquivos de fonte em base64, um por peso, buscados uma vez por sessão.
  *
- * Fica em `public/` e não no pacote porque a fonte tem 68 KB: embutida no
- * módulo, ela entraria no bundle de quem só abre a página. Assim é baixada
- * quando alguém de fato gera, junto do próprio `jspdf`.
+ * Ficam em `public/` e não no pacote: o conjunto todo passa de meio megabyte,
+ * e embutido no módulo entraria no bundle de quem só abre a página. Assim cada
+ * arquivo é baixado quando uma folha de fato o usa.
  *
  * A promessa é guardada, e não o resultado, para duas gerações simultâneas não
- * baixarem duas vezes.
+ * baixarem duas vezes o mesmo arquivo.
  */
-let fontePendente: Promise<string | null> | null = null;
+const arquivosPendentes = new Map<string, Promise<string | null>>();
 
-function carregarFonte(): Promise<string | null> {
-  fontePendente ??= (async () => {
+function carregarArquivo(caminho: string): Promise<string | null> {
+  const guardado = arquivosPendentes.get(caminho);
+  if (guardado) return guardado;
+
+  const pendente = (async () => {
     try {
-      const resposta = await fetch(FONTE_DO_NUMERO.arquivo);
+      const resposta = await fetch(caminho);
       if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
       const bytes = new Uint8Array(await resposta.arrayBuffer());
-      // Em blocos porque `String.fromCharCode` com 68 mil argumentos de uma
-      // vez estoura a pilha de chamadas.
+      // Em blocos porque `String.fromCharCode` com dezenas de milhares de
+      // argumentos de uma vez estoura a pilha de chamadas.
       let bruto = "";
       const bloco = 8192;
       for (let i = 0; i < bytes.length; i += bloco) {
@@ -121,48 +128,78 @@ function carregarFonte(): Promise<string | null> {
       // Rede ruim ou arquivo ausente: cai para a Helvetica, que é padrão do
       // PDF. Gerar com o número num desenho diferente é muito melhor que não
       // gerar.
-      console.warn("Não foi possível carregar a Geist Mono; usando Helvetica.", erro);
+      console.warn(`Não foi possível carregar ${caminho}; usando Helvetica.`, erro);
       return null;
     }
   })();
-  return fontePendente;
+
+  arquivosPendentes.set(caminho, pendente);
+  return pendente;
 }
 
-/** A fonte de fato usada num documento, depois de tentar registrar a Geist. */
+/** Chave de uma fonte no documento: família e peso identificam o arquivo. */
+const chaveDaFonte = (id: string, peso: PesoDaFonte) => `${id}-${peso}`;
+
+/** Baixa só o que a folha usa. */
+async function carregarFontesDoLayout(layout: Layout): Promise<Map<string, string | null>> {
+  const usadas = new Map<string, string>();
+  for (const codigo of layout.codigos) {
+    if (!codigo.texto) continue;
+    usadas.set(
+      chaveDaFonte(codigo.textoFonte, codigo.textoPeso),
+      metricaDe(codigo.textoFonte, codigo.textoPeso).arquivo
+    );
+  }
+  // A régua da amostra escreve, então o padrão sempre entra.
+  usadas.set(
+    chaveDaFonte(FONTE_PADRAO, 400),
+    metricaDe(FONTE_PADRAO, 400).arquivo
+  );
+
+  const pares = await Promise.all(
+    [...usadas].map(async ([chave, caminho]) => [chave, await carregarArquivo(caminho)] as const)
+  );
+  return new Map(pares);
+}
+
+/** A fonte de fato usada para um texto, depois de tentar registrar a escolhida. */
 interface FonteAtiva {
   familia: string;
   alturaDoDigito: number;
-}
-
-function registrarFonte(doc: jsPDF, base64: string | null): FonteAtiva {
-  if (!base64) return { ...FONTE_DE_RESERVA };
-  try {
-    const nome = "GeistMono-Regular.ttf";
-    doc.addFileToVFS(nome, base64);
-    doc.addFont(nome, FONTE_DO_NUMERO.familia, "normal");
-    return {
-      familia: FONTE_DO_NUMERO.familia,
-      alturaDoDigito: FONTE_DO_NUMERO.alturaDoDigito,
-    };
-  } catch (erro) {
-    console.warn("A Geist Mono não pôde ser registrada no PDF; usando Helvetica.", erro);
-    return { ...FONTE_DE_RESERVA };
-  }
+  avanco: number;
 }
 
 /**
- * Desenha as barras de um código, com ou sem giro.
+ * Registra no documento tudo que foi baixado e devolve como consultar.
  *
- * Dois caminhos de propósito. Em múltiplo de 90° cada barra segue sendo um
- * retângulo alinhado aos eixos e sai por `rect`: é o caso do formulário, o
- * caminho verificado por decodificação do raster, e o de menor fluxo de
- * conteúdo. Em qualquer outro ângulo a barra vira um quadrilátero desenhado
- * por `lines`, que é API documentada — nada de escrever matriz de
- * transformação por dentro do jspdf, onde um erro de sinal só apareceria
- * depois de impresso.
- *
- * Nos dois, as coordenadas seguem em ponto flutuante até o operador do PDF.
+ * Quem não carregou cai na Helvetica: o número sai num desenho diferente, mas
+ * sai — e a folha continua utilizável.
  */
+function registrarFontes(
+  doc: jsPDF,
+  arquivos: ReadonlyMap<string, string | null>
+): (id: string, peso: PesoDaFonte) => FonteAtiva {
+  const registradas = new Set<string>();
+  for (const [chave, base64] of arquivos) {
+    if (!base64) continue;
+    try {
+      const nome = `${chave}.ttf`;
+      doc.addFileToVFS(nome, base64);
+      doc.addFont(nome, chave, "normal");
+      registradas.add(chave);
+    } catch (erro) {
+      console.warn(`A fonte ${chave} não pôde ser registrada no PDF.`, erro);
+    }
+  }
+
+  return (id, peso) => {
+    const chave = chaveDaFonte(id, peso);
+    if (!registradas.has(chave)) return { ...FONTE_DE_RESERVA, avanco: 0.6 };
+    const m = metricaDe(id, peso);
+    return { familia: chave, alturaDoDigito: m.alturaDoDigito, avanco: m.avanco };
+  };
+}
+
 function desenharBarras(
   doc: jsPDF,
   codigo: Codigo,
@@ -235,24 +272,38 @@ function desenharTexto(
   fonte: FonteAtiva
 ): void {
   const texto = textoDoCodigo(codigo, valor);
+  doc.setFont(fonte.familia, "normal");
   doc.setFontSize(codigo.textoTamanho);
 
-  // A âncora é calculada aqui, e não com `align`/`baseline` do jspdf, porque
-  // os dois aplicam o deslocamento nos eixos da página, não nos do texto: com
-  // `angle`, o centramento acaba empurrando o texto para o lado errado. Com a
-  // âncora explícita, `text` põe a origem da linha de base exatamente no ponto
-  // pedido — conferido no fluxo de conteúdo gerado.
-  const larguraTexto = doc.getTextWidth(texto);
-  const subida = (codigo.textoTamanho * fonte.alturaDoDigito) / PT_POR_MM;
+  const corpo = codigo.textoTamanho / PT_POR_MM;
+  // Entreletras em ems: acompanha o corpo, que é como se pensa espaçamento de
+  // tipo. O `jspdf` recebe em unidade do documento.
+  const entreletras = codigo.textoEntreletras * corpo;
+  doc.setCharSpace(entreletras);
 
-  // Posiciona no referencial local, centrado sob as barras, e só então gira
-  // junto com o bloco. Assim o texto acompanha o código em qualquer ângulo,
-  // sem um segundo conjunto de contas por quadrante.
+  // A largura sai da métrica da fonte, e não de `getTextWidth`: a conta tem
+  // de ser a mesma que a prévia faz, senão o número que aparece na tela cai
+  // num lugar e o impresso em outro. O último caractere não arrasta
+  // entreletras.
+  const larguraTexto =
+    texto.length * fonte.avanco * corpo + Math.max(0, texto.length - 1) * entreletras;
+  const subida = corpo * fonte.alturaDoDigito;
+
+  const recuo =
+    codigo.textoAlinhamento === "esquerda"
+      ? 0
+      : codigo.textoAlinhamento === "direita"
+        ? codigo.comprimento - larguraTexto
+        : (codigo.comprimento - larguraTexto) / 2;
+
+  // Posiciona no referencial local e só então gira junto com o bloco. Assim o
+  // texto acompanha o código em qualquer ângulo, sem um segundo conjunto de
+  // contas por quadrante.
   const centro = centroDoCodigo(codigo);
   const angulo = normalizarAngulo(codigo.rotacao);
   const ancora = girarPonto(
     {
-      x: codigo.x + (codigo.comprimento - larguraTexto) / 2,
+      x: codigo.x + recuo,
       // Abaixo, a linha de base fica uma subida depois do pé das barras;
       // acima, ela fica sobre o topo e os glifos crescem para fora.
       y: codigo.textoAcima
@@ -263,15 +314,14 @@ function desenharTexto(
     angulo
   );
 
-  if (angulo === 0) {
-    doc.text(texto, ancora.x, ancora.y);
-    return;
-  }
-
   // O `angle` do jspdf conta no sentido anti-horário e gira em torno da
   // âncora, que já é o começo da linha de base — daí o sinal invertido e
   // nenhuma correção de alinhamento.
-  doc.text(texto, ancora.x, ancora.y, { angle: -angulo });
+  if (angulo === 0) doc.text(texto, ancora.x, ancora.y);
+  else doc.text(texto, ancora.x, ancora.y, { angle: -angulo });
+
+  // Zera para o próximo texto não herdar o espaçamento deste.
+  doc.setCharSpace(0);
 }
 
 function novoDocumento(layout: Layout): jsPDF {
@@ -350,8 +400,8 @@ export async function gerarPdfs({
         })
       : null;
 
-  // Uma busca por geração; cada documento registra a mesma base64.
-  const fonteBase64 = await carregarFonte();
+  // Uma busca por geração; cada documento registra os mesmos arquivos.
+  const arquivosDeFonte = await carregarFontesDoLayout(layout);
   conferirCancelamento();
 
   let paginasFeitas = 0;
@@ -377,8 +427,9 @@ export async function gerarPdfs({
   for (let inicioBloco = faixa.de; inicioBloco <= faixa.ate; inicioBloco += faixa.paginasPorArquivo) {
     const fimBloco = Math.min(inicioBloco + faixa.paginasPorArquivo - 1, faixa.ate);
     const doc = novoDocumento(layout);
-    const fonte = registrarFonte(doc, fonteBase64);
-    doc.setFont(fonte.familia, "normal");
+    const fontePara = registrarFontes(doc, arquivosDeFonte);
+    const fontePadrao = fontePara(FONTE_PADRAO, 400);
+    doc.setFont(fontePadrao.familia, "normal");
     doc.setFillColor(0, 0, 0);
     doc.setTextColor(0, 0, 0);
 
@@ -417,10 +468,12 @@ export async function gerarPdfs({
 
       for (const codigo of layout.codigos) {
         desenharBarras(doc, codigo, barras);
-        if (codigo.texto) desenharTexto(doc, codigo, valor, fonte);
+        if (codigo.texto) {
+          desenharTexto(doc, codigo, valor, fontePara(codigo.textoFonte, codigo.textoPeso));
+        }
       }
 
-      if (calibrar) desenharCalibracao(doc, layout.pagina, fonte);
+      if (calibrar) desenharCalibracao(doc, layout.pagina, fontePadrao);
 
       paginasFeitas++;
       if (paginasFeitas % PAGINAS_POR_FATIA === 0) {

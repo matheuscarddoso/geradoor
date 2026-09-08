@@ -1,0 +1,99 @@
+/*
+ * As fontes do número legível, servidas do próprio domínio.
+ *
+ * São os mesmos arquivos que o `jspdf` embute no PDF (veja `src/lib/fontes.ts`)
+ * — é isso que faz o número na prévia ter exatamente o desenho e a largura do
+ * número impresso. Apontar a prévia para o Google e o PDF para outro arquivo
+ * daria duas larguras diferentes para o mesmo texto.
+ *
+ * O navegador só baixa a face que uma folha de fato usa, então declarar as
+ * quatorze aqui não custa rede para quem fica na fonte padrão.
+ *
+ * `font-display: block` e não `swap`: com swap o número apareceria primeiro na
+ * fonte de reserva, numa largura diferente, e saltaria de lugar na folha. Um
+ * instante sem número é melhor que um número que pula.
+ */
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geistmono-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geistmono-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/robotomono-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Roboto Mono";
+  src: url("/fonts/robotomono-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibmplexmono-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibmplexmono-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Courier Prime";
+  src: url("/fonts/courierprime-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Courier Prime";
+  src: url("/fonts/courierprime-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("/fonts/roboto-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("/fonts/roboto-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  src: url("/fonts/archivonarrow-400.ttf") format("truetype");
+  font-weight: 400;
+  font-display: block;
+}
+@font-face {
+  font-family: "Archivo Narrow";
+  src: url("/fonts/archivonarrow-700.ttf") format("truetype");
+  font-weight: 700;
+  font-display: block;
+}

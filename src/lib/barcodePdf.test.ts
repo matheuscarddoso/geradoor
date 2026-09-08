@@ -16,6 +16,7 @@
 import { encode } from "fast-png";
 import { inflateSync, unzlibSync } from "fflate";
 import { describe, expect, it } from "vitest";
+import { FONTE_PADRAO } from "@/lib/fontes";
 import { barrasNormalizadas, codificarCode128 } from "@/lib/code128";
 import {
   ARTE_PADRAO,
@@ -195,6 +196,10 @@ function folhaDeUmCodigo(rotacao: number): Layout {
         textoTamanho: 8,
         textoEspaco: 0.8,
         textoAcima: false,
+        textoFonte: FONTE_PADRAO,
+        textoPeso: 400,
+        textoEntreletras: 0,
+        textoAlinhamento: "centro",
       }),
     ],
   };

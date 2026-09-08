@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { FONTE_PADRAO } from "@/lib/fontes";
 import { caixaEnvolvente, layoutRoe01, type Codigo, type Pagina } from "@/lib/barcodeLayout";
 import {
   alinharConjunto,
@@ -31,6 +32,10 @@ const codigo = (id: string, x: number, y: number, comprimento = 40, altura = 12,
   textoTamanho: 8,
   textoEspaco: 0.8,
   textoAcima: false,
+  textoFonte: FONTE_PADRAO,
+  textoPeso: 400,
+  textoEntreletras: 0,
+  textoAlinhamento: "centro",
 });
 const pagina: Pagina = { largura: 200, altura: 200 };
 const caixa = (x: number, y = 50, largura = 20, altura = 10) => ({ x, y, largura, altura });
@@ -182,5 +187,14 @@ describe("seleção por área", () => {
   it("encostar não é tocar", () => {
     expect(interseccionam(caixa(0, 0, 10, 10), caixa(10, 0, 10, 10))).toBe(false);
     expect(interseccionam(caixa(0, 0, 10, 10), caixa(50, 50, 10, 10))).toBe(false);
+  });
+
+  it("vale para laçada começada fora do papel, em milímetro negativo", () => {
+    // A mesa em volta da folha faz parte da área de trabalho: arrastar de fora
+    // para dentro tem de pegar o que a laçada toca. Como o ponteiro vira
+    // milímetro pela matriz do SVG, fora do papel é coordenada negativa — e
+    // nenhuma conta aqui pode supor que a origem seja zero.
+    expect(interseccionam(caixa(-30, -20, 60, 60), caixa(20, 20, 50, 14))).toBe(true);
+    expect(interseccionam(caixa(-30, -20, 40, 30), caixa(20, 20, 50, 14))).toBe(false);
   });
 });

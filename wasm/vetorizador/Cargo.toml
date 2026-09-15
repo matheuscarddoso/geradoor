@@ -1,0 +1,25 @@
+[package]
+name = "vetorizador"
+version = "1.0.0"
+edition = "2021"
+publish = false
+license = "MIT OR Apache-2.0"
+description = "Motor de vetorização do Geradoor: o conversor do VTracer sobre o visioncortex, exposto a WebAssembly sem glue."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# O algoritmo do VTracer mora nesta biblioteca. Versão exata: o .wasm
+# publicado precisa sair do mesmo código toda vez que for recompilado.
+visioncortex = "=0.8.8"
+
+[profile.release]
+# Tamanho e velocidade do módulo, sem símbolos. `panic = "abort"` porque não
+# há quem desenrole uma pilha do lado de lá: um pânico vira `unreachable` e o
+# worker é descartado.
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

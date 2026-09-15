@@ -1,0 +1,6 @@
+# Versão exata do compilador: o .wasm publicado só sai igual, byte a byte,
+# com o mesmo rustc. Mudar aqui muda o hash (ver README.md).
+[toolchain]
+channel = "1.94.0"
+targets = ["wasm32-unknown-unknown"]
+profile = "minimal"

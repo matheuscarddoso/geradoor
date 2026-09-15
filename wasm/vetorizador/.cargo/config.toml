@@ -1,0 +1,10 @@
+[build]
+target = "wasm32-unknown-unknown"
+
+[target.wasm32-unknown-unknown]
+# Teto duro de memória do módulo: 512 MB. Passou disso, a alocação falha
+# dentro do WebAssembly e a vetorização aborta — o navegador nunca vê o
+# worker crescer além daqui, seja qual for a imagem. O valor tem folga sobre
+# o maior pico medido no teto de resolução da página (ver
+# src/lib/vetorizador.ts, PIXELS_MAXIMOS_DE_TRACADO).
+rustflags = ["-C", "link-arg=--max-memory=536870912"]

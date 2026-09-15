@@ -80,15 +80,28 @@ describe("a comparação da senha", () => {
     const quaseTudoAcerta = "x".repeat(63) + "y";
 
     const medir = (a: string, b: string) => {
-      // Uma volta a seco para o JIT não cobrar a compilação da primeira medida.
-      for (let i = 0; i < 2000; i++) timingSafeEqual(a, b);
       const inicio = performance.now();
       for (let i = 0; i < 20_000; i++) timingSafeEqual(a, b);
       return performance.now() - inicio;
     };
 
-    const cego = medir(senha, nadaAcerta);
-    const quente = medir(senha, quaseTudoAcerta);
+    // Uma volta a seco para o JIT não cobrar a compilação da primeira medida.
+    for (let i = 0; i < 2000; i++) {
+      timingSafeEqual(senha, nadaAcerta);
+      timingSafeEqual(senha, quaseTudoAcerta);
+    }
+
+    // Rodadas intercaladas, ficando com o menor tempo de cada caso. Os outros
+    // arquivos da suíte rodam em paralelo, e uma medida única pegava um pico
+    // de CPU deles numa das duas voltas e acusava diferença que não existe.
+    // Interferência só soma tempo; o mínimo é a medida limpa. O critério de
+    // 50% não mudou.
+    let cego = Infinity;
+    let quente = Infinity;
+    for (let rodada = 0; rodada < 7; rodada++) {
+      cego = Math.min(cego, medir(senha, nadaAcerta));
+      quente = Math.min(quente, medir(senha, quaseTudoAcerta));
+    }
     const diferenca = Math.abs(quente - cego) / Math.max(cego, quente);
 
     expect(diferenca).toBeLessThan(0.5);

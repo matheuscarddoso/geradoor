@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MaximizeIcon } from "@/components/ui/maximize-icon";
+import { MarcaGeradoor } from "@/components/ui/marca-geradoor";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Rodape } from "@/components/shell/Rodape";
 
@@ -23,7 +23,7 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
             href="/"
             className="inline-flex items-center gap-2 rounded text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
           >
-            <MaximizeIcon size={18} className="flex items-center" />
+            <MarcaGeradoor size={22} />
             <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
           </Link>
           <ThemeToggle />

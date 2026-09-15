@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose, Search, Trash2 } from "lucide-react";
-import { useRef } from "react";
-import { MaximizeIcon, type MaximizeIconHandle } from "@/components/ui/maximize-icon";
+import { MarcaGeradoor } from "@/components/ui/marca-geradoor";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { GRUPOS, NOMES_DOS_GRUPOS } from "@/lib/rotas";
 import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
@@ -43,7 +42,6 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
   const caminho = usePathname();
   const rotas = useRotasVisiveis();
   const { recentes, limpar } = useRecentes();
-  const logoRef = useRef<MaximizeIconHandle>(null);
 
   return (
     <aside
@@ -53,18 +51,12 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
       )}
     >
       <div className="flex shrink-0 items-center gap-1 px-2 py-2">
-        {/* A logo anima no hover e também no foco: quem navega por Tab não tem
-            hover, e sem isso o teclado nunca via a animação. */}
         <Link
           href="/"
           data-touch-target
-          onMouseEnter={() => logoRef.current?.startAnimation()}
-          onMouseLeave={() => logoRef.current?.stopAnimation()}
-          onFocus={() => logoRef.current?.startAnimation()}
-          onBlur={() => logoRef.current?.stopAnimation()}
           className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
         >
-          <MaximizeIcon ref={logoRef} size={18} className="flex items-center" />
+          <MarcaGeradoor size={22} />
           <span className="truncate font-logo text-base font-medium tracking-tight">Geradoor</span>
         </Link>
         <button

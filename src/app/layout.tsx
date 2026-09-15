@@ -23,7 +23,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: {
-    default: "Geradoor — geradores de CPF, CNPJ, QR Code e link de WhatsApp",
+    default: "Geradoor · Ferramentas grátis que rodam no seu navegador",
     template: "%s | Geradoor",
   },
   description: SITE.description,
@@ -39,22 +39,17 @@ export const metadata: Metadata = {
     siteName: SITE.name,
     locale: SITE.locale,
     url: SITE.url,
-    title: "Geradoor — geradores de CPF, CNPJ, QR Code e link de WhatsApp",
+    title: "Geradoor · Ferramentas grátis que rodam no seu navegador",
     description: SITE.description,
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Geradoor — geradores online de dados de teste",
-      },
-    ],
+    // Sem `images` aqui de propósito: quem desenha a imagem é o
+    // opengraph-image.tsx de cada rota, e uma lista fixa neste ponto vira
+    // fallback silencioso — foi assim que a captura antiga do gerador de CPF
+    // continuou sendo compartilhada em rota que ainda não tinha a sua.
   },
   twitter: {
     card: "summary_large_image",
-    title: "Geradoor — geradores de CPF, CNPJ, QR Code e link de WhatsApp",
+    title: "Geradoor · Ferramentas grátis que rodam no seu navegador",
     description: SITE.description,
-    images: ["/og-image.png"],
   },
   robots: {
     index: true,

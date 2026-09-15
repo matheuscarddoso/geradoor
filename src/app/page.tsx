@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { MaximizeIcon } from "@/components/ui/maximize-icon";
+import { MarcaGeradoor } from "@/components/ui/marca-geradoor";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Rodape } from "@/components/shell/Rodape";
 import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
@@ -52,7 +52,7 @@ export default function Home() {
 
       <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
         <span className="flex items-center gap-2 text-foreground">
-          <MaximizeIcon size={18} className="flex items-center" />
+          <MarcaGeradoor size={22} />
           <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
         </span>
         <ThemeToggle />

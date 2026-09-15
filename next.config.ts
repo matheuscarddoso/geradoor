@@ -58,6 +58,12 @@ const nextConfig: NextConfig = {
         source: "/modelos/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
+      {
+        // Mesma regra para o motor do vetorizador: versão no nome do arquivo
+        // (vetorizador-v1.wasm), conferido por hash antes de rodar.
+        source: "/wasm/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+      },
     ];
   },
 };

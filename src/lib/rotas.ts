@@ -8,6 +8,7 @@ import {
   QrCode,
   Instagram,
   Smartphone,
+  Spline,
   type LucideIcon,
 } from "lucide-react";
 
@@ -83,6 +84,15 @@ export const ROTAS: Rota[] = [
     descricao: "Tirar o fundo de uma foto em PNG",
     termos: ["remover fundo", "tirar fundo", "png transparente", "recortar", "remove bg", "imagem", "foto"],
     icon: Eraser,
+    novo: true,
+  },
+  {
+    href: "/vetorizador",
+    label: "Vetorizador",
+    labelCurto: "Vetorizar",
+    descricao: "Transformar uma imagem em SVG",
+    termos: ["vetorizar", "vetor", "svg", "png para svg", "jpg para svg", "logo", "traço", "converter", "imagem"],
+    icon: Spline,
     novo: true,
   },
   {

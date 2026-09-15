@@ -31,6 +31,7 @@ const SEM_MOLDURA = new Set([
   "/instagram",
   "/codigo-de-barras",
   "/removedor-de-fundo",
+  "/vetorizador",
 ]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {

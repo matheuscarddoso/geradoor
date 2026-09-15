@@ -17,6 +17,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // O gerador de código de barras não entra: é de uso interno, atrás de
     // senha, e responde redirecionamento para quem não tem sessão.
     { path: "/removedor-de-fundo", priority: 0.9, changeFrequency: "monthly" as const },
+    { path: "/vetorizador", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/qr-code", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/instagram", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/whatsapp", priority: 0.8, changeFrequency: "monthly" as const },

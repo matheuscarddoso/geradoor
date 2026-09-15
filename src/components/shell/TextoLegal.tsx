@@ -81,7 +81,12 @@ export function Termo({ children }: { children: React.ReactNode }) {
 export function PaginaLegal({ titulo, secoes }: { titulo: string; secoes: SecaoLegal[] }) {
   return (
     <>
-      <Moldura className="mx-4 mt-8 p-6 sm:mx-8 sm:p-10">
+      {/* A faixa do título ocupa a largura inteira da folha: as linhas
+          tracejadas de cima e de baixo atravessam de trilho a trilho, e é nos
+          quatro encontros que ficam as cruzes. Sem margem em volta — o vão
+          faria a moldura flutuar dentro da página em vez de fazer parte
+          dela. */}
+      <Moldura className="border-x-0 px-4 py-10 sm:px-8 sm:py-14">
         <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">{titulo}</h1>
         <p className="mt-2 text-[13px] text-muted-foreground">Atualizado em {ATUALIZACAO_LEGAL}</p>
       </Moldura>

@@ -14,7 +14,7 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen flex-col">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col border-border lg:border-x">
-        <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4 sm:px-8">
+        <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
           <Link
             href="/"
             className="inline-flex items-center gap-2 rounded text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"

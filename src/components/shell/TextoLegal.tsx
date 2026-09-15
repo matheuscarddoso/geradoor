@@ -94,7 +94,7 @@ export function PaginaLegal({ titulo, secoes }: { titulo: string; secoes: SecaoL
       {/* O sumário fica numa coluna própria a partir de lg. Abaixo disso não há
           largura para duas colunas, e um sumário empilhado antes do texto só
           empurraria a leitura para baixo. */}
-      <div className="mx-auto grid gap-10 px-4 pb-20 pt-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-12">
+      <div className="mx-auto grid gap-10 px-4 pb-20 pt-12 sm:px-8 lg:grid-cols-[minmax(0,1fr)_15rem] lg:gap-12">
         <article className="min-w-0 max-w-2xl">
           {secoes.map(({ titulo: tituloDaSecao, conteudo }, indice) => (
             <section

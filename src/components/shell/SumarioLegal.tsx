@@ -38,18 +38,18 @@ export function SumarioLegal({ secoes }: { secoes: { id: string; titulo: string 
   }, [secoes]);
 
   return (
-    <nav aria-label="Nesta página" className="sticky top-8">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400 dark:text-zinc-500">Nesta página</p>
-      <ul className="mt-3 flex flex-col border-s border-border">
+    <nav aria-label="Nesta página" className="sticky top-10">
+      <p className="text-sm font-semibold tracking-tight text-foreground">Nesta página</p>
+      <ul className="mt-5 flex flex-col">
         {secoes.map(({ id, titulo }) => (
           <li key={id}>
             <a
               href={`#${id}`}
               aria-current={ativa === id ? "true" : undefined}
               className={cn(
-                "-ms-px block border-s border-transparent py-1.5 ps-3 text-[13px] leading-snug transition-colors duration-150",
+                "block rounded py-1.5 text-sm leading-snug transition-colors duration-150",
                 "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
-                ativa === id ? "border-foreground text-foreground" : "text-muted-foreground"
+                ativa === id ? "font-medium text-foreground" : "text-muted-foreground"
               )}
             >
               {titulo}

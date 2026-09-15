@@ -12,7 +12,11 @@ import { Rodape } from "@/components/shell/Rodape";
  */
 export default function LayoutLegal({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
+    // overflow-x-clip porque a faixa do título é full-bleed e as cruzes ficam
+    // metade para fora dela: abaixo de lg, onde não há trilho lateral, essa
+    // metade cairia fora da tela e criaria rolagem horizontal. `clip` corta sem
+    // virar contêiner de rolagem, então o sumário fixo continua funcionando.
+    <div className="flex min-h-screen flex-col overflow-x-clip">
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col border-border lg:border-x">
         <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
           <Link

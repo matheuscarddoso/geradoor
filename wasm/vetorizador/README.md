@@ -1,8 +1,13 @@
 # Motor do vetorizador
 
-O traçado de imagem para SVG do [Vetorizador](https://www.geradoor.com/vetorizador),
-compilado de Rust para WebAssembly. Roda no navegador da pessoa, num worker; nada
-passa por servidor.
+O traçado de **foto e de arte com textura** do
+[Vetorizador](https://www.geradoor.com/vetorizador), compilado de Rust para
+WebAssembly. Roda no navegador da pessoa, num worker; nada passa por servidor.
+
+Logo, arte de cores chapadas e traço não passam por aqui: vão para o traçado de
+precisão (`src/lib/tracadoPreciso.ts`), que lê a borda abaixo do pixel e devolve
+retas e cantos exatos. O porquê está em
+[`docs/vetorizador.md`](../../docs/vetorizador.md), seção 4.1.
 
 A feature inteira — página, preparação dos pixels, estilos, fidelidade, limites —
 está em [`docs/vetorizador.md`](../../docs/vetorizador.md). Este documento cobre só o
@@ -11,8 +16,8 @@ motor: o que é, como se comunica, como compilar e como publicar uma versão nov
 | | |
 |---|---|
 | Código | `src/lib.rs` |
-| Arquivo publicado | `public/wasm/vetorizador-v1.wasm` (145 KB) |
-| SHA-256 | `536dafe1b33b22f4d02c5067a5f38a5366fba04618dbb835c72329a796b94086` |
+| Arquivo publicado | `public/wasm/vetorizador-v2.wasm` (145 KB) |
+| SHA-256 | `2403f697fd2064f9713a6d9ac4504f4057017546469fa4efa835dfad97693cb2` |
 | Algoritmo | [VTracer](https://github.com/visioncortex/vtracer) 0.6.5, sobre `visioncortex` 0.8.8 |
 | Licença do algoritmo | MIT OR Apache-2.0 |
 | Compilador | Rust 1.94.0 (fixado em `rust-toolchain.toml`) |
@@ -106,11 +111,11 @@ Medições que definiram os limites (Node, mesmo `.wasm`):
 | Foto real, 2,8 MP | 207 MB | 2,0 s |
 | Ruído puro (pior caso), 1 MP | 193 MB | 3,6 s |
 | Ruído puro, 2 MP | 385 MB | 8,9 s |
-| Ruído puro, 3,6 MP | aborta em 0,14 s, no teto | — |
 
-O pior caso cresce ~195 MB por megapixel. Por isso a página traça no máximo 2 MP
-(`PIXELS_MAXIMOS_DE_TRACADO`): nem ruído puro encosta no teto. Numa imagem real,
-depois da redução de cores que a página faz antes, o uso fica bem abaixo disso.
+O pior caso cresce ~195 MB por megapixel. A página traça no máximo 1,2 MP
+(`PIXELS_MAXIMOS_DE_TRACADO`) e passa antes um piso automático de área
+(`pisoDeArea`), que tira o ruído que viraria cluster: o que chega aqui é bem
+mais simples do que essa tabela, e o teto de 256 MB tem folga.
 
 ---
 
@@ -125,7 +130,7 @@ wasm/vetorizador/construir.sh
 ```
 
 O script compila (com `-j 2`, para não disputar a máquina inteira), copia o
-resultado para `public/wasm/vetorizador-v1.wasm` e imprime o SHA-256.
+resultado para `public/wasm/vetorizador-v2.wasm` e imprime o SHA-256.
 
 ### Reprodutibilidade
 

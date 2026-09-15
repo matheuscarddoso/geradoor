@@ -9,7 +9,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 # -j 2: a compilação não disputa a máquina inteira com o resto.
 cargo build --release -j 2
-destino=../../public/wasm/vetorizador-v1.wasm
+destino=../../public/wasm/vetorizador-v2.wasm
 mkdir -p "$(dirname "$destino")"
 cp target/wasm32-unknown-unknown/release/vetorizador.wasm "$destino"
 shasum -a 256 "$destino"

@@ -7,9 +7,10 @@
  * como os controles viram parâmetros do motor, como o SVG é montado e como a
  * fidelidade é medida. Tudo puro, para ser conferido por teste sem canvas.
  *
- * Este arquivo não importa nada de propósito: roda igual no worker, na página
- * e no Node.
+ * Este arquivo só importa tipos: roda igual no worker, na página e no Node.
  */
+
+import type { EntradaDoTracado } from "./tracadoPreciso";
 
 export interface Dimensoes {
   largura: number;
@@ -22,8 +23,8 @@ export interface Dimensoes {
 
 /** O motor, com versão no nome: um motor novo é um arquivo novo. */
 export const MOTOR = {
-  url: "/wasm/vetorizador-v1.wasm",
-  sha256: "536dafe1b33b22f4d02c5067a5f38a5366fba04618dbb835c72329a796b94086",
+  url: "/wasm/vetorizador-v2.wasm",
+  sha256: "2403f697fd2064f9713a6d9ac4504f4057017546469fa4efa835dfad97693cb2",
 } as const;
 
 export const MAX_BYTES = 80 * 1024 * 1024;
@@ -42,40 +43,45 @@ export function validarArquivo(arquivo: { type: string; size: number }): Validac
 }
 
 /**
- * Teto de área do traçado: 2 MP.
- *
- * Medido no motor: uma foto real de 2,8 MP ocupou 207 MB de memória, e ruído
- * puro — o pior caso possível, um cluster por pixel — 385 MB a 2 MP. O módulo
- * tem teto duro de 512 MB (wasm/vetorizador/.cargo/config.toml), então 2 MP é
- * o maior valor em que nem o pior caso encosta nele.
+ * Teto de área do traçado: 1,2 MP.
  *
  * Não é teto de qualidade da saída: o SVG é vetorial e sai com o tamanho
- * original. É a resolução em que as formas são lidas, e 2 MP é mais do que o
- * olho distingue numa forma de logo ou ilustração.
+ * original. É a resolução em que as formas são lidas, e o contorno é lido
+ * abaixo do pixel (ver tracadoPreciso.ts), então 1,2 MP descreve uma forma com
+ * precisão de fração de pixel — mais do que qualquer logo precisa.
+ *
+ * O que manda aqui é memória. Medido em navegador, com o teto anterior de
+ * 2 MP: subir quatro imagens em sequência levava o Chrome de 640 MB a 960 MB,
+ * com picos de 1,08 GB, e numa máquina com pouca RAM livre a aba morria. O
+ * custo é quase linear na área, e 1,2 MP corta o pico quase à metade.
  */
-export const PIXELS_MAXIMOS_DE_TRACADO = 2_000_000;
-export const LADO_MAXIMO_DE_TRACADO = 2048;
+export const PIXELS_MAXIMOS_DE_TRACADO = 1_200_000;
+export const LADO_MAXIMO_DE_TRACADO = 1600;
+
 
 /**
- * Imagens pequenas são ampliadas antes do traçado, até este lado maior e no
- * máximo 4×. Num ícone de 128 px, cada degrau do contorno vira um vértice;
- * ampliado com interpolação suave, o contorno vira curva.
+ * Lado maior da prévia de tela da imagem original.
+ *
+ * O palco tem uns 900 px de largura, o dobro numa tela retina. 1800 px mostra
+ * tudo o que a tela mostra, e guarda metade dos pixels que 2560 guardava — a
+ * prévia é a segunda maior alocação por imagem, depois do traçado.
  */
-export const LADO_MINIMO_DE_TRACADO = 1024;
-const AMPLIACAO_MAXIMA = 4;
+export const LADO_DA_PREVIA = 1800;
 
-/** Lado maior da prévia de tela da imagem original. */
-export const LADO_DA_PREVIA = 2560;
-
+/**
+ * A resolução em que a imagem é traçada: a própria, ou reduzida ao teto.
+ *
+ * Nunca ampliada. Uma versão anterior ampliava imagens pequenas até 1024 px
+ * para o contorno sair mais liso, e a interpolação espalhava o antisserrilhado:
+ * a haste de 1,5 px de um "I" num texto pequeno clareava até nenhum pixel
+ * passar da metade, e a letra sumia do SVG. O traçado de precisão lê a borda
+ * abaixo do pixel no próprio antisserrilhado, e não precisa de mais pixels.
+ */
 export function dimensoesDeTracado(original: Dimensoes): Dimensoes {
   const { largura, altura } = original;
   if (largura <= 0 || altura <= 0) throw new RangeError("Dimensões precisam ser positivas");
   const maior = Math.max(largura, altura);
-  const reducao = Math.min(LADO_MAXIMO_DE_TRACADO / maior, Math.sqrt(PIXELS_MAXIMOS_DE_TRACADO / (largura * altura)));
-  let escala = Math.min(1, reducao);
-  if (escala === 1 && maior < LADO_MINIMO_DE_TRACADO) {
-    escala = Math.min(AMPLIACAO_MAXIMA, LADO_MINIMO_DE_TRACADO / maior, reducao);
-  }
+  const escala = Math.min(1, LADO_MAXIMO_DE_TRACADO / maior, Math.sqrt(PIXELS_MAXIMOS_DE_TRACADO / (largura * altura)));
   return {
     largura: Math.max(1, Math.floor(largura * escala)),
     altura: Math.max(1, Math.floor(altura * escala)),
@@ -96,16 +102,26 @@ export function dimensoesDaPrevia(original: Dimensoes): Dimensoes {
  * Tetos do SVG gerado. Acima deles o resultado não é mostrado: o traçado é
  * refeito mais simples.
  *
- * O risco aqui não é o motor, é a página. Um SVG com 50 mil caminhos e 25 MB
- * — o que ruído puro gera — leva segundos para o navegador desenhar, e trava
- * a aba enquanto isso. Numa foto real a 2 MP, o estilo mais detalhado ficou em
- * ~9 mil caminhos e 5 MB.
+ * O risco aqui não é o motor, é a página. O SVG fica vivo três vezes — como
+ * texto, como Blob e como imagem rasterizada pelo navegador, que numa tela
+ * retina desenha o dobro de pixels em cada uma das duas camadas do comparador.
+ * Medido: um SVG de 3,9 MB deixava ~90 MB presos por imagem exibida.
+ *
+ * 8 mil caminhos e 3 MB cobrem com folga o que uma arte vetorizável produz —
+ * o logo mais detalhado do banco de testes deu 1,2 mil caminhos e 33 KB — e
+ * seguram a foto, onde o detalhe é infinito por natureza.
  */
-export const MAX_CAMINHOS = 20_000;
-export const MAX_BYTES_DO_SVG = 8 * 1024 * 1024;
+export const MAX_CAMINHOS = 8_000;
+export const MAX_BYTES_DO_SVG = 3 * 1024 * 1024;
 
-/** Tentativas de simplificar antes de desistir. */
-export const MAX_TENTATIVAS = 3;
+/**
+ * Tentativas de simplificar antes de desistir.
+ *
+ * Duas, e não mais: cada tentativa é um traçado inteiro, com o pico de memória
+ * dele. O piso automático de área (ver `pisoDeArea`) já resolve antes o caso
+ * que fazia a terceira tentativa ser necessária.
+ */
+export const MAX_TENTATIVAS = 2;
 
 /** Tempo máximo de uma vetorização antes de o worker ser descartado. */
 export const TEMPO_LIMITE_MS = 30_000;
@@ -255,11 +271,11 @@ export function parametrosDoMotor(ajustes: Ajustes, estilo: EstiloConcreto, trac
  * motor esgota a memória: menos cores e menos detalhe a cada tentativa.
  */
 export function simplificar(ajustes: Ajustes, coresUsadas: number): Ajustes {
-  const cores = Math.max(CORES_MINIMAS, Math.floor((ajustes.cores === "auto" ? coresUsadas : ajustes.cores) * 0.6));
+  const cores = Math.max(CORES_MINIMAS, Math.floor((ajustes.cores === "auto" ? coresUsadas : ajustes.cores) * 0.5));
   return normalizarAjustes({
     ...ajustes,
     cores,
-    detalhe: Math.max(0, ajustes.detalhe - 25),
+    detalhe: Math.max(0, ajustes.detalhe - 35),
   });
 }
 
@@ -730,6 +746,153 @@ export function paletaAutomatica(h: Histograma, faixa: readonly [number, number]
   return paleta;
 }
 
+/**
+ * Tira da paleta as cores que são só antisserrilhado: mistura de duas outras
+ * cores da paleta, vista quase só em bordas.
+ *
+ * No texto pequeno, quase todo pixel é borda, e o peso do miolo não basta: a
+ * paleta automática de um texto preto sobre amarelo saía com cinco cores —
+ * três tons de oliva entre as duas — e cada tom virava um halo em volta das
+ * letras. O traçado de precisão já lê a borda como mistura das duas cores
+ * vizinhas; a cor intermediária só atrapalha.
+ *
+ * Uma cor sai quando fica a menos de 14 níveis (em sRGB, onde o
+ * antisserrilhado mistura) do segmento entre duas outras, no miolo dele, menos
+ * de 40% dos pixels dela são miolo de forma, e pelo menos 70% deles encostam
+ * numa das duas cores. Um cinza de verdade entre preto e branco tem áreas
+ * chapadas; o tom do meio de um degradê ocupa uma faixa larga, longe das
+ * pontas. Os dois ficam.
+ */
+export function removerMisturas(
+  paleta: Paleta,
+  h: Histograma,
+  pesosDoPixel: Float32Array | null,
+  dimensoes?: Dimensoes
+): Paleta {
+  let centros = Array.from({ length: paleta.centros.length / 3 }, (_, j) => j);
+  const rgb = centros.map((j) => oklabParaSrgb(paleta.centros[j * 3], paleta.centros[j * 3 + 1], paleta.centros[j * 3 + 2]));
+  const totais = new Float64Array(centros.length);
+  const miolo = new Float64Array(centros.length);
+  for (let i = 0; i < h.caixaDoPixel.length; i++) {
+    const caixa = h.caixaDoPixel[i];
+    if (caixa < 0) continue;
+    const j = paleta.rotulos[caixa];
+    totais[j]++;
+    if (!pesosDoPixel || pesosDoPixel[i] === 1) miolo[j]++;
+  }
+
+  /**
+   * Fração dos pixels da cor `j` que têm `a` e `b` a até 1 px: a faixa de
+   * antisserrilhado é fina e fica entre as duas cores; o tom de um degradê
+   * ocupa uma região, e os vizinhos dele são ele mesmo.
+   */
+  const naFaixa = (j: number, a: number, b: number) => {
+    if (!dimensoes) return 1;
+    const { largura, altura } = dimensoes;
+    let dentro = 0;
+    let contados = 0;
+    for (let i = 0; i < h.caixaDoPixel.length; i++) {
+      const caixa = h.caixaDoPixel[i];
+      if (caixa < 0 || paleta.rotulos[caixa] !== j) continue;
+      contados++;
+      const x = i % largura;
+      const y = (i - x) / largura;
+      let temA = false;
+      let temB = false;
+      for (let dy = -1; dy <= 1; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= altura) continue;
+        for (let dx = -1; dx <= 1; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= largura) continue;
+          const c = h.caixaDoPixel[yy * largura + xx];
+          if (c < 0) continue;
+          const r = paleta.rotulos[c];
+          if (r === a) temA = true;
+          else if (r === b) temB = true;
+        }
+      }
+      if (temA || temB) dentro++;
+    }
+    return contados === 0 ? 0 : dentro / contados;
+  };
+
+  const eMistura = (j: number, restantes: number[]) => {
+    if (totais[j] === 0 || miolo[j] / totais[j] >= 0.4) return false;
+    const c = rgb[j];
+    for (const a of restantes) {
+      for (const b of restantes) {
+        if (a >= b || a === j || b === j) continue;
+        const A = rgb[a];
+        const B = rgb[b];
+        const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+        const comprimento2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+        if (comprimento2 < 40 * 40) continue;
+        const t = ((c[0] - A[0]) * d[0] + (c[1] - A[1]) * d[1] + (c[2] - A[2]) * d[2]) / comprimento2;
+        if (t < 0.08 || t > 0.92) continue;
+        const distancia = Math.hypot(A[0] + d[0] * t - c[0], A[1] + d[1] * t - c[1], A[2] + d[2] * t - c[2]);
+        if (distancia <= 14 && naFaixa(j, a, b) >= 0.7) return true;
+      }
+    }
+    return false;
+  };
+
+  // Uma por vez, da mais "borda" para a menos: tirar uma pode tornar outra
+  // extremo de segmento, e o critério precisa ser refeito.
+  for (;;) {
+    const candidatas = centros
+      .filter((j) => eMistura(j, centros))
+      .sort((x, y) => miolo[x] / totais[x] - miolo[y] / totais[y]);
+    if (candidatas.length === 0 || centros.length <= 2) break;
+    centros = centros.filter((j) => j !== candidatas[0]);
+  }
+  if (centros.length === paleta.centros.length / 3) return paleta;
+
+  const novos = new Float32Array(centros.length * 3);
+  centros.forEach((j, k) => novos.set(paleta.centros.subarray(j * 3, j * 3 + 3), k * 3));
+  const rotulos = new Int32Array(paleta.rotulos.length);
+  for (let caixa = 0; caixa < rotulos.length; caixa++) {
+    const L = h.cores[caixa * 3];
+    const a = h.cores[caixa * 3 + 1];
+    const b = h.cores[caixa * 3 + 2];
+    let melhor = 0;
+    let menor = Infinity;
+    for (let k = 0; k < centros.length; k++) {
+      const dl = L - novos[k * 3];
+      const da = a - novos[k * 3 + 1];
+      const db = b - novos[k * 3 + 2];
+      const dist = dl * dl + da * da + db * db;
+      if (dist < menor) {
+        menor = dist;
+        melhor = k;
+      }
+    }
+    rotulos[caixa] = melhor;
+  }
+  return { centros: novos, rotulos, erroMedio: paleta.erroMedio, malRepresentados: paleta.malRepresentados };
+}
+
+/** Escreve nos pixels a cor do rótulo de cada um; rótulo negativo vira transparente. */
+export function aplicarRotulos(
+  rgba: Uint8ClampedArray | Uint8Array,
+  rotulos: Int16Array,
+  cores: ReadonlyArray<readonly [number, number, number]>
+): void {
+  for (let i = 0; i < rotulos.length; i++) {
+    const p = i * 4;
+    const r = rotulos[i];
+    if (r < 0) {
+      rgba[p] = rgba[p + 1] = rgba[p + 2] = rgba[p + 3] = 0;
+      continue;
+    }
+    const cor = cores[r];
+    rgba[p] = cor[0];
+    rgba[p + 1] = cor[1];
+    rgba[p + 2] = cor[2];
+    rgba[p + 3] = 255;
+  }
+}
+
 /** Escreve a paleta nos pixels opacos. Devolve as cores em sRGB. */
 export function aplicarPaleta(rgba: Uint8ClampedArray | Uint8Array, h: Histograma, paleta: Paleta): Array<[number, number, number]> {
   const k = paleta.centros.length / 3;
@@ -825,16 +988,31 @@ export interface Preparacao {
   paleta: Array<[number, number, number]>;
   fundo: ResultadoDoFundo | null;
   limiar: number | null;
+  /**
+   * Traçado de precisão (tracadoPreciso.ts). Falso na Foto e na arte com
+   * textura, que vão ao VTracer.
+   */
+  preciso: boolean;
+  /**
+   * Rótulo de cor de cada pixel e as cores. O traçado de precisão trabalha
+   * direto nisto; o caminho do VTracer usa para medir a complexidade e
+   * simplificar antes de traçar.
+   */
+  entrada: EntradaDoTracado;
 }
 
 /**
- * Tudo o que acontece com os pixels antes do motor, na ordem:
+ * Tudo o que acontece com os pixels antes do traçado, na ordem:
  *
  * 1. alfa binário;
  * 2. estilo decidido, se automático;
  * 3. no traço, binarização; nos demais, suavização (foto) e redução de cores;
- * 4. fundo liso removido, se pedido (no traço não precisa: o papel já sai
- *    transparente).
+ * 4. fundo liso, se pedido.
+ *
+ * Na Foto, os pixels saem prontos para o VTracer, com a paleta aplicada e o
+ * fundo apagado. Nos demais estilos, sai também `entrada`, para o traçado de
+ * precisão: os rótulos de cor de cada pixel e os pixels originais, cujo
+ * antisserrilhado diz onde cada borda passa.
  *
  * `referencia` recebe a imagem que o SVG tenta reproduzir, contra a qual a
  * fidelidade é medida: os pixels depois do passo 1, sem o fundo que o passo 4
@@ -847,46 +1025,290 @@ export function prepararPixels(
   ajustes: Ajustes,
   referencia?: (pixels: Uint8ClampedArray) => void
 ): Preparacao {
+  const total = dimensoes.largura * dimensoes.altura;
+  const original = new Uint8ClampedArray(rgba);
   binarizarAlfa(rgba);
 
   if (ajustes.estilo === "traco") {
     const limiar = ajustes.limiar === "auto" ? limiarDeOtsu(rgba) : ajustes.limiar;
+    const rotulos = new Int16Array(total);
+    const somas = [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ];
+    for (let i = 0; i < total; i++) {
+      const p = i * 4;
+      if (rgba[p + 3] === 0) {
+        rotulos[i] = -1;
+        continue;
+      }
+      const r = luminancia(rgba[p], rgba[p + 1], rgba[p + 2]) <= limiar ? 0 : 1;
+      rotulos[i] = r;
+      somas[r][0] += rgba[p];
+      somas[r][1] += rgba[p + 1];
+      somas[r][2] += rgba[p + 2];
+      somas[r][3]++;
+    }
+    const media = (k: number, padrao: number): [number, number, number] =>
+      somas[k][3] === 0 ? [padrao, padrao, padrao] : [somas[k][0] / somas[k][3], somas[k][1] / somas[k][3], somas[k][2] / somas[k][3]];
     binarizar(rgba, limiar);
     if (referencia) {
       const tinta = new Uint8ClampedArray(rgba.length);
       for (let p = 0; p < rgba.length; p += 4) if (rgba[p] === 0) tinta[p + 3] = 255;
       referencia(tinta);
     }
-    return { estilo: "traco", coresUsadas: 1, paleta: [], fundo: null, limiar };
+    return {
+      estilo: "traco",
+      coresUsadas: 1,
+      paleta: [],
+      fundo: null,
+      limiar,
+      preciso: true,
+      entrada: {
+        dimensoes,
+        original,
+        rotulos,
+        cores: [media(0, 0), media(1, 255)],
+        // O papel não é desenhado: o traço é só a tinta, sobre transparente.
+        fundo: { rotulo: 1, retangulo: false },
+        preenchimento: new Map([[0, "#000000"]]),
+      },
+    };
   }
 
   const antes = referencia ? new Uint8ClampedArray(rgba) : null;
 
   let estilo: EstiloConcreto = ajustes.estilo === "automatico" ? "ilustracao" : ajustes.estilo;
-  let h = histograma(rgba, pesosDoMiolo(rgba, dimensoes) ?? undefined);
+  let pesos = pesosDoMiolo(rgba, dimensoes);
+  let h = histograma(rgba, pesos ?? undefined);
   if (ajustes.estilo === "automatico") estilo = detectarEstilo(h);
 
   const perfil = PERFIS[estilo];
   if (perfil.suavizarAntes) {
     suavizarPreservandoBordas(rgba, dimensoes);
-    h = histograma(rgba, pesosDoMiolo(rgba, dimensoes) ?? undefined);
+    pesos = pesosDoMiolo(rgba, dimensoes);
+    h = histograma(rgba, pesos ?? undefined);
   }
 
-  const paleta =
+  let paleta =
     ajustes.cores === "auto" ? paletaAutomatica(h, perfil.faixaDeCores, perfil.erroAlvo) : kmeans(h, ajustes.cores);
+  const preciso = estilo === "logo" || (estilo === "ilustracao" && eArteChapada(h, paleta, pesos));
+  // No traçado de precisão, a borda é lida como mistura: cor que só é
+  // mistura sai da paleta. No VTracer, os tons intermediários são desenho.
+  if (preciso) paleta = removerMisturas(paleta, h, pesos, dimensoes);
   const cores = aplicarPaleta(rgba, h, paleta);
 
-  let fundo: ResultadoDoFundo | null = null;
-  const removidos = new Uint8Array(dimensoes.largura * dimensoes.altura);
-  if (ajustes.fundoTransparente) fundo = removerFundoLiso(rgba, dimensoes, removidos);
+  const rotulos = new Int16Array(total);
+  for (let i = 0; i < total; i++) {
+    const caixa = h.caixaDoPixel[i];
+    rotulos[i] = caixa < 0 ? -1 : paleta.rotulos[caixa];
+  }
+
+  if (!preciso) {
+    let fundo: ResultadoDoFundo | null = null;
+    const removidos = new Uint8Array(total);
+    if (ajustes.fundoTransparente) fundo = removerFundoLiso(rgba, dimensoes, removidos);
+    if (antes && referencia) {
+      if (fundo === "removido") for (let i = 0; i < total; i++) if (removidos[i]) antes[i * 4 + 3] = 0;
+      referencia(antes);
+    }
+    // Os rótulos vão junto: o caminho do VTracer mede neles a complexidade da
+    // imagem e simplifica antes de traçar (ver o worker).
+    for (let i = 0; i < total; i++) if (removidos[i]) rotulos[i] = -1;
+    return {
+      estilo,
+      coresUsadas: cores.length,
+      paleta: cores,
+      fundo,
+      limiar: null,
+      preciso: false,
+      entrada: { dimensoes, original, rotulos, cores, fundo: null },
+    };
+  }
+
+  rotularMisturas(rotulos, original, dimensoes, cores, pesos);
+  const coresDoTracado: Array<[number, number, number]> = cores.map((c) => [...c] as [number, number, number]);
+  const { resultado: fundo, entrada: fundoDaEntrada } = separarFundo(rotulos, dimensoes, coresDoTracado, ajustes.fundoTransparente);
 
   if (antes && referencia) {
-    if (fundo === "removido") {
-      for (let i = 0; i < removidos.length; i++) if (removidos[i]) antes[i * 4 + 3] = 0;
+    if (ajustes.fundoTransparente && fundo === "removido" && fundoDaEntrada) {
+      for (let i = 0; i < total; i++) if (rotulos[i] === fundoDaEntrada.rotulo) antes[i * 4 + 3] = 0;
     }
     referencia(antes);
   }
-  return { estilo, coresUsadas: cores.length, paleta: cores, fundo, limiar: null };
+  return {
+    estilo,
+    coresUsadas: cores.length,
+    paleta: cores,
+    fundo: ajustes.fundoTransparente ? fundo : null,
+    limiar: null,
+    preciso: true,
+    entrada: { dimensoes, original, rotulos, cores: coresDoTracado, fundo: fundoDaEntrada },
+  };
+}
+
+/**
+ * Pixel de borda recebe uma das duas cores que ele mistura, nunca uma terceira.
+ *
+ * O antisserrilhado entre marinho e branco dá um azul acinzentado que, pela
+ * cor mais próxima, pode cair num terceiro tom da paleta — o piscina de outra
+ * forma da imagem. O círculo marinho saía com pontos piscina na borda, e o
+ * contorno dele picotado por eles. Aqui, cada pixel que não é miolo procura,
+ * entre as cores presentes numa janela 5 × 5 em volta, o par cuja mistura
+ * explica a cor dele, e fica com a ponta do par mais próxima.
+ */
+function rotularMisturas(
+  rotulos: Int16Array,
+  original: Uint8ClampedArray,
+  { largura, altura }: Dimensoes,
+  cores: ReadonlyArray<readonly [number, number, number]>,
+  pesos: Float32Array | null
+): void {
+  const saida = new Int16Array(rotulos);
+  const presentes = new Set<number>();
+  for (let y = 0; y < altura; y++) {
+    for (let x = 0; x < largura; x++) {
+      const i = y * largura + x;
+      if (rotulos[i] < 0 || (pesos && pesos[i] === 1)) continue;
+      presentes.clear();
+      for (let dy = -2; dy <= 2; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= altura) continue;
+        for (let dx = -2; dx <= 2; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= largura) continue;
+          const r = rotulos[yy * largura + xx];
+          if (r >= 0) presentes.add(r);
+        }
+      }
+      if (presentes.size < 2) continue;
+      const p = i * 4;
+      const c = [original[p], original[p + 1], original[p + 2]];
+      const proprio = cores[rotulos[i]];
+      let melhorDistancia = Math.hypot(c[0] - proprio[0], c[1] - proprio[1], c[2] - proprio[2]);
+      let melhor = rotulos[i];
+      const lista = [...presentes];
+      for (let u = 0; u < lista.length; u++) {
+        for (let v = u + 1; v < lista.length; v++) {
+          const A = cores[lista[u]];
+          const B = cores[lista[v]];
+          const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
+          const comprimento2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+          if (comprimento2 === 0) continue;
+          const t = Math.min(1, Math.max(0, ((c[0] - A[0]) * d[0] + (c[1] - A[1]) * d[1] + (c[2] - A[2]) * d[2]) / comprimento2));
+          const distancia = Math.hypot(A[0] + d[0] * t - c[0], A[1] + d[1] * t - c[1], A[2] + d[2] * t - c[2]);
+          if (distancia < melhorDistancia - 1) {
+            melhorDistancia = distancia;
+            melhor = t < 0.5 ? lista[u] : lista[v];
+          }
+        }
+      }
+      saida[i] = melhor;
+    }
+  }
+  rotulos.set(saida);
+}
+
+/**
+ * Se a imagem é arte de cores chapadas: a maior parte dos pixels fora da cor
+ * dominante é miolo de forma.
+ *
+ * Decide o traçado da Ilustração. Arte chapada vai ao traçado de precisão, com
+ * retas e cantos exatos. Imagem com sombreado e textura — uma foto tratada
+ * como ilustração — vai ao VTracer: medido numa foto, o traçado de precisão
+ * ficou com 72% a 79% de fidelidade, contra 94% do VTracer, que empilha
+ * regiões e reproduz melhor o sombreado.
+ */
+export function eArteChapada(h: Histograma, paleta: Paleta, pesosDoPixel: Float32Array | null): boolean {
+  if (!pesosDoPixel) return false;
+  const k = paleta.centros.length / 3;
+  const contagem = new Float64Array(k);
+  for (let i = 0; i < h.caixaDoPixel.length; i++) {
+    const caixa = h.caixaDoPixel[i];
+    if (caixa >= 0) contagem[paleta.rotulos[caixa]]++;
+  }
+  let dominante = 0;
+  for (let j = 1; j < k; j++) if (contagem[j] > contagem[dominante]) dominante = j;
+  let total = 0;
+  let miolo = 0;
+  for (let i = 0; i < h.caixaDoPixel.length; i++) {
+    const caixa = h.caixaDoPixel[i];
+    if (caixa < 0 || paleta.rotulos[caixa] === dominante) continue;
+    total++;
+    if (pesosDoPixel[i] === 1) miolo++;
+  }
+  return total > 0 && miolo / total >= 0.55;
+}
+
+/**
+ * O fundo do traçado de precisão: a cor que ocupa pelo menos metade da borda.
+ *
+ * - Sem fundo transparente, ele vira um retângulo por baixo de tudo, e os
+ *   pixels dele não são traçados — os buracos das outras camadas mostram o
+ *   retângulo.
+ * - Com fundo transparente, só a parte dele ligada à borda some. O resto — o
+ *   branco dentro de um "O", os olhos de uma coruja — ganha um rótulo próprio,
+ *   da mesma cor, e é traçado como desenho.
+ */
+function separarFundo(
+  rotulos: Int16Array,
+  { largura, altura }: Dimensoes,
+  cores: Array<[number, number, number]>,
+  transparente: boolean
+): { resultado: ResultadoDoFundo; entrada: EntradaDoTracado["fundo"] } {
+  const total = largura * altura;
+  const borda: number[] = [];
+  for (let x = 0; x < largura; x++) borda.push(x, (altura - 1) * largura + x);
+  for (let y = 1; y < altura - 1; y++) borda.push(y * largura, y * largura + largura - 1);
+
+  const contagem = new Map<number, number>();
+  let opacas = 0;
+  for (const i of borda) {
+    if (rotulos[i] < 0) continue;
+    opacas++;
+    contagem.set(rotulos[i], (contagem.get(rotulos[i]) ?? 0) + 1);
+  }
+  if (opacas < borda.length * BORDA_MINIMA_DO_FUNDO) return { resultado: "ja-transparente", entrada: null };
+  let rotulo = -1;
+  let maior = 0;
+  for (const [r, n] of contagem) {
+    if (n > maior) {
+      maior = n;
+      rotulo = r;
+    }
+  }
+  if (maior < borda.length * BORDA_MINIMA_DO_FUNDO) return { resultado: "sem-fundo-liso", entrada: null };
+  if (!transparente) return { resultado: "removido", entrada: { rotulo, retangulo: true } };
+
+  const ligado = new Uint8Array(total);
+  const pilha = new Int32Array(total);
+  let topo = 0;
+  for (const i of borda) {
+    if (!ligado[i] && rotulos[i] === rotulo) {
+      ligado[i] = 1;
+      pilha[topo++] = i;
+    }
+  }
+  while (topo > 0) {
+    const i = pilha[--topo];
+    const x = i % largura;
+    const vizinhos = [x > 0 ? i - 1 : -1, x < largura - 1 ? i + 1 : -1, i - largura, i + largura];
+    for (const j of vizinhos) {
+      if (j < 0 || j >= total || ligado[j] || rotulos[j] !== rotulo) continue;
+      ligado[j] = 1;
+      pilha[topo++] = j;
+    }
+  }
+  const interno = cores.length;
+  let temInterno = false;
+  for (let i = 0; i < total; i++) {
+    if (rotulos[i] === rotulo && !ligado[i]) {
+      rotulos[i] = interno;
+      temInterno = true;
+    }
+  }
+  if (temInterno) cores.push([...cores[rotulo]] as [number, number, number]);
+  return { resultado: "removido", entrada: { rotulo, retangulo: false } };
 }
 
 /**
@@ -1125,8 +1547,8 @@ export type RespostaDoVetorizador =
       svg: string;
       caminhos: number;
       preparacao: Preparacao;
-      /** A referência da fidelidade, em `dimensoesDaAmostra(tracado)`. */
-      referencia: ArrayBuffer;
+      /** 0 a 1, medida no worker contra a imagem preparada. */
+      fidelidade: number;
       duracaoMs: number;
     }
   | {

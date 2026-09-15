@@ -85,13 +85,13 @@ describe("arquivo e tamanhos", () => {
     expect(d.largura).toBeLessThanOrEqual(LADO_MAXIMO_DE_TRACADO);
   });
 
-  it("amplia imagem pequena até 1024 px, no máximo 4×", () => {
-    expect(dimensoesDeTracado({ largura: 512, altura: 256 })).toEqual({ largura: 1024, altura: 512 });
-    expect(dimensoesDeTracado({ largura: 64, altura: 64 })).toEqual({ largura: 256, altura: 256 });
+  it("nunca amplia: imagem pequena é traçada no tamanho dela", () => {
+    expect(dimensoesDeTracado({ largura: 680, altura: 457 })).toEqual({ largura: 680, altura: 457 });
+    expect(dimensoesDeTracado({ largura: 64, altura: 64 })).toEqual({ largura: 64, altura: 64 });
   });
 
   it("deixa como está o que já cabe entre os limites", () => {
-    expect(dimensoesDeTracado({ largura: 1600, altura: 1000 })).toEqual({ largura: 1600, altura: 1000 });
+    expect(dimensoesDeTracado({ largura: 1200, altura: 900 })).toEqual({ largura: 1200, altura: 900 });
   });
 
   it("amostra da fidelidade com lado de até 384 px", () => {
@@ -117,15 +117,15 @@ describe("ajustes", () => {
 
   it("simplificar corta cores e detalhe, sem passar do mínimo", () => {
     const s = simplificar({ ...AJUSTES_INICIAIS, cores: 20, detalhe: 60 }, 20);
-    expect(s.cores).toBe(12);
-    expect(s.detalhe).toBe(35);
+    expect(s.cores).toBe(10);
+    expect(s.detalhe).toBe(25);
     const minimo = simplificar({ ...AJUSTES_INICIAIS, cores: 2, detalhe: 10 }, 2);
     expect(minimo.cores).toBe(2);
     expect(minimo.detalhe).toBe(0);
   });
 
   it("simplificar parte das cores que o automático usou", () => {
-    expect(simplificar(AJUSTES_INICIAIS, 40).cores).toBe(24);
+    expect(simplificar(AJUSTES_INICIAIS, 40).cores).toBe(20);
   });
 });
 

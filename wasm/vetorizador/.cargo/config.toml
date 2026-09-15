@@ -2,9 +2,12 @@
 target = "wasm32-unknown-unknown"
 
 [target.wasm32-unknown-unknown]
-# Teto duro de memória do módulo: 512 MB. Passou disso, a alocação falha
+# Teto duro de memória do módulo: 256 MB. Passou disso, a alocação falha
 # dentro do WebAssembly e a vetorização aborta — o navegador nunca vê o
-# worker crescer além daqui, seja qual for a imagem. O valor tem folga sobre
-# o maior pico medido no teto de resolução da página (ver
-# src/lib/vetorizador.ts, PIXELS_MAXIMOS_DE_TRACADO).
-rustflags = ["-C", "link-arg=--max-memory=536870912"]
+# worker crescer além daqui, seja qual for a imagem.
+#
+# Era 512 MB, com o traçado a 2 MP. Subir imagens em sequência levava o
+# Chrome a 1 GB e matava a aba em máquina com pouca RAM livre. Com o traçado
+# a 1,2 MP e o piso automático de área (que tira o ruído antes do motor),
+# 256 MB tem folga sobre o pior caso medido.
+rustflags = ["-C", "link-arg=--max-memory=268435456"]

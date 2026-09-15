@@ -16,6 +16,7 @@ versão nova — tem manual próprio:
 2. [Mapa dos arquivos](#2-mapa-dos-arquivos)
 3. [O caminho de uma imagem](#3-o-caminho-de-uma-imagem)
 4. [Preparação dos pixels](#4-preparação-dos-pixels)
+4.1. [Os dois traçados](#41-os-dois-traçados)
 5. [Estilos e controles](#5-estilos-e-controles)
 6. [Fidelidade](#6-fidelidade)
 7. [Garantias contra travar](#7-garantias-contra-travar)
@@ -38,7 +39,7 @@ cada ajuste refaz o SVG em segundos — e baixa o arquivo ou copia o código.
 | Princípio | Como se traduz |
 |---|---|
 | **Custo zero** | Tudo roda no navegador. Sem servidor, sem cota, sem conta para vigiar. |
-| **Não travar** | Motor num worker descartável, teto de memória no próprio WebAssembly, tetos de complexidade antes de o SVG chegar à tela (seção 7). |
+| **Não travar** | Decodificação já reduzida, piso automático de detalhe, teto de memória no WebAssembly, tetos de complexidade antes de o SVG chegar à tela (seção 7). |
 | **Fiel à imagem** | Cores escolhidas pela imagem, contornos no lugar certo, e a fidelidade medida e mostrada (seção 6). |
 | **Privacidade** | A imagem não sai do aparelho. |
 
@@ -51,10 +52,11 @@ palco ou em "Escolher imagem", ou colar (⌘V / Ctrl+V) fora de um campo de text
 
 | Tipo | Resultado |
 |---|---|
-| Logo, ícone, cores chapadas | Praticamente idêntico, poucas formas, arquivo de KB. Fidelidade medida acima de 98%. |
+| Logo, ícone, cores chapadas | Retas saem retas e cantos saem no lugar exato, não como curvas onduladas. Poucas formas, arquivo de KB, fidelidade acima de 98%. |
 | Traço, desenho, assinatura | Excelente. Fidelidade acima de 99%. |
-| Ilustração | Boa; degradês viram faixas de cor. |
-| Foto | Efeito pôster. Mais cores deixam mais fiel e mais pesado (16 cores: ~2 MB, fidelidade ~90%). |
+| Texto pequeno dentro do logo | As letras saem fechadas e legíveis até ~9 px de altura. |
+| Ilustração | Arte chapada sai como logo; com sombreado, vira efeito pôster. |
+| Foto | Efeito pôster. Mais cores deixam mais fiel e mais pesado (16 cores: ~2,7 MB, fidelidade ~94%). |
 
 ---
 
@@ -68,10 +70,12 @@ palco ou em "Escolher imagem", ou colar (⌘V / Ctrl+V) fora de um campo de text
 | `src/components/vetorizador/AjustesDoVetor.tsx` | Estilo, sliders, fundo transparente, cor do traço. |
 | `src/lib/useVetorizador.ts` | Hook: compila o motor, cria e descarta workers, tentativas de simplificação, tempo limite, mede a fidelidade. |
 | `src/lib/vetorizador.ts` | Toda a lógica pura: limites, estilos, cor OKLab, preparação dos pixels, paleta, fundo, parâmetros do motor, SVG, fidelidade, protocolo. |
-| `src/lib/vetorizador.worker.ts` | Worker: decodifica a imagem; prepara, traça e monta o SVG. |
+| `src/lib/vetorizador.worker.ts` | Worker: decodifica a imagem; prepara, traça, monta o SVG e mede a fidelidade. |
+| `src/lib/tracadoPreciso.ts` | O traçado de logo, arte chapada e traço: contorno abaixo do pixel, retas e cantos exatos, curvas de Bézier. |
+| `src/lib/dimensoesDaImagem.ts` | Lê largura, altura e orientação do cabeçalho do arquivo, sem decodificar. |
 | `src/lib/vetorizadorMotor.ts` | Ponte entre TypeScript e o WebAssembly. |
 | `wasm/vetorizador/` | Código Rust do motor e script de compilação. |
-| `public/wasm/vetorizador-v1.wasm` | O motor compilado (145 KB), conferido por hash. |
+| `public/wasm/vetorizador-v2.wasm` | O motor compilado (145 KB), conferido por hash. |
 | `next.config.ts` | Cache imutável de um ano em `/wasm/:path*`. |
 | `src/lib/rotas.ts`, `AppShell.tsx`, `sitemap.ts` | Menu e busca com etiqueta "Novo", layout sem moldura, sitemap. |
 
@@ -118,22 +122,22 @@ Passo a passo:
 
 1. **Validação** (`validarArquivo`): tipo em JPG, PNG, WEBP ou AVIF; não vazio;
    até 80 MB.
-2. **Preparar** (worker descartável): `createImageBitmap` com
-   `imageOrientation: "from-image"` e desenho na resolução de traçado
-   (`dimensoesDeTracado`):
-   - acima de 2 MP ou de 2048 px de lado, reduz mantendo a proporção;
-   - abaixo de 1024 px de lado, amplia com interpolação suave até 1024 px, no
-     máximo 4× — num ícone pequeno, cada degrau do contorno viraria um vértice.
-   Gera também a prévia de tela (o próprio arquivo se couber em 2560 px).
-3. **Motor**, em paralelo: baixa `/wasm/vetorizador-v1.wasm`, confere o SHA-256,
+2. **Preparar**: o tamanho vem do cabeçalho do arquivo
+   (`dimensoesDaImagem.ts`), e `createImageBitmap` decodifica **já reduzido**
+   ao maior tamanho que será usado. Numa foto de 48 MP, é a diferença entre um
+   bitmap de 192 MB e um de 13 MB — era a maior alocação da ferramenta, e
+   acontecia antes de qualquer decisão. Formato cujo cabeçalho não se reconheça
+   decodifica inteiro, como antes. O traçado (`dimensoesDeTracado`) reduz o que
+   passar de 1,2 MP ou 1600 px de lado, e nunca amplia. A prévia de tela sai
+   com até 1800 px.
+3. **Motor**, em paralelo: baixa `/wasm/vetorizador-v2.wasm`, confere o SHA-256,
    compila uma vez. O `WebAssembly.Module` compilado é enviado a cada worker, que
    só instancia.
-4. **Vetorizar** (worker novo a cada vez): recebe uma cópia dos pixels — a página
-   mantém os originais para o próximo ajuste —, prepara (seção 4), roda o motor
-   com os parâmetros dos controles (seção 5), monta o SVG, encaixa as cores na
-   paleta e confere os tetos (seção 7).
-5. **Resultado**: o SVG vira Blob e object URL, a tela troca, e a fidelidade é
-   medida em seguida (seção 6).
+4. **Vetorizar**: o worker recebe uma cópia dos pixels — a página mantém os
+   originais para o próximo ajuste —, prepara (seção 4), traça (seção 4.1),
+   monta o SVG, encaixa as cores na paleta, confere os tetos (seção 7) e mede a
+   fidelidade (seção 6).
+5. **Resultado**: o SVG vira Blob e object URL, e a tela troca.
 6. **Ajustes**: cada mudança de controle espera 250 ms sem novas mudanças e
    vetoriza de novo. Um pedido novo encerra o worker do anterior na hora.
 
@@ -142,7 +146,8 @@ Passo a passo:
 ## 4. Preparação dos pixels
 
 `prepararPixels`, em `src/lib/vetorizador.ts`. É a parte que mais pesa na
-qualidade: o VTracer traça bem o que recebe, e o que ele recebe é decidido aqui.
+qualidade: o traçado desenha bem o que recebe, e o que ele recebe é decidido
+aqui.
 
 ### Estilos coloridos (Automático, Logo, Ilustração, Foto)
 
@@ -183,8 +188,18 @@ qualidade: o VTracer traça bem o que recebe, e o que ele recebe é decidido aqu
    - resultados: `removido`, `sem-fundo-liso` (a página sugere o Removedor de
      fundo) ou `ja-transparente`.
 
-Depois do motor, **`ajustarCoresAPaleta`** troca cada cor do SVG pela mais próxima
-da paleta. O VTracer pinta cada forma com a média dos pixels dela, e ao juntar
+Duas coisas a mais, só no traçado de precisão:
+
+- **`removerMisturas`** tira da paleta a cor que é só antisserrilhado — mistura
+  de duas outras, vista quase só em bordas e em faixa estreita. Num texto preto
+  sobre amarelo, a paleta automática vinha com cinco cores, três delas tons de
+  oliva, e cada tom virava um halo em volta das letras.
+- **`rotularMisturas`** dá a cada pixel de borda uma das duas cores que ele
+  mistura, nunca uma terceira. O antisserrilhado entre marinho e branco caía
+  no piscina de outra forma da imagem, e o contorno saía picotado.
+
+Depois do traçado, **`ajustarCoresAPaleta`** troca cada cor do SVG pela mais
+próxima da paleta. O VTracer pinta cada forma com a média dos pixels dela, e ao juntar
 uma mancha pequena à vizinha a média mistura as duas — uma letra saía em quatro
 tons de grafite, e um contorno ganhava uma lasca bege.
 
@@ -193,9 +208,70 @@ tons de grafite, e um contorno ganhava uma lasca bege.
 1. Alfa binário.
 2. **Limiar** de luminância: automático por **Otsu** (`limiarDeOtsu`) — o valor
    que melhor separa tinta de papel —, ou o escolhido no controle.
-3. **Binarização**: tinta preta, papel branco. O motor, em modo binário, traça só
-   a tinta; o papel sai transparente.
+3. **Binarização**: tinta preta, papel branco. Só a tinta é traçada; o papel
+   sai transparente.
 4. A cor do traço (preto, branco ou livre) substitui o preto no SVG.
+
+---
+
+## 4.1. Os dois traçados
+
+| Estilo | Traçado |
+|---|---|
+| Logo | Precisão (`tracadoPreciso.ts`) |
+| Traço | Precisão |
+| Ilustração | Precisão se for arte chapada; VTracer se tiver textura (`eArteChapada`) |
+| Foto | VTracer (`wasm/vetorizador`) |
+
+### Por que dois
+
+O VTracer traça o degrau dos pixels já reduzidos a cores chapadas e tenta
+alisar esse degrau com splines. A informação de onde a borda realmente passa —
+o antisserrilhado — foi jogada fora antes, e o que sai é uma reta de logo
+desenhada como dezenas de curvinhas que ondulam em volta dela. Num logo com
+muitos ângulos retos, isso salta aos olhos.
+
+Em foto e em arte com sombreado, o VTracer continua melhor: ele empilha regiões
+hierárquicas e reproduz o degradê. Medido numa foto tratada como ilustração, o
+traçado de precisão ficou em 72% a 79% de fidelidade, contra 94% do VTracer.
+
+### Como o traçado de precisão funciona
+
+1. **Cobertura abaixo do pixel** (`coberturas`). Cada cor vira um campo: 1 no
+   miolo, 0 fora, e na borda a fração que o antisserrilhado indica — a posição
+   da cor do pixel no segmento entre as duas cores vizinhas. Na borda com o
+   vazio, a fração é o alfa.
+2. **Piso automático de área** (`pisoDeArea`). As manchas menores que o detalhe
+   pedido são absorvidas pela vizinha; se ainda sobrarem mais de 6 mil regiões,
+   o piso dobra até caber. É o que impede uma textura de virar milhares de
+   caminhos — antes de gastar tempo e memória com eles.
+3. **Curvas de nível** (`curvasDeNivel`). O contorno é a linha de cobertura 0,5,
+   por marching squares com interpolação: ele passa exatamente no meio da
+   borda. Regiões pequenas têm o campo ampliado até 3× por interpolação
+   bicúbica (`ampliarRegiao`) — é o que reconstrói um traço de 1 px que caiu
+   entre duas fileiras de pixels, como o topo de um "O" num texto de 9 px.
+   `preservarTracosFinos` cuida do mesmo caso quando a ampliação não basta.
+4. **Polígono mínimo e cantos** (`analisarPoligono`). O contorno vira o
+   polígono com menos vértices que fica a 0,45 px dele, na ideia do Potrace
+   (Selinger, 2003). Um vértice é canto se a virada passa do ângulo pedido ou
+   se ele fica longe da corda entre os pontos médios das arestas vizinhas —
+   assim a ponta arredondada de um traço não vira dois cantos e uma reta.
+   Vértices próximos com viradas no mesmo sentido são fundidos: o
+   antisserrilhado corta a ponta de um canto e a simplificação o partia em dois.
+5. **Retas** (`ajustarReta`, `eArco`). Uma aresta longa do polígono vira uma
+   reta única, por mínimos quadrados totais, quando é reta de verdade: o teste
+   compara o ajuste de reta com o de círculo (Kåsa), porque numa circunferência
+   grande a aresta desvia da reta menos que o ruído. O canto entre duas retas é
+   a **interseção** delas, não o pixel mais próximo.
+6. **Curvas** (`ajustarCurva`). O resto é ajustado com Béziers cúbicas
+   (Schneider, *Graphics Gems*, 1990), subdividindo só onde o erro passa da
+   tolerância.
+7. **Rede de segurança** (`ajustarContorno`). O ajuste é comparado ao contorno
+   real nos dois sentidos; se algum ponto ficar longe demais, refaz com
+   tolerância justa, e em último caso sai como polígono fiel. Uma letra de
+   texto miúdo nunca sai deformada, nem some.
+8. **Sem frestas**. Um caminho por cor, com buracos (`evenodd`), e cada camada
+   avança dois pixels por baixo das camadas desenhadas depois dela.
 
 ---
 
@@ -236,8 +312,12 @@ Cores e limiar começam no automático e mostram o valor escolhido ("Automático
 
 ## 6. Fidelidade
 
-Depois de cada resultado, a página desenha o SVG numa amostra de até 384 px e
-compara com a **referência** que o worker devolveu (`fidelidade`).
+Depois de cada resultado, o **worker** desenha as próprias formas com `Path2D`
+numa amostra de até 384 px e compara com a **referência** (`fidelidade`).
+
+No worker, e não na página: medir exigia decodificar um SVG de milhares de
+caminhos na thread principal, e com uma imagem ruidosa isso deixava a tela sem
+responder por dezenas de segundos.
 
 - **Referência** é a imagem que o SVG tenta reproduzir: a original com alfa
   binário e sem o fundo que foi removido. No Traço, a tinta binarizada sobre
@@ -273,33 +353,48 @@ A exigência central da ferramenta. Cada camada, e onde ela mora:
 
 | # | Garantia | Onde |
 |---|---|---|
-| 1 | O motor roda num worker, nunca na thread da página | `useVetorizador` |
-| 2 | Um worker por pedido, encerrado ao fim: a memória do WebAssembly, que só cresce, volta ao sistema a cada vetorização | `pedir` em `useVetorizador` |
-| 3 | Pedido novo encerra o anterior na hora; a promessa abandonada é resolvida para não segurar os pixels | `encerrarWorker` |
-| 4 | Teto duro de 512 MB na memória do módulo: acima disso ele aborta, não cresce | `wasm/vetorizador/.cargo/config.toml` |
-| 5 | Traçado de no máximo 2 MP: nem o pior caso medido (385 MB) encosta no teto | `PIXELS_MAXIMOS_DE_TRACADO` |
-| 6 | A foto é decodificada uma vez só; os ajustes usam a cópia de até 2 MP | `carregar` |
-| 7 | SVG com mais de 20 mil caminhos ou 8 MB não chega à tela: o SVG pesado trava a aba ao ser desenhado | `MAX_CAMINHOS`, `MAX_BYTES_DO_SVG` |
-| 8 | Passou dos tetos ou esgotou a memória: tenta de novo com 60% das cores e 25 pontos a menos de detalhe, até 3 vezes, e avisa que simplificou; depois disso, mensagem de erro | `simplificar`, `MAX_TENTATIVAS` |
+| 1 | O traçado roda num worker, nunca na thread da página — inclusive a medição de fidelidade | `useVetorizador`, `vetorizador.worker.ts` |
+| 2 | A imagem é decodificada **já reduzida**, pelo tamanho lido do cabeçalho: uma foto de 48 MP não vira um bitmap de 192 MB | `dimensoesDaImagem.ts` |
+| 3 | Traçado de no máximo 1,2 MP; prévia de tela de até 1800 px | `PIXELS_MAXIMOS_DE_TRACADO`, `LADO_DA_PREVIA` |
+| 4 | Piso automático de área: textura e ruído são simplificados **antes** do traçado, não depois de falhar | `pisoDeArea` |
+| 5 | Teto duro de 256 MB na memória do WebAssembly: acima disso ele aborta, não cresce | `wasm/vetorizador/.cargo/config.toml` |
+| 6 | O traçado de precisão para em 8 mil contornos | `MAX_CONTORNOS` |
+| 7 | SVG com mais de 8 mil caminhos ou 3 MB não chega à tela | `MAX_CAMINHOS`, `MAX_BYTES_DO_SVG` |
+| 8 | Passou dos tetos ou esgotou a memória: uma nova tentativa com metade das cores e menos detalhe; depois disso, mensagem | `simplificar`, `MAX_TENTATIVAS` |
 | 9 | 30 segundos sem resposta encerram o worker | `TEMPO_LIMITE_MS` |
-| 10 | Ajustes em sequência esperam 250 ms de pausa | `ESPERA_DO_AJUSTE_MS` |
-| 11 | O SVG é mostrado como `<img>`, nunca inserido no DOM: o navegador não monta milhares de nós | `ComparadorDoVetor` |
-| 12 | Zoom limitado a 8× | `NIVEIS` |
+| 10 | Um worker só, reaproveitado; descartado quando o motor aborta, quando o pedido é abandonado e depois de um minuto ocioso | `useVetorizador` |
+| 11 | Ajustes em sequência esperam 250 ms de pausa | `ESPERA_DO_AJUSTE_MS` |
+| 12 | A foto é decodificada uma vez só; os ajustes usam a cópia de até 1,2 MP | `carregar` |
+| 13 | O SVG é mostrado como `<img>`, nunca inserido no DOM | `ComparadorDoVetor` |
+| 14 | Zoom limitado a 8× | `NIVEIS` |
 
 ### Verificação em navegador real
 
-Chromium headless, com um vigia que soma a memória de todos os processos do
-navegador a cada 200 ms e aborta acima de 1,3 GB. Roteiro: logo, zoom 400%,
-download, fundo transparente, sete trocas rápidas de estilo, foto, traço e o pior
-caso — ruído puro de 2000 × 2000 px.
+Chromium headless, em tela retina, com um vigia que soma a memória de todos os
+processos do navegador a cada 200 ms.
 
-| Etapa | Resultado | Memória do Chromium |
+**Oito imagens em sequência** (pôsteres coloridos e fotos grandes), que é como o
+problema aparece na prática:
+
+| | Antes | Depois |
 |---|---|---|
-| Página aberta (servidor de desenvolvimento) | — | ~700 MB |
-| Logo | 4 cores, 10 formas, 16 KB, 98%, em 0,7 s | ~720 MB |
-| Sete trocas rápidas | só a última vetorização conclui | ~570 MB |
-| Foto | 16 cores, 4.098 formas, 2,2 MB, 92%, em 0,9 s | ~660 MB |
-| Ruído 2000 × 2000 | três tentativas de simplificar, recusado com mensagem em ~10 s | pico de 1.097 MB; 3 s depois, 754 MB |
+| Memória ao abrir | 638 MB | 624 MB |
+| Depois de 8 imagens | 1.040 MB, **sempre subindo** | 692 a 815 MB, **subindo e voltando** |
+| Pico | 1.080 MB | 917 MB |
+
+O crescimento contínuo era o que derrubava a aba numa máquina com pouca memória
+livre. Ele vinha de bitmaps — não de JavaScript: o heap JS ficava em 10 MB, e
+forçar o coletor devolvia 270 MB de uma vez.
+
+**Casos difíceis:**
+
+| Entrada | Antes | Depois |
+|---|---|---|
+| Ruído de 4 MP | 13,5 s e resultado inútil; a página não respondia por mais de 30 s | recusado com mensagem em 4,2 s, sem travar |
+| Ruído de 2 MP | 13,5 s | 3,2 s |
+| Pôster colorido de 3,2 MP | 3,3 s | 2,7 s |
+| Foto de 3,8 MP | 4,3 s | 3,3 s |
+| Zoom de 100% a 800%, arrastando | — | memória estável em ~580 MB |
 
 ---
 
@@ -407,6 +502,13 @@ pessoa, e o ajuste é imediato, sem viagem pela rede.
 | Fidelidade num sentido só | Forma inventada sobre fundo transparente passava | Dois sentidos |
 | Traço comparado com a foto colorida | Fidelidade 0% | Referência = tinta binarizada |
 | `will-change: transform` no zoom | SVG ampliado borrado | Removido |
+| VTracer para logo | Uma reta virava dezenas de curvinhas que ondulam em volta dela | Traçado de precisão próprio |
+| Ampliar a imagem pequena antes de traçar | A interpolação espalhava o antisserrilhado, e a haste de um "I" de texto pequeno sumia | Nunca ampliar a imagem; ampliar o campo de cobertura, por região |
+| Traçado de precisão também na foto | 72% a 79% de fidelidade, contra 94% do VTracer | VTracer onde há sombreado (`eArteChapada`) |
+| Decodificar a imagem inteira para saber o tamanho | Uma foto de 48 MP virava 192 MB antes de qualquer decisão | Ler o tamanho do cabeçalho e decodificar já reduzido |
+| Medir a fidelidade na página | Decodificar um SVG de milhares de caminhos travava a tela por dezenas de segundos | Medir no worker, com `Path2D` |
+| Tentar, falhar e simplificar | Cada tentativa custava o traçado inteiro; o ruído levava 13,5 s | Piso automático de área, antes de traçar |
+| Um worker novo por pedido | Compilava o módulo a cada vez e o navegador segurava a memória dos anteriores | Um worker reaproveitado, descartado quando precisa |
 
 ---
 
@@ -450,10 +552,11 @@ comparador, zoom) foi verificado no navegador real da seção 7.
 | Limitação | Impacto | Caminho, se valer |
 |---|---|---|
 | Degradês viram faixas | Ilustrações com gradiente e fotos ficam com cara de pôster | Detectar degradês e emitir `<linearGradient>` |
-| Traçado a 2 MP | Detalhes menores que ~1/1400 da imagem se perdem numa foto grande | Traçar por blocos, com memória por bloco |
+| Traçado a 1,2 MP | Detalhes menores que ~1/1100 da imagem se perdem numa foto grande | Traçar por blocos, com memória por bloco |
 | Sem seleção de cores da paleta | A pessoa não escolhe quais cores manter ou juntar | Editor de paleta sobre o resultado |
 | SVG não otimizado além do básico | Arquivos de foto ficam em MB | Juntar caminhos de mesma cor, coordenadas relativas |
 | Fidelidade rigorosa em degradês sutis e molduras finas | Nota baixa com resultado visualmente próximo | Métrica perceptual por região (SSIM em OKLab) |
+| Textura e ruído são simplificados sem avisar | O piso de área sobe sozinho; a pessoa vê menos detalhe do que pediu | Dizer na tela que a imagem foi simplificada, e o quanto |
 | Fundo transparente só para fundo liso | Foto precisa passar antes pelo Removedor | Integrar o recorte do Removedor como opção |
 | Primeira vetorização baixa 145 KB de motor | Irrelevante; fica em cache por um ano | — |
 

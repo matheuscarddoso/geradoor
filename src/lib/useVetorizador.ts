@@ -5,8 +5,6 @@ import {
   MAX_TENTATIVAS,
   MOTOR,
   TEMPO_LIMITE_MS,
-  dimensoesDaAmostra,
-  fidelidade,
   simplificar,
   validarArquivo,
   type Ajustes,
@@ -39,8 +37,8 @@ export interface Resultado {
   /** Os tetos de complexidade obrigaram a simplificar os ajustes pedidos. */
   simplificado: boolean;
   duracaoMs: number;
-  /** 0 a 1. Nulo enquanto é medida. */
-  fidelidade: number | null;
+  /** 0 a 1: quanto do resultado reproduz a imagem (ver `fidelidade`). */
+  fidelidade: number;
 }
 
 export type Estado =
@@ -56,6 +54,10 @@ const MENSAGEM_COMPLEXA =
   "Esta imagem tem detalhe demais para virar um SVG que abre sem travar. Tente menos cores ou menos detalhe.";
 const MENSAGEM_DEMOROU =
   "A vetorização demorou demais e foi interrompida. Tente menos cores ou menos detalhe.";
+const MENSAGEM_NAO_CARREGOU = "O vetorizador não carregou. Recarregue a página e tente de novo.";
+
+/** Tempo que o worker fica vivo sem trabalho. */
+const OCIOSO_MS = 60_000;
 
 function hexDoDigest(digest: ArrayBuffer): string {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
@@ -83,28 +85,6 @@ function obterModulo(): Promise<WebAssembly.Module> {
     throw erro;
   });
   return modulo;
-}
-
-/** Desenha o SVG na amostra e compara com a referência. */
-async function medirFidelidade(url: string, referencia: ArrayBuffer, tracado: Dimensoes): Promise<number> {
-  const amostra = dimensoesDaAmostra(tracado);
-  const imagem = new Image();
-  imagem.decoding = "async";
-  imagem.src = url;
-  await imagem.decode();
-  const canvas = document.createElement("canvas");
-  canvas.width = amostra.largura;
-  canvas.height = amostra.altura;
-  try {
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) throw new Error("Canvas 2D indisponível");
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(imagem, 0, 0, amostra.largura, amostra.altura);
-    const vetor = ctx.getImageData(0, 0, amostra.largura, amostra.altura).data;
-    return fidelidade(new Uint8ClampedArray(referencia), vetor, amostra);
-  } finally {
-    canvas.width = canvas.height = 0;
-  }
 }
 
 /**
@@ -145,14 +125,40 @@ export function useVetorizador() {
 
   /** Desfecho do pedido em curso: encerrar o worker resolve a promessa com nulo. */
   const abandonar = useRef<(() => void) | null>(null);
+  /** O que fazer se o worker quebrar enquanto um pedido espera. */
+  const erroDoWorker = useRef<(() => void) | null>(null);
+  const temporizadorOcioso = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const encerrarWorker = useCallback(() => {
-    // Um worker encerrado não responde mais: sem isto, quem esperava a
-    // resposta ficaria preso para sempre, segurando os pixels na memória.
+    if (temporizadorOcioso.current) clearTimeout(temporizadorOcioso.current);
+    temporizadorOcioso.current = null;
     abandonar.current?.();
     abandonar.current = null;
+    erroDoWorker.current = null;
     worker.current?.terminate();
     worker.current = null;
+  }, []);
+
+  /**
+   * Um minuto sem trabalho e o worker sai de cena, com tudo que ele ainda
+   * segurava: quem vetorizou uma vez e ficou olhando o resultado não paga por
+   * um worker vivo.
+   */
+  const agendarOciosidade = useCallback(() => {
+    if (temporizadorOcioso.current) clearTimeout(temporizadorOcioso.current);
+    temporizadorOcioso.current = setTimeout(() => {
+      if (!abandonar.current) encerrarWorker();
+    }, OCIOSO_MS);
+  }, [encerrarWorker]);
+
+  const criarWorker = useCallback(() => {
+    const novo = new Worker(new URL("./vetorizador.worker.ts", import.meta.url), { type: "module" });
+    novo.addEventListener("error", (evento) => {
+      console.error("[vetorizador] worker", evento);
+      erroDoWorker.current?.();
+    });
+    worker.current = novo;
+    return novo;
   }, []);
 
   useEffect(
@@ -165,36 +171,54 @@ export function useVetorizador() {
   );
 
   /**
-   * Um pedido a um worker novo. Resolve com a resposta, ou com nulo se outro
-   * pedido tomou o lugar deste. O worker é encerrado em qualquer desfecho.
+   * Um pedido ao worker, com a resposta como promessa. Resolve com nulo se
+   * outro pedido tomar o lugar deste.
+   *
+   * O worker é reaproveitado entre pedidos e só morre quando precisa: pedido
+   * abandonado, tempo esgotado, erro, ou um minuto sem trabalho. Criar um
+   * worker por pedido custava compilar o módulo de novo a cada vez, e o
+   * navegador segurava a memória dos anteriores por bem mais tempo do que
+   * levava para chegar o próximo.
+   *
+   * Quando o worker é encerrado no meio, quem esperava recebe nulo: sem isso,
+   * a promessa ficaria pendente para sempre, segurando os pixels na memória.
    */
   const pedir = useCallback(
     (pedido: PedidoAoVetorizador, transferir: Transferable[] = []): Promise<RespostaDoVetorizador | null> => {
-      encerrarWorker();
+      if (temporizadorOcioso.current) clearTimeout(temporizadorOcioso.current);
+      // Worker ocupado com um pedido que ninguém quer mais: ele não para no
+      // meio, então sai de cena e outro assume. É o caso de mexer num controle
+      // enquanto a vetorização anterior corre.
+      if (abandonar.current) encerrarWorker();
       const id = pedido.id;
-      const novo = new Worker(new URL("./vetorizador.worker.ts", import.meta.url), { type: "module" });
-      worker.current = novo;
+      const atual = worker.current ?? criarWorker();
       return new Promise((resolver) => {
-        const concluir = (resposta: RespostaDoVetorizador | null) => {
+        const concluir = (resposta: RespostaDoVetorizador | null, descartar: boolean) => {
+          if (encerrado) return;
+          encerrado = true;
           clearTimeout(limite);
-          novo.terminate();
-          if (worker.current === novo) {
-            worker.current = null;
-            abandonar.current = null;
-          }
+          atual.removeEventListener("message", aoResponder);
+          if (abandonar.current === abandonarEste) abandonar.current = null;
+          if (descartar) encerrarWorker();
+          else agendarOciosidade();
           resolver(id === pedidoAtual.current ? resposta : null);
         };
-        abandonar.current = () => concluir(null);
-        const limite = setTimeout(() => concluir({ tipo: "erro", id, mensagem: MENSAGEM_DEMOROU }), TEMPO_LIMITE_MS);
-        novo.addEventListener("message", (evento: MessageEvent<RespostaDoVetorizador>) => concluir(evento.data));
-        novo.addEventListener("error", (evento) => {
-          console.error("[vetorizador] worker", evento);
-          concluir({ tipo: "erro", id, mensagem: "O vetorizador não carregou. Recarregue a página e tente de novo." });
-        });
-        novo.postMessage(pedido, transferir);
+        let encerrado = false;
+        const aoResponder = (evento: MessageEvent<RespostaDoVetorizador>) => {
+          if (evento.data?.id !== id) return;
+          // Um motor que abortou deixa o heap do WebAssembly num estado
+          // qualquer: esse worker não serve para o próximo pedido.
+          concluir(evento.data, evento.data.tipo === "complexo-demais");
+        };
+        const abandonarEste = () => concluir(null, true);
+        abandonar.current = abandonarEste;
+        const limite = setTimeout(() => concluir({ tipo: "erro", id, mensagem: MENSAGEM_DEMOROU }, true), TEMPO_LIMITE_MS);
+        atual.addEventListener("message", aoResponder);
+        erroDoWorker.current = () => concluir({ tipo: "erro", id, mensagem: MENSAGEM_NAO_CARREGOU }, true);
+        atual.postMessage(pedido, transferir);
       });
     },
-    [encerrarWorker]
+    [agendarOciosidade, criarWorker, encerrarWorker]
   );
 
   const carregar = useCallback(
@@ -306,25 +330,13 @@ export function useVetorizador() {
           limiar: resposta.preparacao.limiar,
           simplificado: n > 0,
           duracaoMs: resposta.duracaoMs,
-          fidelidade: null,
+          fidelidade: resposta.fidelidade,
         };
         const antiga = urlNaTela.current;
         urlNaTela.current = url;
         setEstado({ fase: "pronto", imagem, resultado });
         // A URL antiga ainda está no <img> até o React trocar; sai depois.
         if (antiga) setTimeout(() => revogar(antiga), 1000);
-
-        try {
-          const nota = await medirFidelidade(url, resposta.referencia, imagem.tracado);
-          if (id !== pedidoAtual.current) return;
-          setEstado((atual) =>
-            atual.fase === "pronto" && atual.resultado.url === url
-              ? { ...atual, resultado: { ...atual.resultado, fidelidade: nota } }
-              : atual
-          );
-        } catch (erro) {
-          console.error("[vetorizador] fidelidade", erro);
-        }
         return;
       }
 

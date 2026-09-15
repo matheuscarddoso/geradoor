@@ -305,10 +305,7 @@ function Estatisticas({ resultado }: { resultado: Resultado }) {
     { rotulo: "Cores", valor: formatarNumero(resultado.cores) },
     { rotulo: "Formas", valor: formatarNumero(resultado.caminhos) },
     { rotulo: "Arquivo", valor: formatarBytes(resultado.bytes) },
-    {
-      rotulo: "Fidelidade",
-      valor: resultado.fidelidade === null ? "…" : `${Math.round(resultado.fidelidade * 100)}%`,
-    },
+    { rotulo: "Fidelidade", valor: `${Math.round(resultado.fidelidade * 100)}%` },
   ];
   return (
     <dl className="grid grid-cols-4 gap-2 rounded-xl bg-muted/60 p-3">

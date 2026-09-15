@@ -39,8 +39,8 @@ describe("o arquivo publicado", () => {
     expect(WebAssembly.Module.imports(modulo)).toEqual([]);
     const instancia = new WebAssembly.Instance(modulo, {});
     const memoria = instancia.exports.memory as WebAssembly.Memory;
-    // 512 MB são 8192 páginas de 64 KB: crescer além disso tem de falhar.
-    expect(() => memoria.grow(8192)).toThrow();
+    // 256 MB são 4096 páginas de 64 KB: crescer além disso tem de falhar.
+    expect(() => memoria.grow(4096)).toThrow();
   });
 });
 
@@ -96,10 +96,10 @@ describe("o motor", () => {
   });
 
   it("imagem grande demais para o teto aborta como MotorEsgotado", async () => {
-    // 2200 × 2200 de ruído: um cluster por pixel passa dos 512 MB e aborta
+    // 1600 × 1600 de ruído: um cluster por pixel passa dos 256 MB e aborta
     // cedo, na alocação. Instância própria, porque a abortada não serve mais.
     const proprio = await criarMotor(modulo);
-    const lado = 2200;
+    const lado = 1600;
     const px = new Uint8Array(lado * lado * 4);
     let s = 1;
     for (let i = 0; i < px.length; i++) {

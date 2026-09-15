@@ -2,6 +2,7 @@ import {
   Barcode,
   Building2,
   CreditCard,
+  Eraser,
   IdCard,
   MessageCircle,
   QrCode,
@@ -28,6 +29,13 @@ export interface Rota {
    * quem chega no site.
    */
   privada?: true;
+  /**
+   * Ferramenta recém-lançada, com a etiqueta "Novo" no menu e na busca.
+   *
+   * Tirar quando deixar de ser novidade — uns dois meses. Etiqueta que fica
+   * para sempre deixa de ser lida.
+   */
+  novo?: true;
 }
 
 /** Fonte única das ferramentas: topo, sidebar e busca leem daqui. */
@@ -67,6 +75,15 @@ export const ROTAS: Rota[] = [
     descricao: "Criar QR Code a partir de um link",
     termos: ["qrcode", "código", "link", "logo"],
     icon: QrCode,
+  },
+  {
+    href: "/removedor-de-fundo",
+    label: "Removedor de fundo",
+    labelCurto: "Remover fundo",
+    descricao: "Tirar o fundo de uma foto em PNG",
+    termos: ["remover fundo", "tirar fundo", "png transparente", "recortar", "remove bg", "imagem", "foto"],
+    icon: Eraser,
+    novo: true,
   },
   {
     href: "/instagram",

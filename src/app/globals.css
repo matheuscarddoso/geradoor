@@ -383,3 +383,118 @@ svg.lucide {
   --ios-switch-on: #30d158;
   --ios-switch-off: #39393d;
 }
+
+/* =========================================================================
+   Removedor de fundo (/removedor-de-fundo)
+   ========================================================================= */
+@layer components {
+  /*
+   * Xadrez de transparência, o mesmo sinal do Figma e do Photoshop.
+   *
+   * Um conic-gradient só, sem imagem: pinta dois quadrados de quatro por
+   * ladrilho. No escuro as casas ficam próximas em valor para o xadrez não
+   * brigar com o recorte — ele informa "aqui é vazio", não decora.
+   */
+  .xadrez {
+    --xadrez-claro: #ffffff;
+    --xadrez-escuro: #ececec;
+    background-color: var(--xadrez-claro);
+    background-image: conic-gradient(
+      var(--xadrez-escuro) 25%,
+      transparent 0 50%,
+      var(--xadrez-escuro) 0 75%,
+      transparent 0
+    );
+    background-size: 16px 16px;
+  }
+
+  .dark .xadrez {
+    --xadrez-claro: #1f1f1f;
+    --xadrez-escuro: #292929;
+  }
+
+  /*
+   * Varredura sobre a foto enquanto o modelo trabalha.
+   *
+   * Uma faixa de luz desce pela imagem, com a borda de baixo mais acesa, como
+   * um scanner. Comunica "estou lendo a sua foto" melhor que um spinner, que
+   * só diz "espere". Anima transform e nada mais, então fica na GPU.
+   */
+  .varredura {
+    background: rgb(0 0 0 / 0.14);
+    overflow: hidden;
+  }
+
+  .varredura::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: -40%;
+    height: 40%;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(255 255 255 / 0.12) 80%,
+      rgb(255 255 255 / 0.5) 99%,
+      rgb(255 255 255 / 0.9)
+    );
+    animation: varredura 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  /* Sem movimento, sobra o véu: ainda diz que a foto está ocupada. */
+  @media (prefers-reduced-motion: reduce) {
+    .varredura::before {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+/*
+ * Fora de @layer: o Tailwind só preserva o que está numa layer quando acha a
+ * classe no código-fonte, e nome de animação não é classe.
+ *
+ * Percentual de translate é do próprio elemento: 40% de altura precisa de
+ * 350% para ir de cima (-40%) até passar da borda de baixo (100%).
+ */
+@keyframes varredura {
+  to {
+    transform: translateY(350%);
+  }
+}
+
+/*
+ * Tema claro do dialkit.
+ *
+ * O dialkit nasce com a paleta escura e só troca com `data-theme="light"` no
+ * `.dialkit-root`. O tema do site é a classe `dark` do next-themes, que o
+ * dialkit não conhece: no claro, o slider ficava branco sobre branco — no
+ * removedor de fundo e no tamanho do logo do QR Code.
+ *
+ * Em CSS, e não lendo o tema no React, porque o next-themes aplica a classe
+ * antes da primeira pintura, e o `resolvedTheme` só chega depois da
+ * hidratação: pelo React, o slider piscaria escuro no primeiro quadro.
+ * Valores copiados da regra `[data-theme="light"]` do próprio dialkit.
+ */
+html:not(.dark) .dialkit-root {
+  --dial-surface: rgba(0, 0, 0, 0.04);
+  --dial-surface-hover: rgba(0, 0, 0, 0.08);
+  --dial-surface-active: rgba(0, 0, 0, 0.1);
+  --dial-surface-subtle: rgba(0, 0, 0, 0.06);
+  --dial-text-root: #000000;
+  --dial-text-section: rgba(0, 0, 0, 0.65);
+  --dial-text-label: rgba(0, 0, 0, 0.6);
+  --dial-text-focus: #000000;
+  --dial-text-primary: rgba(0, 0, 0, 0.9);
+  --dial-text-secondary: rgba(0, 0, 0, 0.55);
+  --dial-text-tertiary: rgba(0, 0, 0, 0.35);
+  --dial-border: rgba(0, 0, 0, 0.1);
+  --dial-border-hover: rgba(0, 0, 0, 0.15);
+  --dial-focus-ring: rgba(0, 0, 0, 0.55);
+  --dial-timeline-clip-overlay: rgba(0, 0, 0, 0.28);
+  --dial-glass-bg: #fafafa;
+  --dial-dropdown-bg: #ffffff;
+  --dial-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --dial-shadow-collapsed: 0 2px 10px rgba(0, 0, 0, 0.06);
+  --dial-shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
+}

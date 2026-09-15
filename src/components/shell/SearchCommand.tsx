@@ -14,6 +14,7 @@ import {
 import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
 import { useRecentes } from "@/lib/recentes";
 import { cn } from "@/lib/utils";
+import { EtiquetaNovo } from "./EtiquetaNovo";
 
 /**
  * Busca das ferramentas, aberta por clique ou ⌘K / Ctrl+K.
@@ -79,7 +80,7 @@ export function SearchCommand({ className }: { className?: string }) {
           <CommandEmpty>Nada encontrado.</CommandEmpty>
 
           <CommandGroup heading="Geradores">
-            {rotas.map(({ href, label, descricao, termos, icon: Icone }) => (
+            {rotas.map(({ href, label, descricao, termos, icon: Icone, novo }) => (
               <CommandItem
                 key={href}
                 /* value alimenta o filtro do cmdk: junta rótulo, descrição e
@@ -90,6 +91,7 @@ export function SearchCommand({ className }: { className?: string }) {
               >
                 <Icone className="h-4 w-4 shrink-0 text-zinc-400" />
                 <span>{label}</span>
+                {novo && <EtiquetaNovo />}
                 <span className="ms-auto truncate text-xs text-muted-foreground">
                   {descricao}
                 </span>

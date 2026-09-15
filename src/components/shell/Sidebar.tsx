@@ -7,6 +7,7 @@ import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
 import { useRecentes } from "@/lib/recentes";
 import { hrefDeRestauracao } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
+import { EtiquetaNovo } from "./EtiquetaNovo";
 
 function Secao({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +31,7 @@ export function Sidebar({ className }: { className?: string }) {
     >
       <Secao>Geradores</Secao>
       <nav className="flex flex-col gap-0.5">
-        {rotas.map(({ href, label, icon: Icone }) => {
+        {rotas.map(({ href, label, icon: Icone, novo }) => {
           const ativa = caminho === href;
           return (
             <Link
@@ -46,7 +47,8 @@ export function Sidebar({ className }: { className?: string }) {
               )}
             >
               <Icone className="h-4 w-4 shrink-0 text-zinc-400" />
-              {label}
+              <span className="min-w-0 truncate">{label}</span>
+              {novo && <EtiquetaNovo className="ms-auto" />}
             </Link>
           );
         })}

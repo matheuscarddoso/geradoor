@@ -25,7 +25,13 @@ import { cn } from "@/lib/utils";
  * (/admin, /docs) passam direto, sem casca.
  */
 /** Rotas cujo layout encosta nas bordas da área de conteúdo. */
-const SEM_MOLDURA = new Set(["/whatsapp", "/qr-code", "/instagram", "/codigo-de-barras"]);
+const SEM_MOLDURA = new Set([
+  "/whatsapp",
+  "/qr-code",
+  "/instagram",
+  "/codigo-de-barras",
+  "/removedor-de-fundo",
+]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();

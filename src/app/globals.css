@@ -498,3 +498,28 @@ html:not(.dark) .dialkit-root {
   --dial-shadow-collapsed: 0 2px 10px rgba(0, 0, 0, 0.06);
   --dial-shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
+
+/*
+ * Cantos de curvatura contínua, como os do macOS.
+ *
+ * O canto arredondado comum é um arco de círculo: ele começa de repente, e o
+ * olho vê a emenda entre a reta e a curva. A superelipse — o "squircle" — entra
+ * na curva aos poucos, e é por isso que um ícone de app parece mais macio que
+ * um retângulo com o mesmo raio.
+ *
+ * `corner-shape` é recente. Onde não existir, fica o `border-radius` de sempre,
+ * que é o mesmo desenho com a curva antiga: o fallback é a regra de cima.
+ *
+ * O raio cresce junto porque a superelipse gasta menos canto: com o mesmo
+ * valor, ela parece mais quadrada que o arco.
+ */
+.squircle {
+  border-radius: 1rem;
+}
+
+@supports (corner-shape: squircle) {
+  .squircle {
+    corner-shape: squircle;
+    border-radius: 1.75rem;
+  }
+}

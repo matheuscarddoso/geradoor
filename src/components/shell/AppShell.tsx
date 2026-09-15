@@ -1,24 +1,16 @@
 "use client";
 
-import { useRef } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { MaximizeIcon, type MaximizeIconHandle } from "@/components/ui/maximize-icon";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { PanelLeft } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Sidebar } from "./Sidebar";
 import { SearchCommand } from "./SearchCommand";
 import { ROTAS } from "@/lib/rotas";
 import { cn } from "@/lib/utils";
 
 /**
- * Casca da aplicação: topo fixo, sidebar persistente e área de conteúdo.
+ * Casca da aplicação: sidebar à esquerda e a folha ocupando o resto.
  *
  * Vive no layout raiz para a sidebar não remontar a cada navegação — é o que
  * dá a sensação de app em vez de site. As rotas que não são ferramenta
@@ -34,9 +26,43 @@ const SEM_MOLDURA = new Set([
   "/vetorizador",
 ]);
 
+const CHAVE_DA_SIDEBAR = "geradoor:sidebar";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
-  const logoRef = useRef<MaximizeIconHandle>(null);
+  const [aberta, setAberta] = useState(true);
+  const [gaveta, setGaveta] = useState(false);
+  const [busca, setBusca] = useState(false);
+  const [mac, setMac] = useState(false);
+
+  /*
+   * A escolha de quem usa, lembrada entre visitas.
+   *
+   * Lida num efeito, e não no estado inicial: o HTML vem do servidor sem saber
+   * de localStorage, e ler durante a renderização daria marcação diferente da
+   * do cliente. Começa aberta, que é o certo para quem chega pela primeira vez.
+   */
+  useEffect(() => {
+    setMac(/Mac|iPhone|iPad/.test(navigator.platform));
+    try {
+      if (localStorage.getItem(CHAVE_DA_SIDEBAR) === "recolhida") setAberta(false);
+    } catch {
+      // Janela anônima ou dados de site bloqueados: fica o padrão.
+    }
+  }, []);
+
+  const definirAberta = useCallback((valor: boolean) => {
+    setAberta(valor);
+    try {
+      localStorage.setItem(CHAVE_DA_SIDEBAR, valor ? "aberta" : "recolhida");
+    } catch {
+      // Sem persistência a escolha ainda vale nesta sessão.
+    }
+  }, []);
+
+  // A gaveta do celular fecha sozinha ao navegar: continuar aberta sobre a
+  // ferramenta recém-escolhida esconderia justamente o que se foi ver.
+  useEffect(() => setGaveta(false), [caminho]);
 
   const ehFerramenta = ROTAS.some((rota) => rota.href === caminho);
   if (!ehFerramenta) return <>{children}</>;
@@ -44,53 +70,58 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Rotas que desenham a própria moldura: recebem a área crua, sem padding e
   // sem centralização, para poderem encostar nas bordas.
   const semMoldura = SEM_MOLDURA.has(caminho);
+  const abrirBusca = () => {
+    setGaveta(false);
+    setBusca(true);
+  };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
-      <header className="relative flex h-14 shrink-0 items-center gap-1 border-b border-border px-3">
-        {/* Sidebar em gaveta no mobile, onde não há largura para ela fixa */}
-        <Sheet>
-          <SheetTrigger
-            data-touch-target
-            aria-label="Abrir menu"
-            className="grid h-9 w-9 place-items-center rounded-xl text-zinc-500 transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground md:hidden dark:text-zinc-400 dark:hover:bg-zinc-900"
-          >
-            <Menu className="h-4 w-4" />
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 pt-10">
-            <SheetTitle className="sr-only">Menu</SheetTitle>
-            <Sidebar className="w-full border-e-0" />
-          </SheetContent>
-        </Sheet>
+    <div className="flex h-screen overflow-hidden">
+      {aberta && (
+        <Sidebar
+          className="hidden md:flex"
+          onRecolher={() => definirAberta(false)}
+          onBuscar={abrirBusca}
+          mac={mac}
+        />
+      )}
 
-        {/* A logo anima no hover e também no foco: quem navega por Tab não
-            tem hover, e sem isso o teclado nunca via a animação. */}
-        <Link
-          href="/"
+      {/* No celular a sidebar é gaveta: não há largura para ela fixa. */}
+      <Sheet open={gaveta} onOpenChange={setGaveta}>
+        <SheetContent side="left" className="w-64 p-0 [&>button]:hidden">
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <Sidebar className="w-full border-e-0" onRecolher={() => setGaveta(false)} onBuscar={abrirBusca} mac={mac} />
+        </SheetContent>
+      </Sheet>
+
+      <div className="relative flex min-w-0 flex-1 flex-col">
+        {/* Com a sidebar recolhida, este é o único caminho de volta para ela.
+            Fica sobre o conteúdo, e não numa faixa própria: uma coluna vazia
+            de 48 px só para um botão desperdiça a largura que a folha ganhou. */}
+        <button
+          type="button"
+          onClick={() => (window.innerWidth < 768 ? setGaveta(true) : definirAberta(true))}
           data-touch-target
-          onMouseEnter={() => logoRef.current?.startAnimation()}
-          onMouseLeave={() => logoRef.current?.stopAnimation()}
-          onFocus={() => logoRef.current?.startAnimation()}
-          onBlur={() => logoRef.current?.stopAnimation()}
-          className="flex shrink-0 items-center gap-2 rounded-xl px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-selected"
+          aria-label="Abrir menu"
+          title="Abrir menu"
+          className={cn(
+            "absolute left-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-lg",
+            "bg-background/80 text-zinc-500 backdrop-blur-sm transition-colors duration-150",
+            "hover:bg-zinc-100 hover:text-foreground dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+            aberta && "md:hidden"
+          )}
         >
-          <MaximizeIcon ref={logoRef} size={18} className="flex items-center" />
-          <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
-        </Link>
+          <PanelLeft className="h-4 w-4" />
+        </button>
 
-        {/* As abas do topo saíram: a sidebar já lista tudo, e duplicar a
-            navegação em dois lugares só disputa espaço com a busca. */}
-
-        <SearchCommand className="flex-1 md:absolute md:left-1/2 md:w-full md:max-w-[280px] md:flex-none md:-translate-x-1/2" />
-        <ThemeToggle className="ms-auto shrink-0" />
-      </header>
-
-      <div className="flex min-h-0 flex-1">
-        <Sidebar className="hidden md:flex" />
         {/* overflow-auto, não overflow-y-auto: a raiz do shell tem
-              overflow-hidden, então conteúdo mais largo que a área seria
-              cortado sem barra alguma. Assim degrada para rolagem. */}
-        <main className="min-w-0 flex-1 overflow-auto">
+            overflow-hidden, então conteúdo mais largo que a área seria cortado
+            sem barra alguma. Assim degrada para rolagem.
+
+            O padding do topo no celular é o espaço do botão acima: sem ele, o
+            botão cobriria o título da ferramenta. */}
+        <main className={cn("min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0", aberta && "md:pt-0")}>
           {semMoldura ? (
             children
           ) : (
@@ -103,13 +134,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </main>
       </div>
+
+      <SearchCommand aberto={busca} onAberto={setBusca} />
     </div>
   );
 }
 
 /**
  * Cabeçalho de página, alinhado ao topo da área de conteúdo.
- * Padroniza título e subtítulo entre as cinco ferramentas.
+ * Padroniza título e subtítulo entre as ferramentas.
  */
 export function PageHeader({
   title,

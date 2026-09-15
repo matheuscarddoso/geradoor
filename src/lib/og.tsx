@@ -95,6 +95,25 @@ export const TEXTOS_DA_IMAGEM: Record<string, { titulo: string; subtitulo: strin
  * contagem de letras, que na Geist Pixel — de largura constante — prevê a
  * linha com precisão suficiente.
  */
+/**
+ * O contorno que engrossa o título até parecer semibold.
+ *
+ * A Geist Pixel tem um peso só — as variantes dela são formas de pixel
+ * (quadrado, círculo, linha), não pesos —, e o gerador de imagem não engrossa
+ * fonte que não tem o peso pedido: `fontWeight: 600` sai idêntico ao normal.
+ * Um contorno da própria cor, nas quatro direções, engrossa o traço de
+ * verdade, e numa fonte de pixel o resultado é limpo: não há curva para
+ * borrar.
+ *
+ * A espessura acompanha o corpo, senão o mesmo valor engrossaria demais um
+ * título pequeno e desapareceria num grande. 1,8% foi escolhido comparando
+ * lado a lado: abaixo disso o peso mal se nota, acima vira negrito.
+ */
+export function contornoDoTitulo(corpo: number): string {
+  const e = (corpo * 0.018).toFixed(2);
+  return `${e}px 0 0 #fff, -${e}px 0 0 #fff, 0 ${e}px 0 #fff, 0 -${e}px 0 #fff`;
+}
+
 export function corpoDoTitulo(titulo: string): number {
   const letras = titulo.length;
   if (letras <= 4) return 168;
@@ -107,6 +126,7 @@ export function corpoDoTitulo(titulo: string): number {
 export function imagemDeCompartilhamento(rota: string): ImageResponse {
   const texto = TEXTOS_DA_IMAGEM[rota];
   if (!texto) throw new Error(`Sem texto de compartilhamento para ${rota}`);
+  const corpo = corpoDoTitulo(texto.titulo);
 
   return new ImageResponse(
     (
@@ -138,10 +158,11 @@ export function imagemDeCompartilhamento(rota: string): ImageResponse {
           <div
             style={{
               fontFamily: "Geist Pixel",
-              fontSize: corpoDoTitulo(texto.titulo),
+              fontSize: corpo,
               lineHeight: 1,
               color: "#ffffff",
               letterSpacing: -1,
+              textShadow: contornoDoTitulo(corpo),
             }}
           >
             {texto.titulo}

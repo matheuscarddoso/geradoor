@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Lista, Secao, Termo, TituloLegal } from "@/components/shell/TextoLegal";
+import { Lista, PaginaLegal, Termo, type SecaoLegal } from "@/components/shell/TextoLegal";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -10,20 +10,23 @@ export const metadata: Metadata = pageMetadata({
   path: "/cookies",
 });
 
-export default function Cookies() {
-  return (
-    <>
-      <TituloLegal>Política de Cookies</TituloLegal>
-
-      <Secao numero={1} titulo="O resumo">
+const SECOES: SecaoLegal[] = [
+  {
+    titulo: "O resumo",
+    conteudo: (
+      <>
         <p>
           O Geradoor <Termo>não usa cookies de rastreamento, de perfil ou de publicidade</Termo>, e por isso não
           tem aquela faixa de consentimento. O que guardamos fica no armazenamento local do seu navegador, são
           preferências suas e nunca chegam até nós.
         </p>
-      </Secao>
-
-      <Secao numero={2} titulo="O que fica guardado no seu navegador">
+      </>
+    ),
+  },
+  {
+    titulo: "O que fica guardado no seu navegador",
+    conteudo: (
+      <>
         <p>
           Não são cookies: é o armazenamento local, que o navegador não envia junto com os pedidos ao servidor.
           Guardamos ali:
@@ -47,9 +50,13 @@ export default function Cookies() {
             gerar. Ela fica só aí; pode limpar pelo ícone de lixeira ao lado do título.
           </li>
         </Lista>
-      </Secao>
-
-      <Secao numero={3} titulo="Os dois cookies que existem">
+      </>
+    ),
+  },
+  {
+    titulo: "Os dois cookies que existem",
+    conteudo: (
+      <>
         <p>
           Eles só aparecem para quem usa a área interna do gerador de etiquetas, que é protegida por senha. Se
           você nunca entrou lá, o site não grava cookie nenhum no seu navegador.
@@ -64,9 +71,13 @@ export default function Cookies() {
             autoriza nada: forjá-lo acrescenta uma linha na lista e o clique cai na tela de senha do mesmo jeito.
           </li>
         </Lista>
-      </Secao>
-
-      <Secao numero={4} titulo="Medição de uso sem cookies">
+      </>
+    ),
+  },
+  {
+    titulo: "Medição de uso sem cookies",
+    conteudo: (
+      <>
         <p>
           Para saber quais páginas são visitadas, usamos o Vercel Web Analytics, que funciona sem cookies: cada
           visita vira um código técnico derivado do pedido, trocado a cada 24 horas, que não atravessa dias nem
@@ -76,15 +87,23 @@ export default function Cookies() {
           </Link>
           .
         </p>
-      </Secao>
-
-      <Secao numero={5} titulo="Como apagar">
+      </>
+    ),
+  },
+  {
+    titulo: "Como apagar",
+    conteudo: (
+      <>
         <p>
           Nas configurações do seu navegador, apagar os dados do site remove tudo de uma vez — preferências e os
           dois cookies. Navegação anônima também funciona: nada sobrevive ao fechar a janela. A única
           consequência é que o site volta ao estado inicial, e a lista de recentes some.
         </p>
-      </Secao>
-    </>
-  );
+      </>
+    ),
+  },
+];
+
+export default function Cookies() {
+  return <PaginaLegal titulo="Política de Cookies" secoes={SECOES} />;
 }

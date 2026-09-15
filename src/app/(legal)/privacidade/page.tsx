@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Lista, Secao, Termo, TituloLegal } from "@/components/shell/TextoLegal";
+import { Lista, PaginaLegal, Termo, type SecaoLegal } from "@/components/shell/TextoLegal";
 import { EMAIL_DE_CONTATO, RESPONSAVEL, pageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
@@ -10,12 +10,11 @@ export const metadata: Metadata = pageMetadata({
   path: "/privacidade",
 });
 
-export default function Privacidade() {
-  return (
-    <>
-      <TituloLegal>Política de Privacidade</TituloLegal>
-
-      <Secao numero={1} titulo="Quem é o responsável">
+const SECOES: SecaoLegal[] = [
+  {
+    titulo: "Quem é o responsável",
+    conteudo: (
+      <>
         <p>
           O Geradoor é operado por {RESPONSAVEL}, pessoa física. Para qualquer assunto de privacidade — pedir
           informação, correção ou exclusão de dados —, escreva para{" "}
@@ -24,18 +23,26 @@ export default function Privacidade() {
           </a>
           .
         </p>
-      </Secao>
-
-      <Secao numero={2} titulo="O princípio: quase tudo acontece no seu navegador">
+      </>
+    ),
+  },
+  {
+    titulo: "O princípio: quase tudo acontece no seu navegador",
+    conteudo: (
+      <>
         <p>
           A maior parte das ferramentas não manda nada para lugar nenhum. O CPF, o CNPJ, o cartão de teste, o
           telefone, o link do WhatsApp e do Instagram e a vetorização de imagem são calculados dentro do seu
           navegador. Fechou a aba, acabou: nada daquilo passou por um servidor.
         </p>
         <p>Só três coisas saem do seu aparelho, e estão detalhadas abaixo.</p>
-      </Secao>
-
-      <Secao numero={3} titulo="O Removedor de fundo e a sua imagem">
+      </>
+    ),
+  },
+  {
+    titulo: "O Removedor de fundo e a sua imagem",
+    conteudo: (
+      <>
         <p>
           Para recortar a foto, o navegador manda uma <Termo>cópia reduzida</Termo> dela — no máximo 2048 pixels
           de lado — a um serviço nosso hospedado na Cloudflare, que devolve o contorno do que está em primeiro
@@ -61,9 +68,13 @@ export default function Privacidade() {
             com modelos menores. A página avisa quando isso acontece.
           </li>
         </Lista>
-      </Secao>
-
-      <Secao numero={4} titulo="O QR Code e o link que você encurta">
+      </>
+    ),
+  },
+  {
+    titulo: "O QR Code e o link que você encurta",
+    conteudo: (
+      <>
         <p>
           O gerador de QR Code cria um link curto, e isso exige guardar alguma coisa. Ficam no nosso banco de
           dados: o <Termo>endereço de destino</Termo> que você digitou, o código curto correspondente, a data de
@@ -83,9 +94,13 @@ export default function Privacidade() {
             endereço fica guardado conosco.
           </li>
         </Lista>
-      </Secao>
-
-      <Secao numero={5} titulo="Medição de uso">
+      </>
+    ),
+  },
+  {
+    titulo: "Medição de uso",
+    conteudo: (
+      <>
         <p>
           Usamos o Vercel Web Analytics e o Speed Insights para saber quais páginas são visitadas e se elas
           carregam rápido. Essa medição <Termo>não usa cookies</Termo> e não cria identificador que atravesse
@@ -93,17 +108,25 @@ export default function Privacidade() {
           horas. O que sobra são números agregados — quantas visitas, de que país, em que página —, sem ligação
           com uma pessoa.
         </p>
-      </Secao>
-
-      <Secao numero={6} titulo="Registros do servidor">
+      </>
+    ),
+  },
+  {
+    titulo: "Registros do servidor",
+    conteudo: (
+      <>
         <p>
           Como qualquer site, o nosso serviço de hospedagem (Vercel) e o serviço que faz o recorte (Cloudflare)
           mantêm registros técnicos de acesso — endereço IP, data, recurso pedido —, usados para operar,
           proteger contra abuso e investigar incidentes. Não usamos esses registros para perfilar ninguém.
         </p>
-      </Secao>
-
-      <Secao numero={7} titulo="O que guardamos no seu navegador">
+      </>
+    ),
+  },
+  {
+    titulo: "O que guardamos no seu navegador",
+    conteudo: (
+      <>
         <p>
           Preferências ficam no armazenamento local do seu navegador e não chegam até nós: o tema claro ou
           escuro, a sidebar aberta ou recolhida, o tamanho do pincel do removedor, o layout de etiquetas e a
@@ -114,9 +137,13 @@ export default function Privacidade() {
           </Link>
           .
         </p>
-      </Secao>
-
-      <Secao numero={8} titulo="Com quem os dados são compartilhados">
+      </>
+    ),
+  },
+  {
+    titulo: "Com quem os dados são compartilhados",
+    conteudo: (
+      <>
         <p>
           Não vendemos nem cedemos dados a ninguém. Os únicos terceiros envolvidos são os que fazem o site
           funcionar:
@@ -133,17 +160,25 @@ export default function Privacidade() {
           Os dois operam servidores fora do Brasil, então há transferência internacional. Também podemos
           divulgar informação quando a lei ou uma ordem judicial exigir.
         </p>
-      </Secao>
-
-      <Secao numero={9} titulo="Por que podemos tratar esses dados">
+      </>
+    ),
+  },
+  {
+    titulo: "Por que podemos tratar esses dados",
+    conteudo: (
+      <>
         <p>
           Na Lei Geral de Proteção de Dados: para <Termo>executar o que você pediu</Termo> — recortar a imagem,
           criar o link curto — e por <Termo>legítimo interesse</Termo> em manter o serviço no ar, protegido
           contra abuso e em condições de melhorar. Não usamos seus dados para publicidade.
         </p>
-      </Secao>
-
-      <Secao numero={10} titulo="Seus direitos">
+      </>
+    ),
+  },
+  {
+    titulo: "Seus direitos",
+    conteudo: (
+      <>
         <p>
           Você pode pedir confirmação de que tratamos algum dado seu, acesso a ele, correção, anonimização,
           bloqueio ou exclusão, e também se opor a um tratamento. Basta escrever para{" "}
@@ -154,29 +189,45 @@ export default function Privacidade() {
           como ligar um dado a você. O caso em que conseguimos agir é o do QR Code, se você nos disser qual é o
           link curto.
         </p>
-      </Secao>
-
-      <Secao numero={11} titulo="Segurança">
+      </>
+    ),
+  },
+  {
+    titulo: "Segurança",
+    conteudo: (
+      <>
         <p>
           Todo o tráfego é criptografado por HTTPS. A área interna do site é protegida por senha e por um cookie
           assinado. Ainda assim, nenhum serviço é imune a falhas: não envie por aqui documento, dado de saúde,
           senha ou qualquer informação que você não possa perder.
         </p>
-      </Secao>
-
-      <Secao numero={12} titulo="Crianças">
+      </>
+    ),
+  },
+  {
+    titulo: "Crianças",
+    conteudo: (
+      <>
         <p>
           O Geradoor é uma ferramenta de trabalho e não se destina a menores de 13 anos. Não coletamos
           conscientemente dados de crianças.
         </p>
-      </Secao>
-
-      <Secao numero={13} titulo="Mudanças">
+      </>
+    ),
+  },
+  {
+    titulo: "Mudanças",
+    conteudo: (
+      <>
         <p>
           Quando esta política mudar, a data no topo muda junto. Alterações relevantes valem a partir da
           publicação; continuar usando o site depois disso significa que você as conhece.
         </p>
-      </Secao>
-    </>
-  );
+      </>
+    ),
+  },
+];
+
+export default function Privacidade() {
+  return <PaginaLegal titulo="Política de Privacidade" secoes={SECOES} />;
 }

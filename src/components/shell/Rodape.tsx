@@ -24,8 +24,8 @@ export function Rodape({ className }: { className?: string }) {
   return (
     <footer
       className={cn(
-        "flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-2",
-        "border-t border-zinc-200 text-[11px] text-zinc-400 dark:border-zinc-800 dark:text-zinc-500",
+        "flex shrink-0 flex-wrap items-center justify-center gap-x-5 gap-y-1 px-4 py-2.5",
+        "border-t border-zinc-200 text-[13px] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400",
         className
       )}
     >

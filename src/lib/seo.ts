@@ -103,8 +103,11 @@ export function faqSchema(items: Array<{ question: string; answer: string }>) {
  * Existe por causa de uma pegadinha do Next: `openGraph` e `twitter` definidos
  * numa página SUBSTITUEM o objeto do layout, não mesclam. Declarar apenas
  * título e descrição na página derruba silenciosamente og:type, og:locale,
- * og:image, og:site_name e rebaixa o card do Twitter para "summary".
- * Aqui os dois blocos são montados inteiros, sempre.
+ * og:site_name e rebaixa o card do Twitter para "summary". Aqui os dois blocos
+ * são montados inteiros, sempre.
+ *
+ * A imagem fica de fora: ela vem do `opengraph-image.tsx` de cada rota, que o
+ * Next injeta sozinho e com prioridade sobre o que for declarado aqui.
  */
 export function pageMetadata({
   title,
@@ -127,20 +130,13 @@ export function pageMetadata({
       url,
       title,
       description,
-      images: [
-        {
-          url: "/og-image.png",
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
+      // Sem `images`: cada rota tem o seu `opengraph-image.tsx`, e imagem
+      // declarada aqui apareceria como uma segunda og:image na página.
     },
     twitter: {
       card: "summary_large_image" as const,
       title,
       description,
-      images: ["/og-image.png"],
     },
   };
 }

@@ -6,6 +6,19 @@
  * comum em site com muitas páginas parecidas.
  */
 
+/** Quem responde pelo site, e para onde vão os pedidos de privacidade. */
+export const RESPONSAVEL = "Matheus Cardoso";
+export const EMAIL_DE_CONTATO = "mathuscardoso@gmail.com";
+
+/**
+ * Data da última revisão dos textos legais.
+ *
+ * Fixa e escrita à mão: a data serve para a pessoa saber se leu a versão que
+ * está no ar, e uma data calculada na hora diria "atualizado hoje" todo dia,
+ * sem nada ter mudado.
+ */
+export const ATUALIZACAO_LEGAL = "15 de setembro de 2026";
+
 export const SITE = {
   name: "Geradoor",
   url: "https://www.geradoor.com",

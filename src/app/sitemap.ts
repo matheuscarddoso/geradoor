@@ -21,6 +21,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/qr-code", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/instagram", priority: 0.8, changeFrequency: "monthly" as const },
     { path: "/whatsapp", priority: 0.8, changeFrequency: "monthly" as const },
+    // As páginas legais entram com prioridade baixa: existem para serem
+    // encontradas por quem procura, não para disputar busca.
+    { path: "/privacidade", priority: 0.3, changeFrequency: "yearly" as const },
+    { path: "/termos", priority: 0.3, changeFrequency: "yearly" as const },
+    { path: "/cookies", priority: 0.3, changeFrequency: "yearly" as const },
   ].map(({ path, priority, changeFrequency }) => ({
     url: absolute(path),
     lastModified,

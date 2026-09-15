@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { PanelLeft } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Rodape } from "./Rodape";
 import { Sidebar } from "./Sidebar";
 import { SearchCommand } from "./SearchCommand";
 import { ROTAS } from "@/lib/rotas";
@@ -133,6 +134,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           )}
         </main>
+        <Rodape />
       </div>
 
       <SearchCommand aberto={busca} onAberto={setBusca} />

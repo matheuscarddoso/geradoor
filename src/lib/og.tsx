@@ -85,6 +85,18 @@ export const TEXTOS_DA_IMAGEM: Record<string, { titulo: string; subtitulo: strin
     titulo: "WhatsApp",
     subtitulo: "Crie o link wa.me com a mensagem já escrita, sem salvar o número na agenda.",
   },
+  "/privacidade": {
+    titulo: "Privacidade",
+    subtitulo: "O que o Geradoor coleta, o que não coleta, e o que acontece com as imagens e os links que passam pelas ferramentas.",
+  },
+  "/termos": {
+    titulo: "Termos de uso",
+    subtitulo: "Para que servem os dados de teste, o que você pode fazer com os arquivos gerados e os limites da nossa responsabilidade.",
+  },
+  "/cookies": {
+    titulo: "Cookies",
+    subtitulo: "Sem rastreamento e sem publicidade: o que fica guardado é preferência sua, e fica no seu navegador.",
+  },
 };
 
 /**

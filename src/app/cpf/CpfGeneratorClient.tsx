@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { formatCPF, generateCPF } from './utils/cpf_gen';
+import { formatCPF, generateCPF } from '../utils/cpf_gen';
 import { Input } from '@/components/ui/input';
 import { toast } from "sonner";
 import { PageHeader } from '@/components/shell/AppShell';

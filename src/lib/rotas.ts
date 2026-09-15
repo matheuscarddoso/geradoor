@@ -101,7 +101,7 @@ export const ROTAS: Rota[] = [
   },
 
   {
-    href: "/",
+    href: "/cpf",
     grupo: "gerador",
     label: "CPF",
     descricao: "Gerar CPF válido para teste",

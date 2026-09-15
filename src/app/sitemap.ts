@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { path: "/", priority: 1, changeFrequency: "monthly" as const },
+    { path: "/cpf", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/cnpj", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/cartao-de-credito", priority: 0.9, changeFrequency: "monthly" as const },
     { path: "/telefone", priority: 0.9, changeFrequency: "monthly" as const },

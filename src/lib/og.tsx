@@ -44,6 +44,11 @@ const fundo = `data:image/png;base64,${daPasta("public/og-fundo.png").toString("
  */
 export const TEXTOS_DA_IMAGEM: Record<string, { titulo: string; subtitulo: string }> = {
   "/": {
+    titulo: "Geradoor",
+    subtitulo:
+      "Recorte de imagem, vetorização, QR Code e dados de teste. Sem cadastro, sem marca d'água e sem enviar o que não precisa sair do seu navegador.",
+  },
+  "/cpf": {
     titulo: "CPF",
     subtitulo: "Gere CPF válido para testar seus formulários. Grátis, sem cadastro e sem limite.",
   },

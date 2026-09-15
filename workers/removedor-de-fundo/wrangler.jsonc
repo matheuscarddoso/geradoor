@@ -1,0 +1,59 @@
+{
+  // Remoção de fundo do Geradoor: recebe a imagem, devolve o PNG recortado.
+  // Deploy: npm run deploy:removedor (na raiz do projeto).
+  "name": "geradoor-removedor-de-fundo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "preview_urls": false,
+
+  // Cloudflare Images com segment=foreground, que roda o BiRefNet. No plano
+  // Free são 5.000 transformações únicas por mês; passou disso, o Images
+  // responde erro 9422 e não cobra nada. A cota em src/cota.ts para antes.
+  "images": { "binding": "IMAGES" },
+
+  // Rajadas. O binding de rate limit só aceita janelas de 10 ou 60 s; os
+  // limites por dia e por mês ficam no Durable Object abaixo.
+  "ratelimits": [
+    {
+      // Uma pessoa trocando de foto não chega a 15 por minuto.
+      "name": "LIMITE_POR_IP",
+      "namespace_id": "4201",
+      "simple": { "limit": 15, "period": 60 }
+    },
+    {
+      // Todo mundo somado: segura ataque espalhado em muitos IPs.
+      "name": "LIMITE_GLOBAL",
+      "namespace_id": "4202",
+      "simple": { "limit": 90, "period": 60 }
+    }
+  ],
+
+  // Contador de cota por IP, por dia e por mês. SQLite, que é o único backend
+  // de Durable Object do plano Free — e o que dá consistência forte à contagem.
+  "durable_objects": {
+    "bindings": [{ "name": "COTA", "class_name": "Cota" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Cota"] }],
+
+  "vars": {
+    // Interruptor manual: troque para "false" e faça o deploy para desligar
+    // o recorte na hora. A página cai no modo leve sozinha.
+    "REMOVEDOR_ATIVO": "true",
+
+    // Limites da cota. O mensal nunca passa de 4.900, nem configurado acima
+    // disso (TETO_ABSOLUTO_MENSAL em src/cota.ts). 4.800 deixa 200 de folga
+    // sobre as 5.000 grátis; o diário de 300 impede um único dia de abuso de
+    // levar mais que 6% do mês.
+    "LIMITE_MENSAL": "4800",
+    "LIMITE_DIARIO": "300",
+    "LIMITE_POR_IP_DIA": "150",
+
+    // Só estas origens recebem os headers de CORS. Os localhost são do
+    // desenvolvimento; CORS não é barreira contra quem chama fora do
+    // navegador, e para isso existem os limites acima.
+    "ORIGENS_PERMITIDAS": "https://www.geradoor.com,https://geradoor.com,http://localhost:3000,http://localhost:3001,http://localhost:3100"
+  },
+
+  "observability": { "enabled": true }
+}

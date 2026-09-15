@@ -10,6 +10,6 @@ export default defineConfig({
     // montagem de PDF — nada disso precisa de DOM, e um ambiente falso só
     // atrasaria a suíte que mais interessa rodar a cada mudança.
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "workers/**/*.test.ts"],
   },
 });

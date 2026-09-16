@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE, jsonLd } from "@/lib/seo";
+import { PERFIS_DO_AUTOR, RESPONSAVEL, SITE, jsonLd } from "@/lib/seo";
 import { AppShell } from "@/components/shell/AppShell";
 import { GeistSans } from "geist/font";
 /*
@@ -87,6 +87,15 @@ const siteSchema = [
     name: SITE.name,
     url: SITE.url,
     logo: `${SITE.url}/icon.svg`,
+    // O site é feito por uma pessoa, e é ela que tem presença pública. Ligar as
+    // duas entidades por `founder` é o que permite ao buscador juntar os
+    // sinais sem que a marca reivindique perfil que não é dela.
+    founder: {
+      "@type": "Person",
+      name: RESPONSAVEL,
+      url: PERFIS_DO_AUTOR[0],
+      sameAs: [...PERFIS_DO_AUTOR],
+    },
   },
 ];
 

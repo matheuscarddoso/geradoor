@@ -11,6 +11,23 @@ export const RESPONSAVEL = "Matheus Cardoso";
 export const EMAIL_DE_CONTATO = "mathuscardoso@gmail.com";
 
 /**
+ * Os perfis públicos de quem faz o site.
+ *
+ * São da pessoa, não do projeto — o Geradoor não tem rede social —, e é por
+ * isso que eles ficam no nó `Person` e não no `Organization`. `sameAs` num
+ * `Organization` afirma "estes são os perfis oficiais da marca"; declarar ali
+ * um perfil pessoal seria dizer algo que não é verdade, e um sinal impreciso
+ * vale menos que nenhum.
+ *
+ * Só entra endereço que existe e que é dele. Antes de acrescentar um, abra o
+ * link.
+ */
+export const PERFIS_DO_AUTOR = [
+  "https://x.com/mattcrdoso",
+  "https://github.com/matheuscarddoso",
+] as const;
+
+/**
  * Data da última revisão dos textos legais.
  *
  * Fixa e escrita à mão: a data serve para a pessoa saber se leu a versão que

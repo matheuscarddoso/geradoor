@@ -231,15 +231,18 @@ Acima de ~10% no bloco editorial, reescreva antes de publicar.
 
 ## 7. Pendências
 
-- [ ] **`Organization.sameAs`** em `src/app/layout.tsx:86`. Hoje o nó
-      `Organization` declara só `name`, `url` e `logo`. `sameAs` amarra os
-      perfis oficiais da marca — Instagram, X, GitHub, o que existir — e é o
-      sinal de consistência de entidade que a pesquisa de GEO aponta como
-      relevante. Dos doze concorrentes medidos, **só o Photoroom faz isso**.
-      Ganho pequeno e indireto, custo de dois minutos.
-      **Bloqueado por não saber quais perfis existem.** Só entra perfil real e
-      da marca: `sameAs` apontando para conta inexistente ou de terceiro é sinal
-      errado, pior que campo ausente.
+- [x] **`sameAs`** — resolvido em 16/09/2026, e não como estava previsto. O
+      projeto não tem rede social própria; quem tem presença pública é o autor.
+      Então o `sameAs` foi para um nó `Person`, ligado ao `Organization` por
+      `founder`, com os perfis em `PERFIS_DO_AUTOR` (`src/lib/seo.ts`).
+      Declarar perfil pessoal como se fosse da marca seria afirmar algo falso, e
+      sinal impreciso vale menos que sinal ausente.
+
+- [ ] **Registrar `@geradoor` no X e no Instagram**, com bio e link, sem
+      compromisso de postar. Não é SEO — rede social não é fator de ranking, e o
+      4Devs lidera há 14 anos sem nenhuma. É para a marca não ser ocupada por
+      outra pessoa. Se um dia as contas existirem de verdade e forem do projeto,
+      aí sim entram num `sameAs` do `Organization`.
 
 - [ ] **Search Console.** Submeter o sitemap e acompanhar impressão e clique das
       três páginas de pouso. Página nova leva 60 a 90 dias para dar sinal legível.

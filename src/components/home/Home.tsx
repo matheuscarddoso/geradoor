@@ -159,8 +159,8 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
             {conteudo.detalhe.apoio}
           </CabecalhoDaSecao>
         </div>
-        <div className="mx-auto max-w-5xl">
-          <ConteudoDaFerramenta secoes={conteudo.secoes} faq={[]} veja={[]} idioma={idioma} nivel={3} />
+        <div className="mx-auto max-w-5xl pt-10">
+          <ConteudoDaFerramenta secoes={conteudo.secoes} faq={[]} veja={[]} idioma={idioma} nivel={3} emColunas />
         </div>
       </section>
 
@@ -176,8 +176,8 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
             {conteudo.perguntas.apoio}
           </CabecalhoDaSecao>
         </div>
-        <div className="mx-auto max-w-5xl">
-          <ConteudoDaFerramenta secoes={[]} faq={conteudo.faq} veja={[]} idioma={idioma} nivel={3} semTituloDaFaq />
+        <div className="mx-auto max-w-5xl pt-10">
+          <ConteudoDaFerramenta secoes={[]} faq={conteudo.faq} veja={[]} idioma={idioma} nivel={3} semTituloDaFaq emColunas />
         </div>
       </section>
 

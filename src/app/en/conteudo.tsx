@@ -124,9 +124,9 @@ const DESTAQUE = traduzir(ROTAS_PUBLICAS.find((r) => r.novo) ?? ROTAS_PUBLICAS[0
 export const HOME: ConteudoDaHome = {
   hero: {
     aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
-    titulo: { antes: "Tools that do the job", destaque: "and get out of the way" },
+    titulo: { antes: "Nine tools.", destaque: "None wants your email." },
     subtitulo:
-      "Background removal, vectorizing, QR Codes and test data — most of it without ever uploading your file.",
+      "Background removal, vectorizing, QR Codes and test data. Most of it runs inside your browser, with nothing uploaded.",
     acao: { texto: "Open the vectorizer", href: "/en/vectorizer" },
     secundaria: { texto: "See every tool", href: "#ferramentas" },
     nota: "Free, no sign-up and no watermark.",

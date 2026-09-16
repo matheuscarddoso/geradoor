@@ -43,6 +43,7 @@ export function ConteudoDaFerramenta({
   idioma = "pt-BR",
   nivel = 2,
   semTituloDaFaq = false,
+  emColunas = false,
 }: {
   secoes: SecaoDaFerramenta[];
   faq: PerguntaDaFerramenta[];
@@ -60,6 +61,15 @@ export function ConteudoDaFerramenta({
   nivel?: 2 | 3;
   /** Esconde o título "Perguntas frequentes": a seção que envolve já o diz. */
   semTituloDaFaq?: boolean;
+  /**
+   * Distribui as seções em colunas, em vez de empilhá-las numa coluna estreita.
+   *
+   * Na home as grades vão até a borda do contêiner e a prosa parava bem antes,
+   * o que deixava metade da seção vazia. Em duas colunas o texto ocupa a mesma
+   * largura das grades e cada coluna mantém medida de leitura — que é o motivo
+   * de não bastar alargar o parágrafo.
+   */
+  emColunas?: boolean;
 }) {
   const t = TEXTOS[idioma];
   const Titulo = nivel === 3 ? "h3" : "h2";
@@ -87,7 +97,13 @@ export function ConteudoDaFerramenta({
 
       {/* Aninhado numa seção da home, o bloco alinha à esquerda com o título
           que o antecede; sozinho numa página de ferramenta, centraliza. */}
-      <div className={cn("flex max-w-2xl flex-col gap-10", nivel === 3 ? "" : "mx-auto")}>
+      <div
+        className={cn(
+          "flex flex-col gap-10",
+          nivel === 3 ? "" : "mx-auto max-w-2xl",
+          emColunas ? "gap-x-10 sm:grid sm:grid-cols-2 sm:items-start" : "max-w-2xl"
+        )}
+      >
         {secoes.map(({ titulo, conteudo }) => (
           <div key={titulo}>
             <Titulo className={classeDoTitulo}>{titulo}</Titulo>
@@ -98,14 +114,14 @@ export function ConteudoDaFerramenta({
         ))}
 
         {faq.length > 0 && (
-          <div>
+          <div className={cn(emColunas && "sm:col-span-2")}>
             {!semTituloDaFaq && <Titulo className={classeDoTitulo}>{t.perguntasFrequentes}</Titulo>}
             <FaqAcordeao perguntas={faq} />
           </div>
         )}
 
         {relacionadas.length > 0 && (
-          <div>
+          <div className={cn(emColunas && "sm:col-span-2")}>
             <Titulo className={classeDoTitulo}>{t.vejaTambem}</Titulo>
             <ul className="mt-3 flex flex-col gap-2">
               {relacionadas.map(({ href, label, descricao }) => (

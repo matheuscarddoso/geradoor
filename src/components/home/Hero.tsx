@@ -48,40 +48,28 @@ export function Hero({
 
   return (
     <div className="relative">
-      {/* A fotografia e o que a escurece. `object-cover` com foco à direita
-          mantém a lua e o mar visíveis quando a tela estreita. */}
+      {/* A fotografia e o que a torna legível. Duas versões da mesma cena: a
+          noturna no tema escuro, a diurna no claro — a troca é por CSS, em
+          globals.css, para o navegador baixar só uma. */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 h-[760px] overflow-hidden sm:h-[820px]">
-        <picture>
-          <source media="(max-width: 640px)" srcSet="/hero-noite-p.webp" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/hero-noite.webp"
-            alt=""
-            width={1920}
-            height={1081}
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-full object-cover object-[70%_center]"
-          />
-        </picture>
-        {/* Três camadas, cada uma com um trabalho.
-            A vertical firma o topo, onde fica o cabeçalho, e o pé, de onde a
-            tela do produto emerge. A horizontal escurece só o lado esquerdo —
-            é onde o texto vive, e sem ela o subtítulo cai em cima das colunas
-            do templo e some. A última fecha na cor do fundo, para a fotografia
-            não terminar num corte reto. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1020]/75 via-[#0a1020]/25 to-[#0a1020]/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a1020]/85 via-[#0a1020]/35 to-transparent" />
+        <div className="hero-fundo h-full w-full" />
+        {/* O véu, e é aqui que os dois temas divergem de verdade.
+            No escuro o texto é branco e o véu é azul-noite. No claro a foto tem
+            céu azul e mar brilhante, onde branco não se lê: o véu vira branco e
+            o texto, escuro. O horizontal é o que importa, porque o texto mora à
+            esquerda; o vertical firma o topo e o pé, de onde a tela emerge. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/85 dark:from-[#0a1020]/75 dark:via-[#0a1020]/25 dark:to-[#0a1020]/90" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/45 to-transparent dark:from-[#0a1020]/85 dark:via-[#0a1020]/35 dark:to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent to-background" />
       </div>
 
       <div className="relative">
         <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-8">
-          <Link href={inicio} className="flex items-center gap-2 text-white">
+          <Link href={inicio} className="flex items-center gap-2 text-zinc-900 dark:text-white">
             <MarcaGeradoor size={22} />
             <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
           </Link>
-          <div className="text-white">
+          <div className="text-zinc-900 dark:text-white">
             <ThemeToggle />
           </div>
         </header>
@@ -89,38 +77,38 @@ export function Hero({
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-8 sm:pb-14 sm:pt-24">
           <Link
             href={texto.aviso.href}
-            className="group inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] py-1 pe-2.5 ps-1.5 text-[13px] text-white/80 backdrop-blur transition-colors duration-150 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="group inline-flex items-center gap-2 rounded-full border border-zinc-900/15 bg-white/50 py-1 pe-2.5 ps-1.5 text-[13px] text-zinc-700 backdrop-blur transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/20 dark:bg-white/[0.06] dark:text-white/80 dark:hover:text-white dark:focus-visible:ring-white/60"
           >
             <EtiquetaNovo idioma={idioma} />
             <span className="truncate">{texto.aviso.texto}</span>
             <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
 
-          <h1 className="mt-6 max-w-3xl text-balance text-[34px] font-medium leading-[1.06] tracking-[-0.03em] text-white sm:text-[56px]">
+          <h1 className="mt-6 max-w-3xl text-balance text-[34px] font-medium leading-[1.06] tracking-[-0.03em] text-zinc-900 sm:text-[56px] dark:text-white">
             {texto.titulo.antes}
             <br />
-            <span className="text-white/55">{texto.titulo.destaque}</span>
+            <span className="text-zinc-900/45 dark:text-white/55">{texto.titulo.destaque}</span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-balance text-[15px] leading-relaxed text-white/65">{texto.subtitulo}</p>
+          <p className="mt-5 max-w-lg text-balance text-[15px] leading-relaxed text-zinc-600 dark:text-white/65">{texto.subtitulo}</p>
 
           <div className="mt-8 flex flex-wrap items-center gap-2.5">
             <Link
               href={texto.acao.href}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:bg-white dark:text-zinc-900 dark:focus-visible:ring-white/60"
             >
               {texto.acao.texto}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={texto.secundaria.href}
-              className="inline-flex items-center rounded-full border border-white/25 px-4 py-2.5 text-sm text-white/85 transition-colors duration-150 hover:border-white/50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              className="inline-flex items-center rounded-full border border-zinc-900/20 px-4 py-2.5 text-sm text-zinc-700 transition-colors duration-150 hover:border-zinc-900/50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/25 dark:text-white/85 dark:hover:border-white/50 dark:hover:text-white dark:focus-visible:ring-white/60"
             >
               {texto.secundaria.texto}
             </Link>
           </div>
 
-          <p className="mt-4 text-[13px] text-white/45">{texto.nota}</p>
+          <p className="mt-4 text-[13px] text-zinc-500 dark:text-white/45">{texto.nota}</p>
         </div>
 
         {children && <div className="mx-auto max-w-6xl px-4 sm:px-8">{children}</div>}
@@ -137,7 +125,7 @@ export function Hero({
  */
 export function TelaDoProduto({ children }: { children: React.ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-white/12 bg-zinc-950 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)]">
+    <div className="overflow-hidden rounded-xl border border-zinc-900/10 bg-zinc-950 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.35)] dark:border-white/12 dark:shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)]">
       {children}
     </div>
   );

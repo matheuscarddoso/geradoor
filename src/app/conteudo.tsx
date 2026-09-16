@@ -140,9 +140,9 @@ const DESTAQUE = ROTAS_PUBLICAS.find((rota) => rota.novo) ?? ROTAS_PUBLICAS[0];
 export const HOME: ConteudoDaHome = {
   hero: {
     aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
-    titulo: { antes: "Ferramentas que fazem o", destaque: "trabalho e somem" },
+    titulo: { antes: "Nove ferramentas.", destaque: "Nenhuma quer seu e-mail." },
     subtitulo:
-      "Recorte de imagem, vetorização, QR Code e dados de teste — a maior parte sem nunca enviar o arquivo para lugar nenhum.",
+      "Recorte de imagem, vetorização, QR Code e dados de teste. A maior parte roda dentro do seu navegador, sem enviar o arquivo.",
     acao: { texto: "Abrir o vetorizador", href: "/vetorizador" },
     secundaria: { texto: "Ver todas as ferramentas", href: "#ferramentas" },
     nota: "Grátis, sem cadastro e sem marca d'água.",

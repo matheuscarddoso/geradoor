@@ -586,3 +586,33 @@ html:not(.dark) .dialkit-root {
     animation: none;
   }
 }
+
+/*
+ * A fotografia da abertura, uma por tema.
+ *
+ * Vai como `background-image`, e não num `<img>`, por um motivo de bytes: o
+ * tema aqui é uma classe no `<html>`, não uma media query, então duas `<img>`
+ * com uma escondida por CSS baixariam as duas — 380 KB para mostrar metade. Com
+ * background-image o navegador busca só a regra que venceu.
+ *
+ * A versão estreita é servida abaixo de 640px, onde a larga seria desperdício.
+ */
+.hero-fundo {
+  background-image: url("/hero-dia-p.webp");
+  background-size: cover;
+  background-position: 70% center;
+}
+
+.dark .hero-fundo {
+  background-image: url("/hero-noite-p.webp");
+}
+
+@media (min-width: 641px) {
+  .hero-fundo {
+    background-image: url("/hero-dia.webp");
+  }
+
+  .dark .hero-fundo {
+    background-image: url("/hero-noite.webp");
+  }
+}

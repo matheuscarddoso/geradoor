@@ -258,8 +258,8 @@ export default function RemovedorDeFundoClient() {
       <div className="px-6 pt-10 sm:px-10 md:col-start-1 md:row-start-2 md:pt-0">
         <div className="w-full max-w-md">
           <PageHeader
-            title="Removedor de fundo"
-            description="Tire o fundo de qualquer foto em segundos, com contorno preciso até no cabelo. Grátis e sem marca d'água."
+            title="Removedor de fundo de imagem"
+            description="Remova o fundo de qualquer foto em segundos e baixe em PNG transparente, na resolução original. Grátis, sem cadastro e sem marca d'água."
           />
         </div>
       </div>

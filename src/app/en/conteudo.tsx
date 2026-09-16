@@ -137,6 +137,8 @@ export const HOME: ConteudoDaHome = {
     marcador: "The tools",
     pilula: "Nine, and none asks for an account",
     titulo: { antes: "Images, codes and test data", destaque: "in one place" },
+    apoio:
+      "Nine tools, each solving one thing. None asks for an account, none marks your file.",
   },
   pilares: {
     marcador: "How it works",
@@ -159,16 +161,22 @@ export const HOME: ConteudoDaHome = {
           "Files come out clean and at original resolution. No hidden paid tier and no downscaled preview that only improves if you subscribe.",
       },
     ],
+    apoio:
+      "Three decisions that hold for all of them, and that are what sets us apart.",
   },
   detalhe: {
     marcador: "Privacy",
     pilula: "What stays, what goes",
     titulo: { antes: "Privacy, said", destaque: "plainly" },
+    apoio:
+      "What is computed on your device, what needs a server, and why — without euphemism.",
   },
   perguntas: {
     marcador: "Questions",
     pilula: "Frequently asked",
     titulo: { antes: "What people ask", destaque: "before using it" },
+    apoio:
+      "The questions that come up before anyone drops in a first file.",
   },
   chamada: {
     titulo: "Pick a tool and start",

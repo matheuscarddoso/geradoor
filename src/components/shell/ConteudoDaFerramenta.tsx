@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ROTAS_DE_POUSO, ROTAS_PUBLICAS, traduzir } from "@/lib/rotas";
+import { FaqAcordeao } from "./FaqAcordeao";
 import { TEXTOS } from "@/lib/textos";
 import { cn } from "@/lib/utils";
 import type { Idioma } from "@/lib/idioma";
@@ -99,14 +100,7 @@ export function ConteudoDaFerramenta({
         {faq.length > 0 && (
           <div>
             {!semTituloDaFaq && <Titulo className={classeDoTitulo}>{t.perguntasFrequentes}</Titulo>}
-            <dl className="mt-4 flex flex-col divide-y divide-border border-t border-border">
-              {faq.map(({ pergunta, resposta }) => (
-                <div key={pergunta} className="py-4">
-                  <dt className="text-sm font-medium">{pergunta}</dt>
-                  <dd className="mt-1.5 text-sm leading-[1.7] text-zinc-600 dark:text-zinc-300">{resposta}</dd>
-                </div>
-              ))}
-            </dl>
+            <FaqAcordeao perguntas={faq} />
           </div>
         )}
 

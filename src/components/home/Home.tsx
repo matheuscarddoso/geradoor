@@ -3,7 +3,7 @@ import { ArrowRight, Cpu, EyeOff, Gauge } from "lucide-react";
 import { Rodape } from "@/components/shell/Rodape";
 import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
 import { ConteudoDaFerramenta, type PerguntaDaFerramenta, type SecaoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
-import { BlocoDeChamada, CartaoNumerado, MarcadorDeSecao, Pilula, TituloDaSecao } from "./Secoes";
+import { BlocoDeChamada, CabecalhoDaSecao, CartaoNumerado, MarcadorDeSecao } from "./Secoes";
 import { Hero, TelaDoProduto, type TextoDaHero } from "./Hero";
 import { rotasPublicas } from "@/lib/rotas";
 import type { Idioma } from "@/lib/idioma";
@@ -21,17 +21,25 @@ import type { Idioma } from "@/lib/idioma";
  * construída sobre uma régua, e não uma pilha de blocos soltos.
  */
 
+/**
+ * O cabeçalho de uma seção.
+ *
+ * `marcador` é o que vai na régua de cima, em caixa alta; `pilula` é a
+ * sobrancelha dentro da seção; `apoio` é o parágrafo que explica o título.
+ */
+type SecaoDaHome = {
+  marcador: string;
+  pilula: string;
+  titulo: { antes: string; destaque: string };
+  apoio: string;
+};
+
 export type ConteudoDaHome = {
   hero: TextoDaHero;
-  ferramentas: { marcador: string; pilula: string; titulo: { antes: string; destaque: string } };
-  pilares: {
-    marcador: string;
-    pilula: string;
-    titulo: { antes: string; destaque: string };
-    cartoes: { titulo: string; texto: string }[];
-  };
-  detalhe: { marcador: string; pilula: string; titulo: { antes: string; destaque: string } };
-  perguntas: { marcador: string; pilula: string; titulo: { antes: string; destaque: string } };
+  ferramentas: SecaoDaHome;
+  pilares: SecaoDaHome & { cartoes: { titulo: string; texto: string }[] };
+  detalhe: SecaoDaHome;
+  perguntas: SecaoDaHome;
   chamada: { titulo: string; texto: string; acao: string; secundaria: string };
   secoes: SecaoDaFerramenta[];
   faq: PerguntaDaFerramenta[];
@@ -66,12 +74,13 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
       </div>
       <section id="ferramentas" className="scroll-mt-4 border-b border-border px-4 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <div className="flex flex-col items-start gap-4">
-            <Pilula>{conteudo.ferramentas.pilula}</Pilula>
-            <TituloDaSecao destaque={conteudo.ferramentas.titulo.destaque}>
-              {conteudo.ferramentas.titulo.antes}
-            </TituloDaSecao>
-          </div>
+          <CabecalhoDaSecao
+            sobrancelha={conteudo.ferramentas.pilula}
+            titulo={conteudo.ferramentas.titulo.antes}
+            destaque={conteudo.ferramentas.titulo.destaque}
+          >
+            {conteudo.ferramentas.apoio}
+          </CabecalhoDaSecao>
           <nav className="mt-10 border-t border-border">
             <ul className="grid grid-cols-2 border-s border-border sm:grid-cols-3">
               {rotas.map(({ href, label, labelCurto, descricao, icon: Icone, novo }, indice) => (
@@ -114,19 +123,19 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
       <MarcadorDeSecao numero={2}>{conteudo.pilares.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <div className="flex flex-col items-start gap-4">
-            <Pilula>{conteudo.pilares.pilula}</Pilula>
-            <TituloDaSecao destaque={conteudo.pilares.titulo.destaque}>
-              {conteudo.pilares.titulo.antes}
-            </TituloDaSecao>
-          </div>
+          <CabecalhoDaSecao
+            sobrancelha={conteudo.pilares.pilula}
+            titulo={conteudo.pilares.titulo.antes}
+            destaque={conteudo.pilares.titulo.destaque}
+          >
+            {conteudo.pilares.apoio}
+          </CabecalhoDaSecao>
           <div className="mt-10 grid border-s border-t border-border sm:grid-cols-3">
             {conteudo.pilares.cartoes.map((cartao, i) => {
               const Icone = ICONES[i] ?? Cpu;
               return (
                 <CartaoNumerado
                   key={cartao.titulo}
-                  numero={i + 1}
                   titulo={cartao.titulo}
                   icone={<Icone className="h-4 w-4" strokeWidth={1.5} />}
                 >
@@ -141,25 +150,35 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
       {/* [03] O texto longo: o que sai do aparelho, o cadastro, o dado de teste. */}
       <MarcadorDeSecao numero={3}>{conteudo.detalhe.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 pt-12 sm:px-8 sm:pt-16">
-        <div className="mx-auto flex max-w-5xl flex-col items-start gap-4">
-          <Pilula>{conteudo.detalhe.pilula}</Pilula>
-          <TituloDaSecao destaque={conteudo.detalhe.titulo.destaque}>
-            {conteudo.detalhe.titulo.antes}
-          </TituloDaSecao>
+        <div className="mx-auto max-w-5xl">
+          <CabecalhoDaSecao
+            sobrancelha={conteudo.detalhe.pilula}
+            titulo={conteudo.detalhe.titulo.antes}
+            destaque={conteudo.detalhe.titulo.destaque}
+          >
+            {conteudo.detalhe.apoio}
+          </CabecalhoDaSecao>
         </div>
-        <ConteudoDaFerramenta secoes={conteudo.secoes} faq={[]} veja={[]} idioma={idioma} nivel={3} />
+        <div className="mx-auto max-w-5xl">
+          <ConteudoDaFerramenta secoes={conteudo.secoes} faq={[]} veja={[]} idioma={idioma} nivel={3} />
+        </div>
       </section>
 
       {/* [04] As perguntas. */}
       <MarcadorDeSecao numero={4}>{conteudo.perguntas.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 pt-12 sm:px-8 sm:pt-16">
-        <div className="mx-auto flex max-w-5xl flex-col items-start gap-4">
-          <Pilula>{conteudo.perguntas.pilula}</Pilula>
-          <TituloDaSecao destaque={conteudo.perguntas.titulo.destaque}>
-            {conteudo.perguntas.titulo.antes}
-          </TituloDaSecao>
+        <div className="mx-auto max-w-5xl">
+          <CabecalhoDaSecao
+            sobrancelha={conteudo.perguntas.pilula}
+            titulo={conteudo.perguntas.titulo.antes}
+            destaque={conteudo.perguntas.titulo.destaque}
+          >
+            {conteudo.perguntas.apoio}
+          </CabecalhoDaSecao>
         </div>
-        <ConteudoDaFerramenta secoes={[]} faq={conteudo.faq} veja={[]} idioma={idioma} nivel={3} semTituloDaFaq />
+        <div className="mx-auto max-w-5xl">
+          <ConteudoDaFerramenta secoes={[]} faq={conteudo.faq} veja={[]} idioma={idioma} nivel={3} semTituloDaFaq />
+        </div>
       </section>
 
       <BlocoDeChamada
@@ -168,14 +187,14 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
           <>
             <Link
               href={destaque.href}
-              className="inline-flex items-center gap-2 rounded-full bg-background px-4 py-2 text-sm font-medium text-foreground transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               {conteudo.chamada.acao}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={idioma === "en" ? "/en/privacy" : "/privacidade"}
-              className="inline-flex items-center rounded-full border border-background/25 px-4 py-2 text-sm text-background/80 transition-colors duration-150 hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-background"
+              className="inline-flex items-center rounded-full border border-white/35 px-4 py-2.5 text-sm text-white/90 transition-colors duration-150 hover:border-white hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               {conteudo.chamada.secundaria}
             </Link>

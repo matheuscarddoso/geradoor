@@ -1,29 +1,29 @@
 import { cn } from "@/lib/utils";
+import { GradeCintilante } from "./GradeCintilante";
 
 /**
- * As peças de desenho da home.
+ * As peças de desenho das seções.
  *
- * A gramática é a mesma do resto do site — fio de 1px, cinza, uma única cor de
- * destaque — com três elementos emprestados de um wireframe de referência:
- * o marcador numerado em monoespaçada que abre cada seção, a pílula que anuncia
- * o assunto acima do título, e o bloco invertido que fecha a página.
+ * A gramática vem das referências que o autor trouxe: **sobrancelha em caixa
+ * alta**, título grande logo abaixo e um parágrafo de apoio — nessa ordem,
+ * todos encostados na mesma margem esquerda. É o que dá a impressão de coluna
+ * editorial em vez de blocos empilhados.
  *
- * O que NÃO veio da referência: bloco de investidor, foto de equipe e logotipo
- * de cliente. Não temos nenhum dos três, e seção vazia esperando conteúdo é
- * pior que seção que não existe.
+ * A pílula com borda que havia aqui antes saiu: numa página de fio de 1px ela
+ * era o único elemento com cápsula, e chamava atenção para si em vez de para o
+ * título.
  */
 
 /**
- * O marcador que abre uma seção: `| [01] NOME DA SEÇÃO` e três asteriscos na
- * outra ponta.
+ * O marcador que abre uma seção: `| [01] NOME` e três asteriscos na outra ponta.
  *
  * Em monoespaçada porque é sinalização, não texto de leitura — a mesma família
- * do logotipo, então não inaugura uma fonte no sistema. Os asteriscos à direita
- * não dizem nada: fecham a linha, que de outro modo morreria no meio da página.
+ * do logotipo, então não inaugura fonte no sistema. Os asteriscos não dizem
+ * nada: fecham a linha, que de outro modo morreria no meio da página.
  */
 export function MarcadorDeSecao({ numero, children }: { numero: number; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-8">
+    <div className="flex items-center justify-between border-y border-border px-4 py-3 sm:px-8">
       <p className="flex items-center gap-2.5 font-logo text-[11px] uppercase tracking-[0.12em] text-zinc-400 dark:text-zinc-500">
         <span className="text-blue-600 dark:text-blue-400">|</span>
         <span className="tabular-nums">[{String(numero).padStart(2, "0")}]</span>
@@ -36,52 +36,72 @@ export function MarcadorDeSecao({ numero, children }: { numero: number; children
   );
 }
 
-/** A etiqueta que anuncia o assunto, logo acima do título da seção. */
-export function Pilula({ children }: { children: React.ReactNode }) {
+/** A sobrancelha: o assunto da seção, em caixa alta, acima do título. */
+export function Sobrancelha({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-border bg-background px-3 py-1 text-[12px] text-zinc-500 dark:text-zinc-400">
-      {children}
-    </span>
+    <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-400 dark:text-zinc-500">{children}</p>
   );
 }
 
 /**
- * O título de uma seção, com a última parte em destaque.
+ * O cabeçalho de uma seção: sobrancelha, título e parágrafo de apoio.
  *
- * A referência põe uma palavra do título em laranja. Aqui é azul, que já é a
- * cor de destaque do site — inaugurar uma segunda seria quebrar o sistema por
- * causa de um título.
+ * Existe como peça única porque os três andam sempre juntos e sempre na mesma
+ * margem — separá-los seria abrir espaço para uma seção sair desalinhada das
+ * outras, que foi exatamente o que aconteceu antes.
  */
-export function TituloDaSecao({ children, destaque }: { children: React.ReactNode; destaque?: string }) {
+export function CabecalhoDaSecao({
+  sobrancelha,
+  titulo,
+  destaque,
+  children,
+  centrado = false,
+}: {
+  sobrancelha: string;
+  titulo: string;
+  destaque?: string;
+  /** O parágrafo de apoio. Opcional: nem toda seção precisa explicar-se. */
+  children?: React.ReactNode;
+  centrado?: boolean;
+}) {
   return (
-    <h2 className="max-w-2xl text-balance text-2xl font-medium leading-[1.15] tracking-[-0.02em] sm:text-[34px]">
-      {children}
-      {destaque && <span className="text-blue-600 dark:text-blue-400"> {destaque}</span>}
-    </h2>
+    <div className={cn("flex flex-col gap-3", centrado && "items-center text-center")}>
+      <Sobrancelha>{sobrancelha}</Sobrancelha>
+      <h2 className="max-w-2xl text-balance text-2xl font-medium leading-[1.15] tracking-[-0.02em] sm:text-[34px]">
+        {titulo}
+        {destaque && <span className="text-blue-600 dark:text-blue-400"> {destaque}</span>}
+      </h2>
+      {children && (
+        <p className="max-w-xl text-balance text-[15px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+          {children}
+        </p>
+      )}
+    </div>
   );
 }
 
-/** Cartão numerado, na fileira de três que a referência usa para os pilares. */
+/**
+ * Cartão da grade de pilares.
+ *
+ * O ícone fica na linha do título, e não num canto acima dele: é como a
+ * referência faz, e é o que permite a descrição começar na mesma vertical do
+ * título em vez de recuar.
+ */
 export function CartaoNumerado({
-  numero,
   titulo,
   children,
   icone,
 }: {
-  numero: number;
   titulo: string;
   children: React.ReactNode;
   icone?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-3 border-b border-e border-border p-5 sm:p-6">
-      <div className="flex items-center justify-between">
-        <span className="font-logo text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
-          {String(numero).padStart(2, "0")}
-        </span>
-        {icone && <span className="text-blue-600 dark:text-blue-400">{icone}</span>}
+      <div className="flex items-center gap-2.5">
+        {icone && <span className="text-zinc-400 dark:text-zinc-500">{icone}</span>}
+        <h3 className="text-[15px] font-medium tracking-tight">{titulo}</h3>
       </div>
-      <h3 className="text-[15px] font-medium tracking-tight">{titulo}</h3>
       <p className="text-sm leading-[1.7] text-zinc-600 dark:text-zinc-300">{children}</p>
     </div>
   );
@@ -90,39 +110,31 @@ export function CartaoNumerado({
 /**
  * O bloco que fecha a página.
  *
- * A referência usa um retângulo laranja com trama de quadrados. Aqui o bloco é
- * invertido — tinta do texto como fundo —, que é o contraste mais forte
- * disponível sem inventar cor. A trama é a mesma ideia: uma grade de fios que
- * aparece de leve e dá textura ao que seria um retângulo chapado.
+ * Azul da marca, texto branco e a grade cintilante por trás. O azul é o mesmo
+ * que já destaca palavra de título e etiqueta "Novo" — o bloco é o único lugar
+ * onde ele aparece chapado, e é por isso que funciona como ponto final.
  */
 export function BlocoDeChamada({
   titulo,
   children,
   acao,
-  className,
 }: {
   titulo: string;
   children: React.ReactNode;
   acao: React.ReactNode;
-  className?: string;
 }) {
   return (
-    <div className={cn("relative overflow-hidden bg-foreground px-6 py-14 text-center sm:py-20", className)}>
+    <div className="relative overflow-hidden bg-blue-600 px-6 py-16 text-center sm:py-24">
+      <GradeCintilante className="pointer-events-none absolute inset-0 h-full w-full" />
+      {/* Um véu radial no centro para o texto não disputar com a grade. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.07]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, hsl(var(--background)) 1px, transparent 1px), linear-gradient(to bottom, hsl(var(--background)) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_50%_50%,rgba(37,99,235,0.85),transparent)]"
       />
       <div className="relative mx-auto flex max-w-xl flex-col items-center gap-4">
-        <h2 className="text-balance text-2xl font-medium tracking-[-0.02em] text-background sm:text-3xl">
-          {titulo}
-        </h2>
-        <p className="text-balance text-sm leading-relaxed text-background/70">{children}</p>
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-2">{acao}</div>
+        <h2 className="text-balance text-2xl font-medium tracking-[-0.02em] text-white sm:text-[34px]">{titulo}</h2>
+        <p className="text-balance text-[15px] leading-relaxed text-white/75">{children}</p>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2.5">{acao}</div>
       </div>
     </div>
   );

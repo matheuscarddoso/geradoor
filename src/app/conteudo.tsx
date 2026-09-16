@@ -153,6 +153,8 @@ export const HOME: ConteudoDaHome = {
     marcador: "As ferramentas",
     pilula: "Nove, e nenhuma pede cadastro",
     titulo: { antes: "Imagem, código e dado de teste", destaque: "num lugar só" },
+    apoio:
+      "Nove ferramentas, cada uma resolvendo uma coisa. Nenhuma pede cadastro, nenhuma marca o arquivo.",
   },
   pilares: {
     marcador: "Como funciona",
@@ -175,16 +177,22 @@ export const HOME: ConteudoDaHome = {
           "O arquivo sai limpo e na resolução original. Não há versão paga escondida nem prévia reduzida que só melhora se você assinar.",
       },
     ],
+    apoio:
+      "Três decisões que valem para todas elas, e que são o que nos separa do resto.",
   },
   detalhe: {
     marcador: "Privacidade",
     pilula: "O que fica, o que vai",
     titulo: { antes: "Privacidade dita", destaque: "sem rodeio" },
+    apoio:
+      "O que é calculado no seu aparelho, o que precisa de servidor e por que — sem eufemismo.",
   },
   perguntas: {
     marcador: "Dúvidas",
     pilula: "Perguntas frequentes",
     titulo: { antes: "O que perguntam", destaque: "antes de usar" },
+    apoio:
+      "As dúvidas que aparecem antes de alguém soltar o primeiro arquivo.",
   },
   chamada: {
     titulo: "Escolha uma ferramenta e comece",

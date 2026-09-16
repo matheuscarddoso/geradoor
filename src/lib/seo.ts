@@ -1,3 +1,4 @@
+import { parDeIdiomas } from "./rotas";
 /**
  * Constantes e blocos de dados estruturados do site.
  *
@@ -149,15 +150,19 @@ export function pageMetadata({
   path: string;
 }) {
   const url = absolute(path);
+  const par = parDeIdiomas(path);
   return {
     title,
     description,
-    // O site é monolíngue. Declarar pt-BR e x-default na mesma URL custa duas
-    // linhas e evita que o buscador trate a página como português genérico —
-    // concorrente que serve pt-PT para busca brasileira perde por isso.
+    // O hreflang de verdade: cada página aponta para a irmã no outro idioma.
+    // É isto que impede o buscador de tratar as duas como duplicata e é o que
+    // faz ele servir a versão certa para cada país. x-default é o português,
+    // que é a raiz.
     alternates: {
       canonical: url,
-      languages: { "pt-BR": url, "x-default": url },
+      languages: par
+        ? { "pt-BR": absolute(par["pt-BR"]), en: absolute(par.en), "x-default": absolute(par["pt-BR"]) }
+        : { "pt-BR": url, "x-default": url },
     },
     openGraph: {
       type: "website" as const,

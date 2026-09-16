@@ -8,6 +8,8 @@ import { Rodape } from "./Rodape";
 import { Sidebar } from "./Sidebar";
 import { SearchCommand } from "./SearchCommand";
 import { HREFS_COM_CASCA } from "@/lib/rotas";
+import { idiomaDoCaminho } from "@/lib/idioma";
+import { useTextos } from "@/lib/useTextos";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,6 +23,7 @@ const CHAVE_DA_SIDEBAR = "geradoor:sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const caminho = usePathname();
+  const t = useTextos();
   const [aberta, setAberta] = useState(true);
   const [gaveta, setGaveta] = useState(false);
   const [busca, setBusca] = useState(false);
@@ -79,7 +82,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* No celular a sidebar é gaveta: não há largura para ela fixa. */}
       <Sheet open={gaveta} onOpenChange={setGaveta}>
         <SheetContent side="left" className="w-64 p-0 [&>button]:hidden">
-          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetTitle className="sr-only">{t.buscarFerramenta}</SheetTitle>
           <Sidebar className="w-full border-e-0" onRecolher={() => setGaveta(false)} onBuscar={abrirBusca} mac={mac} />
         </SheetContent>
       </Sheet>
@@ -92,8 +95,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           type="button"
           onClick={() => (window.innerWidth < 768 ? setGaveta(true) : definirAberta(true))}
           data-touch-target
-          aria-label="Abrir menu"
-          title="Abrir menu"
+          aria-label={t.abrirMenu}
+          title={t.abrirMenu}
           className={cn(
             "absolute left-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-lg",
             "bg-background/80 text-zinc-500 backdrop-blur-sm transition-colors duration-150",
@@ -114,7 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className={cn("min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0", aberta && "md:pt-0")}>
           {children}
         </main>
-        <Rodape />
+        <Rodape idioma={idiomaDoCaminho(caminho)} />
       </div>
 
       <SearchCommand aberto={busca} onAberto={setBusca} />

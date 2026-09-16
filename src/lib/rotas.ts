@@ -268,6 +268,8 @@ export function rotasPublicas(idioma: Idioma): RotaTraduzida[] {
 
 /** O par de endereços de uma página, para o hreflang. Null se não for rota de ferramenta. */
 export function parDeIdiomas(href: string): { "pt-BR": string; en: string } | null {
+  // A home é o par que não está na lista de ferramentas.
+  if (href === "/" || href === "/en") return { "pt-BR": "/", en: "/en" };
   const rota = ROTAS.find((r) => r.href === href || r.en.href === href);
   return rota ? { "pt-BR": rota.href, en: rota.en.href } : null;
 }

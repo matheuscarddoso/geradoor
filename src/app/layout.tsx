@@ -1,7 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
-import { idiomaDoCaminho } from "@/lib/idioma";
-import { CABECALHO_DO_CAMINHO } from "@/middleware";
 import { PERFIS_DO_AUTOR, RESPONSAVEL, SITE, jsonLd } from "@/lib/seo";
 import { AppShell } from "@/components/shell/AppShell";
 import { GeistSans } from "geist/font";
@@ -103,22 +100,29 @@ const siteSchema = [
 ];
 
 /**
- * O `lang` do documento sai do caminho, e o caminho vem do middleware.
+ * O documento nasce em português, e a subárvore em inglês se declara por dentro.
  *
- * Componente de servidor não recebe a rota por outro meio, e o atributo precisa
- * estar certo: é dele que leitor de tela tira a pronúncia e que o buscador tira
- * o idioma da página. `await headers()` torna o layout dinâmico, então as
- * páginas seguem sendo geradas no build — o que muda é só este atributo.
+ * A versão óbvia disto seria ler o caminho no layout e trocar o `lang` do
+ * `<html>`. Não dá: componente de servidor só recebe a rota por `headers()`, e
+ * chamar `headers()` aqui torna DINÂMICA toda página do site — medido, `/cpf`
+ * saiu de estático para renderizado a cada requisição. Trocar a geração
+ * estática do site inteiro pelo atributo de uma subárvore é um mau negócio.
+ *
+ * A alternativa correta seria dois layouts raiz em grupos de rota, mas ela
+ * obriga a mover todas as páginas já indexadas, e o risco não se paga.
+ *
+ * Então o `<html>` fica em pt-BR e as páginas em inglês marcam `lang="en"` no
+ * próprio contêiner. É HTML válido: o atributo vale para a subárvore, que é o
+ * que leitor de tela usa para escolher a pronúncia. Para o buscador, quem diz o
+ * idioma de cada página é o hreflang, que aponta para o par certo.
  */
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const caminho = (await headers()).get(CABECALHO_DO_CAMINHO) ?? "/";
-
   return (
-    <html lang={idiomaDoCaminho(caminho)} suppressHydrationWarning>
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-5073478672232880" />
         <script

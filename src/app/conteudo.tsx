@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Dado, type PerguntaDaFerramenta, type SecaoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import type { ConteudoDaHome } from "@/components/home/Home";
+import { ROTAS_PUBLICAS } from "@/lib/rotas";
 
 /**
  * O texto da home.
@@ -131,3 +133,53 @@ export const FAQ: PerguntaDaFerramenta[] = [
       "Ainda não existe API pública documentada. Todas as ferramentas funcionam pelo navegador, e quem precisa automatizar em volume deve procurar um serviço feito para isso.",
   },
 ];
+
+/** A ferramenta anunciada no aviso do topo: uma só, e a mais recente. */
+const DESTAQUE = ROTAS_PUBLICAS.find((rota) => rota.novo) ?? ROTAS_PUBLICAS[0];
+
+export const HOME: ConteudoDaHome = {
+  aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
+  titulo: { antes: "Ferramentas que fazem o trabalho", destaque: "e somem" },
+  subtitulo:
+    "Recorte de imagem, vetorização, QR Code e dados de teste. Sem cadastro, sem marca d'água e sem enviar o que não precisa sair do seu navegador.",
+  pilares: {
+    marcador: "Como funciona",
+    pilula: "O essencial",
+    titulo: { antes: "Ferramenta que abre, faz e", destaque: "sai da frente" },
+    cartoes: [
+      {
+        titulo: "Roda no seu aparelho",
+        texto:
+          "Cinco das nove ferramentas calculam tudo dentro do navegador, em JavaScript ou WebAssembly. Não há upload, não há fila e não há nada para apagar depois.",
+      },
+      {
+        titulo: "Sem cadastro",
+        texto:
+          "Não existe conta no site. Sem conta não há senha para vazar, e-mail para vender nem histórico para cruzar — e nada atrasa você entre abrir a página e usar.",
+      },
+      {
+        titulo: "Sem marca d'água",
+        texto:
+          "O arquivo sai limpo e na resolução original. Não há versão paga escondida nem prévia reduzida que só melhora se você assinar.",
+      },
+    ],
+  },
+  detalhe: {
+    marcador: "Privacidade",
+    pilula: "O que fica, o que vai",
+    titulo: { antes: "Privacidade dita", destaque: "sem rodeio" },
+  },
+  perguntas: {
+    marcador: "Dúvidas",
+    pilula: "Perguntas frequentes",
+    titulo: { antes: "O que perguntam", destaque: "antes de usar" },
+  },
+  chamada: {
+    titulo: "Escolha uma ferramenta e comece",
+    texto: "Sem cadastro, sem limite e sem instalar nada. Abre e usa.",
+    acao: DESTAQUE.label,
+    secundaria: "Como tratamos seus dados",
+  },
+  secoes: SECOES,
+  faq: FAQ,
+};

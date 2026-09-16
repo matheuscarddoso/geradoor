@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import type { Idioma } from "@/lib/idioma";
 
 /**
  * Etiqueta "Novo" ao lado de uma ferramenta recém-lançada.
@@ -7,7 +8,7 @@ import { cn } from "@/lib/utils";
  * funciona: um azul entre cinzas se lê de relance sem gritar. O azul é o dos
  * links do site, então não inaugura uma cor nova no sistema.
  */
-export function EtiquetaNovo({ className }: { className?: string }) {
+export function EtiquetaNovo({ className, idioma = "pt-BR" }: { className?: string; idioma?: Idioma }) {
   return (
     <span
       className={cn(
@@ -18,7 +19,7 @@ export function EtiquetaNovo({ className }: { className?: string }) {
         className
       )}
     >
-      Novo
+      {idioma === "en" ? "New" : "Novo"}
     </span>
   );
 }

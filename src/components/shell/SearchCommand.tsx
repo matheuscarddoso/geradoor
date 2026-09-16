@@ -10,8 +10,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { GRUPOS, NOMES_DOS_GRUPOS } from "@/lib/rotas";
+import { GRUPOS } from "@/lib/rotas";
 import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
+import { useTextos } from "@/lib/useTextos";
 import { useRecentes } from "@/lib/recentes";
 import { EtiquetaNovo } from "./EtiquetaNovo";
 
@@ -28,6 +29,7 @@ import { EtiquetaNovo } from "./EtiquetaNovo";
 export function SearchCommand({ aberto, onAberto }: { aberto: boolean; onAberto: (aberto: boolean) => void }) {
   const router = useRouter();
   const rotas = useRotasVisiveis();
+  const t = useTextos();
   const { recentes } = useRecentes();
 
   useEffect(() => {
@@ -52,15 +54,15 @@ export function SearchCommand({ aberto, onAberto }: { aberto: boolean; onAberto:
 
   return (
     <CommandDialog open={aberto} onOpenChange={onAberto}>
-      <CommandInput grande placeholder="Buscar ferramenta…" />
+      <CommandInput grande placeholder={`${t.buscarFerramenta}…`} />
       <CommandList>
-        <CommandEmpty>Nada encontrado.</CommandEmpty>
+        <CommandEmpty>{t.semResultado}</CommandEmpty>
 
         {GRUPOS.map((grupo) => {
           const doGrupo = rotas.filter((rota) => rota.grupo === grupo);
           if (doGrupo.length === 0) return null;
           return (
-            <CommandGroup key={grupo} heading={NOMES_DOS_GRUPOS[grupo]}>
+            <CommandGroup key={grupo} heading={grupo === "ferramenta" ? t.ferramentas : t.geradores}>
               {doGrupo.map(({ href, label, descricao, termos, icon: Icone, novo }) => (
                 <CommandItem
                   key={href}
@@ -83,7 +85,7 @@ export function SearchCommand({ aberto, onAberto }: { aberto: boolean; onAberto:
         })}
 
         {recentes.length > 0 && (
-          <CommandGroup heading="Recentes">
+          <CommandGroup heading={t.recentes}>
             {recentes.slice(0, 5).map((item) => (
               <CommandItem
                 key={item.id}

@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_DE_POUSO, ROTAS_PUBLICAS, traduzir } from "@/lib/rotas";
+import { TEXTOS } from "@/lib/textos";
+import { cn } from "@/lib/utils";
+import type { Idioma } from "@/lib/idioma";
 import { faqSchema, jsonLd } from "@/lib/seo";
 
 /**
@@ -36,22 +39,40 @@ export function ConteudoDaFerramenta({
   secoes,
   faq,
   veja,
+  idioma = "pt-BR",
+  nivel = 2,
+  semTituloDaFaq = false,
 }: {
   secoes: SecaoDaFerramenta[];
   faq: PerguntaDaFerramenta[];
   /** Hrefs de ferramentas relacionadas, para a âncora sair descritiva. */
   veja: string[];
+  idioma?: Idioma;
+  /**
+   * O nível dos títulos das seções.
+   *
+   * Nas páginas de ferramenta este bloco é o primeiro conteúdo depois do <h1>,
+   * e os títulos são <h2>. Na home ele vive DENTRO de uma seção que já tem o
+   * seu <h2>, e aí precisa descer para <h3> — dois <h2> seguidos dizendo a
+   * mesma coisa quebram a hierarquia que o leitor de tela usa para navegar.
+   */
+  nivel?: 2 | 3;
+  /** Esconde o título "Perguntas frequentes": a seção que envolve já o diz. */
+  semTituloDaFaq?: boolean;
 }) {
+  const t = TEXTOS[idioma];
+  const Titulo = nivel === 3 ? "h3" : "h2";
+  const classeDoTitulo = nivel === 3 ? "text-base font-medium tracking-tight" : "text-lg font-medium tracking-tight";
   // As páginas de pouso entram na busca por href junto com as ferramentas: é
   // este bloco que liga /vetorizador a /png-para-svg e de volta, e sem ele as
   // páginas novas ficariam órfãs, alcançáveis só pelo sitemap.
-  const catalogo = [...ROTAS_PUBLICAS, ...ROTAS_DE_POUSO];
+  const catalogo = [...ROTAS_PUBLICAS.map((r) => traduzir(r, idioma)), ...ROTAS_DE_POUSO];
   const relacionadas = veja
     .map((href) => catalogo.find((rota) => rota.href === href))
     .filter((rota): rota is (typeof catalogo)[number] => rota !== undefined);
 
   return (
-    <section className="border-t border-border px-6 py-12 sm:px-10 sm:py-16">
+    <section className={cn("px-6 py-12 sm:py-16", nivel === 3 ? "px-0 sm:px-0" : "border-t border-border sm:px-10")}>
       {faq.length > 0 && (
         <script
           type="application/ld+json"
@@ -63,10 +84,12 @@ export function ConteudoDaFerramenta({
         />
       )}
 
-      <div className="mx-auto flex max-w-2xl flex-col gap-10">
+      {/* Aninhado numa seção da home, o bloco alinha à esquerda com o título
+          que o antecede; sozinho numa página de ferramenta, centraliza. */}
+      <div className={cn("flex max-w-2xl flex-col gap-10", nivel === 3 ? "" : "mx-auto")}>
         {secoes.map(({ titulo, conteudo }) => (
           <div key={titulo}>
-            <h2 className="text-lg font-medium tracking-tight">{titulo}</h2>
+            <Titulo className={classeDoTitulo}>{titulo}</Titulo>
             <div className="mt-3 flex flex-col gap-3 text-sm leading-[1.7] text-zinc-600 dark:text-zinc-300">
               {conteudo}
             </div>
@@ -75,7 +98,7 @@ export function ConteudoDaFerramenta({
 
         {faq.length > 0 && (
           <div>
-            <h2 className="text-lg font-medium tracking-tight">Perguntas frequentes</h2>
+            {!semTituloDaFaq && <Titulo className={classeDoTitulo}>{t.perguntasFrequentes}</Titulo>}
             <dl className="mt-4 flex flex-col divide-y divide-border border-t border-border">
               {faq.map(({ pergunta, resposta }) => (
                 <div key={pergunta} className="py-4">
@@ -89,7 +112,7 @@ export function ConteudoDaFerramenta({
 
         {relacionadas.length > 0 && (
           <div>
-            <h2 className="text-lg font-medium tracking-tight">Veja também</h2>
+            <Titulo className={classeDoTitulo}>{t.vejaTambem}</Titulo>
             <ul className="mt-3 flex flex-col gap-2">
               {relacionadas.map(({ href, label, descricao }) => (
                 <li key={href}>

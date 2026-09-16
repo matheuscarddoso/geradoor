@@ -1,7 +1,4 @@
-"use client";
-
-import { usePathname } from "next/navigation";
-import { idiomaDoCaminho, type Idioma } from "./idioma";
+import type { Idioma } from "./idioma";
 
 /**
  * O texto da casca — menu, rodapé, busca — nos dois idiomas.
@@ -9,13 +6,16 @@ import { idiomaDoCaminho, type Idioma } from "./idioma";
  * Aqui só entra o que se repete em toda página. O texto de cada ferramenta fica
  * junto dela, porque é lá que alguém vai procurá-lo quando precisar mudar.
  *
+ * Sem `use client`: componente de servidor também lê daqui. Os ganchos que
+ * descobrem o idioma pelo caminho ficam em `useTextos.ts`, que é de cliente.
+ *
  * É um dicionário escrito à mão, e não uma biblioteca de internacionalização,
  * por proporção: são dois idiomas e texto estático, sem plural complicado, sem
  * data formatada, sem gênero. Uma dependência resolveria problemas que o site
  * não tem e acrescentaria um passo de build que ele não precisa.
  */
 
-type Dicionario = {
+export type Dicionario = {
   /** Grupos do menu. */
   ferramentas: string;
   geradores: string;
@@ -82,19 +82,3 @@ export const TEXTOS: Record<Idioma, Dicionario> = {
     atualizadoEm: "Updated on",
   },
 };
-
-/**
- * O idioma da página atual, no cliente.
- *
- * Sai do caminho, e não de um provider: o caminho já carrega a informação, e um
- * contexto a mais seria uma segunda fonte para a mesma verdade — do tipo que um
- * dia discorda da primeira.
- */
-export function useIdioma(): Idioma {
-  return idiomaDoCaminho(usePathname());
-}
-
-/** O dicionário da página atual. */
-export function useTextos(): Dicionario {
-  return TEXTOS[useIdioma()];
-}

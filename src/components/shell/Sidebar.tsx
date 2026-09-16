@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { PanelLeftClose, Search, Trash2 } from "lucide-react";
 import { MarcaGeradoor } from "@/components/ui/marca-geradoor";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { GRUPOS, NOMES_DOS_GRUPOS } from "@/lib/rotas";
+import { GRUPOS } from "@/lib/rotas";
 import { useRotasVisiveis } from "@/lib/useRotasVisiveis";
+import { useIdioma, useTextos } from "@/lib/useTextos";
 import { useRecentes } from "@/lib/recentes";
 import { hrefDeRestauracao } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,8 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
   const caminho = usePathname();
   const rotas = useRotasVisiveis();
   const { recentes, limpar } = useRecentes();
+  const idioma = useIdioma();
+  const t = useTextos();
 
   return (
     <aside
@@ -63,8 +66,8 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
           type="button"
           onClick={onRecolher}
           data-touch-target
-          aria-label="Recolher menu"
-          title="Recolher menu"
+          aria-label={t.recolherMenu}
+          title={t.recolherMenu}
           className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors duration-150 hover:bg-zinc-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
         >
           <PanelLeftClose className="h-4 w-4" />
@@ -77,7 +80,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
           if (doGrupo.length === 0) return null;
           return (
             <div key={grupo}>
-              <Secao>{NOMES_DOS_GRUPOS[grupo]}</Secao>
+              <Secao>{grupo === "ferramenta" ? t.ferramentas : t.geradores}</Secao>
               <nav className="flex flex-col gap-0.5">
                 {doGrupo.map(({ href, label, icon: Icone, novo }) => {
                   const ativa = caminho === href;
@@ -110,7 +113,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
         {recentes.length > 0 && (
           <>
             <div className="flex items-center justify-between pe-1">
-              <Secao>Recentes</Secao>
+              <Secao>{t.recentes}</Secao>
               <button
                 type="button"
                 onClick={limpar}
@@ -168,7 +171,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
           className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
         >
           <Search className="h-4 w-4 shrink-0 text-zinc-400" />
-          <span className="truncate">Buscar</span>
+          <span className="truncate">{t.buscar}</span>
           <span className="ms-auto shrink-0 font-sans text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
             {mac ? "⌘F" : "Ctrl+F"}
           </span>

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { PISTA_COOKIE } from "@/lib/acessoDaGrafica";
-import { ROTAS, ROTAS_PUBLICAS, type Rota } from "@/lib/rotas";
+import { usePathname } from "next/navigation";
+import { ROTAS, ROTAS_PUBLICAS, traduzir, type RotaTraduzida } from "@/lib/rotas";
+import { idiomaDoCaminho } from "@/lib/idioma";
 
 /**
  * As ferramentas que este navegador deve ver no menu e na busca.
@@ -16,8 +18,9 @@ import { ROTAS, ROTAS_PUBLICAS, type Rota } from "@/lib/rotas";
  * Vale repetir que a pista não autoriza nada: forjá-la só acrescenta uma linha
  * no menu, e o clique cai na tela de senha do mesmo jeito.
  */
-export function useRotasVisiveis(): Rota[] {
+export function useRotasVisiveis(): RotaTraduzida[] {
   const [liberada, setLiberada] = useState(false);
+  const caminho = usePathname();
 
   useEffect(() => {
     // Compara o nome inteiro para `outra_grafica_liberada` não valer por esta.
@@ -28,5 +31,6 @@ export function useRotasVisiveis(): Rota[] {
     );
   }, []);
 
-  return liberada ? ROTAS : ROTAS_PUBLICAS;
+  const idioma = idiomaDoCaminho(caminho);
+  return (liberada ? ROTAS : ROTAS_PUBLICAS).map((rota) => traduzir(rota, idioma));
 }

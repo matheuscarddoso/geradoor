@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { TRACADO_DA_MARCA } from "@/components/ui/marca-geradoor";
 
 /**
  * A imagem que aparece quando alguém compartilha uma página do Geradoor.
@@ -30,6 +31,17 @@ const daPasta = (caminho: string) => readFileSync(join(process.cwd(), caminho));
  * blocos de cor chapada.
  */
 const fundo = `data:image/png;base64,${daPasta("public/og-fundo.png").toString("base64")}`;
+
+/**
+ * A marca, em branco, como data URI.
+ *
+ * O satori — que é quem desenha estas imagens — não aceita `<svg>` solto com a
+ * confiabilidade de um `<img>`, então o SVG vai embutido. O traçado vem de
+ * `marca-geradoor.tsx`, para não existir uma segunda cópia dele aqui.
+ */
+const marca = `data:image/svg+xml;base64,${Buffer.from(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="388 260 248 248"><path fill="#FEFFFF" fill-rule="evenodd" d="${TRACADO_DA_MARCA}"/></svg>`
+).toString("base64")}`;
 
 /**
  * Título e subtítulo de cada rota.
@@ -155,7 +167,49 @@ export function corpoDoTitulo(titulo: string): number {
   return 72;
 }
 
+/**
+ * O tamanho da marca na imagem da raiz.
+ *
+ * 240 de 630 de altura: grande o bastante para se ler no cartão pequeno que o
+ * WhatsApp desenha, pequeno o bastante para a arte do fundo continuar sendo
+ * arte, e não moldura.
+ */
+const LADO_DA_MARCA = 240;
+
+/**
+ * A imagem da raiz: o fundo e a marca ao centro, nada mais.
+ *
+ * Sem texto de propósito. Nas páginas de ferramenta o nome existe porque o
+ * cartão precisa dizer qual ferramenta é; na raiz, o nome do site já vem no
+ * título do link, logo abaixo da imagem — escrevê-lo de novo dentro dela seria
+ * dizer a mesma coisa duas vezes no mesmo cartão.
+ */
+function imagemDaRaiz(): ImageResponse {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- fora do Next: isto vira uma imagem, não uma página */}
+        <img src={fundo} alt="" width={TAMANHO.width} height={TAMANHO.height} style={{ position: "absolute", inset: 0 }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={marca} alt="" width={LADO_DA_MARCA} height={LADO_DA_MARCA} style={{ position: "relative" }} />
+      </div>
+    ),
+    TAMANHO
+  );
+}
+
 export function imagemDeCompartilhamento(rota: string): ImageResponse {
+  if (rota === "/") return imagemDaRaiz();
+
   const texto = TEXTOS_DA_IMAGEM[rota];
   if (!texto) throw new Error(`Sem texto de compartilhamento para ${rota}`);
   const corpo = corpoDoTitulo(texto.titulo);

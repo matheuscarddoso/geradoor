@@ -207,6 +207,30 @@ print('palavras:', len(html.unescape(re.sub(r'<[^>]+>', ' ', corpo)).split()),
 done
 ```
 
+URLs do sitemap, antes de submeter ou depois de acrescentar rota — 200,
+canonical próprio, sem noindex, sem redirecionamento:
+
+```bash
+python3 -c "
+import re, urllib.request
+def pega(u):
+    req = urllib.request.Request(u, headers={'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1)'})
+    r = urllib.request.urlopen(req, timeout=30)
+    return r.getcode(), r.geturl(), r.read().decode('utf-8', 'replace')
+urls = re.findall(r'<loc>(.*?)</loc>', pega('https://www.geradoor.com/sitemap.xml')[2])
+for u in urls:
+    cod, final, h = pega(u)
+    c = re.search(r'<link rel=\"canonical\" href=\"(.*?)\"', h)
+    rob = re.search(r'<meta name=\"robots\" content=\"(.*?)\"', h)
+    erros = []
+    if cod != 200: erros.append(f'http {cod}')
+    if not c or c.group(1) != u: erros.append('canonical')
+    if rob and 'noindex' in rob.group(1): erros.append('noindex')
+    if final != u: erros.append('redireciona')
+    print(u.replace('https://www.geradoor.com', '') or '/', '->', ', '.join(erros) if erros else 'ok')
+"
+```
+
 Duplicação entre duas páginas — **rode isto antes de criar qualquer página de
 pouso nova**:
 
@@ -244,8 +268,21 @@ Acima de ~10% no bloco editorial, reescreva antes de publicar.
       outra pessoa. Se um dia as contas existirem de verdade e forem do projeto,
       aí sim entram num `sameAs` do `Organization`.
 
-- [ ] **Search Console.** Submeter o sitemap e acompanhar impressão e clique das
-      três páginas de pouso. Página nova leva 60 a 90 dias para dar sinal legível.
+- [x] **Search Console e Bing Webmaster** — feitos em 16/09/2026. Propriedade de
+      **domínio** (não prefixo de URL), verificada por TXT no DNS, que cobre www
+      e sem www numa propriedade só. Sitemap submetido; as páginas de pouso
+      tiveram indexação solicitada à mão, já que ninguém linka para elas de
+      fora. O Bing importa a propriedade do Search Console em dois cliques, e
+      importa porque o índice dele é o que alimenta a busca do ChatGPT.
+
+      Antes de submeter, as 16 URLs do sitemap foram conferidas uma a uma: todas
+      200, canonical apontando para si mesmas, nenhuma com `noindex`, nenhum
+      redirecionamento. Vale repetir essa checagem sempre que uma rota nova
+      entrar no sitemap — o script está na seção 6.
+
+- [ ] **Ler o relatório de Páginas** quando os dados aparecerem (~1 dia para
+      cobertura, 1 a 2 semanas para saber quantas das 16 foram indexadas, 30
+      dias para os primeiros termos de busca reais).
 
 - [ ] **Decidir sobre expandir o pSEO** com base nesse dado, por volta de
       dezembro de 2026. Se as três pegarem tração, o mesmo padrão vale para

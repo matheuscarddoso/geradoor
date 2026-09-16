@@ -32,8 +32,13 @@ const SECOES: SecaoLegal[] = [
       <>
         <p>
           A maior parte das ferramentas não manda nada para lugar nenhum. O CPF, o CNPJ, o cartão de teste, o
-          telefone, o link do WhatsApp e do Instagram e a vetorização de imagem são calculados dentro do seu
-          navegador. Fechou a aba, acabou: nada daquilo passou por um servidor.
+          telefone e a vetorização de imagem são calculados dentro do seu navegador. Fechou a aba, acabou: nada
+          daquilo passou por um servidor.
+        </p>
+        <p>
+          O link do WhatsApp e o endereço do perfil do Instagram também são montados aqui, no seu navegador. Mas o{" "}
+          <Termo>QR Code</Termo> dessas duas páginas, como o do gerador de QR Code, cria um link curto — e link
+          curto exige guardar o destino. Copiar o link sem gerar o QR Code não envia nada.
         </p>
         <p>Só três coisas saem do seu aparelho, e estão detalhadas abaixo.</p>
       </>

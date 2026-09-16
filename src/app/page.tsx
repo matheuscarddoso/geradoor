@@ -6,6 +6,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Rodape } from "@/components/shell/Rodape";
 import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
 import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES } from "./conteudo";
 import { SITE, absolute, jsonLd, pageMetadata } from "@/lib/seo";
 
 const TITLE = "Geradoor · Ferramentas grátis que rodam no seu navegador";
@@ -35,7 +37,7 @@ const DESTAQUE = ROTAS_PUBLICAS.find((rota) => rota.novo) ?? ROTAS_PUBLICAS[0];
  * textos divergentes, é ambiguidade gratuita para quem lê. Aqui vai só o que a
  * página é: uma lista.
  */
-const schema = {
+const listaDeFerramentas = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   name: `Ferramentas do ${SITE.name}`,
@@ -57,11 +59,22 @@ const schema = {
   })),
 };
 
+/**
+ * Só a lista aqui. O FAQPage é emitido pelo próprio ConteudoDaFerramenta, a
+ * partir da mesma lista que desenha as perguntas na tela — declarar de novo
+ * aqui criaria dois nós FAQPage na mesma página.
+ */
+const schema = listaDeFerramentas;
+
 export default function Home() {
   return (
-    <div className="flex h-dvh flex-col overflow-hidden">
+    <div className="flex min-h-dvh flex-col">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
 
+      {/* A hero ocupa a tela inteira e nada mais: quem chega vê a lista de
+          ferramentas sem rolar, como antes. O texto abaixo existe porque a raiz
+          servia 133 palavras e nenhum <h2>. */}
+      <div className="flex h-dvh shrink-0 flex-col overflow-hidden">
       <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
         <span className="flex items-center gap-2 text-foreground">
           <MarcaGeradoor size={22} />
@@ -141,6 +154,9 @@ export default function Home() {
           </ul>
         </nav>
       </main>
+      </div>
+
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={[]} />
 
       <Rodape />
     </div>

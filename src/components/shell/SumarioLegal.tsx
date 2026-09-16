@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { TEXTOS } from "@/lib/textos";
+import type { Idioma } from "@/lib/idioma";
 
 /**
  * O sumário fixo das páginas de texto.
@@ -10,7 +12,13 @@ import { cn } from "@/lib/utils";
  * dessas páginas que precisa de JavaScript, e por isso vive sozinha aqui: o
  * texto em si continua saindo pronto do servidor.
  */
-export function SumarioLegal({ secoes }: { secoes: { id: string; titulo: string }[] }) {
+export function SumarioLegal({
+  secoes,
+  idioma = "pt-BR",
+}: {
+  secoes: { id: string; titulo: string }[];
+  idioma?: Idioma;
+}) {
   const [ativa, setAtiva] = useState(secoes[0]?.id ?? "");
 
   useEffect(() => {
@@ -38,8 +46,8 @@ export function SumarioLegal({ secoes }: { secoes: { id: string; titulo: string 
   }, [secoes]);
 
   return (
-    <nav aria-label="Nesta página" className="sticky top-10">
-      <p className="text-sm font-semibold tracking-tight text-foreground">Nesta página</p>
+    <nav aria-label={TEXTOS[idioma].nestaPagina} className="sticky top-10">
+      <p className="text-sm font-semibold tracking-tight text-foreground">{TEXTOS[idioma].nestaPagina}</p>
       <ul className="mt-5 flex flex-col">
         {secoes.map(({ id, titulo }) => (
           <li key={id}>

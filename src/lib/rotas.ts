@@ -271,7 +271,10 @@ export function parDeIdiomas(href: string): { "pt-BR": string; en: string } | nu
   // A home é o par que não está na lista de ferramentas.
   if (href === "/" || href === "/en") return { "pt-BR": "/", en: "/en" };
   const rota = ROTAS.find((r) => r.href === href || r.en.href === href);
-  return rota ? { "pt-BR": rota.href, en: rota.en.href } : null;
+  if (rota) return { "pt-BR": rota.href, en: rota.en.href };
+
+  const pouso = ROTAS_DE_POUSO.find((r) => r.href === href || r.en?.href === href);
+  return pouso?.en ? { "pt-BR": pouso.href, en: pouso.en.href } : null;
 }
 
 /**
@@ -293,6 +296,8 @@ export interface RotaDePouso {
   descricao: string;
   /** A ferramenta que atende esta busca. */
   ferramenta: string;
+  /** O par em inglês, quando existe. Nem toda busca tem equivalente. */
+  en?: { href: string; label: string; descricao: string };
 }
 
 export const ROTAS_DE_POUSO: RotaDePouso[] = [
@@ -301,12 +306,14 @@ export const ROTAS_DE_POUSO: RotaDePouso[] = [
     label: "PNG para SVG",
     descricao: "Converter PNG em vetor SVG",
     ferramenta: "/vetorizador",
+    en: { href: "/en/png-to-svg", label: "PNG to SVG", descricao: "Convert a PNG into a vector SVG" },
   },
   {
     href: "/jpg-para-svg",
     label: "JPG para SVG",
     descricao: "Converter JPG em vetor SVG",
     ferramenta: "/vetorizador",
+    en: { href: "/en/jpg-to-svg", label: "JPG to SVG", descricao: "Convert a JPG into a vector SVG" },
   },
   {
     href: "/validador-de-cpf",
@@ -320,4 +327,5 @@ export const ROTAS_DE_POUSO: RotaDePouso[] = [
 export const HREFS_COM_CASCA = new Set<string>([
   ...ROTAS.map((rota) => rota.href),
   ...ROTAS_DE_POUSO.map((rota) => rota.href),
+  ...ROTAS_DE_POUSO.flatMap((rota) => (rota.en ? [rota.en.href] : [])),
 ]);

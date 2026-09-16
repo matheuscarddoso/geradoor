@@ -50,7 +50,10 @@ import { cn } from "@/lib/utils";
 
 const QR_RENDER_SIZE = 200;
 
-const InstagramGenerator: React.FC = () => {
+const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
+  titulo = "Gerador de QR Code do Instagram",
+  descricao = "Crie um QR Code que abre o seu perfil. Basta informar o @ — quem escanear cai direto na sua página.",
+}) => {
   const [arroba, setArroba] = useState("");
   const [tocado, setTocado] = useState(false);
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
@@ -180,8 +183,8 @@ const InstagramGenerator: React.FC = () => {
         <div className="w-full max-w-md">
           <PageHeader
             icone={<MarcaSvg id="instagram" />}
-            title="Gerador de QR Code do Instagram"
-            description="Crie um QR Code que abre o seu perfil. Basta informar o @ — quem escanear cai direto na sua página."
+            title={titulo}
+            description={descricao}
           />
 
           <div className="flex w-full flex-col gap-3">

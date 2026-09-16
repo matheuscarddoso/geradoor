@@ -49,6 +49,12 @@ ${geradores.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
 
 ${ROTAS_DE_POUSO.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
 
+## English
+
+The whole site exists in English under /en, with its own tools where the format differs:
+
+${ROTAS_PUBLICAS.map((r) => linha(r.en.href, r.en.label, r.en.descricao)).join("\n")}
+
 ## Institucional
 
 ${PAGINAS_LEGAIS.map((p) => linha(p.href, p.label, "Documento legal do site")).join("\n")}

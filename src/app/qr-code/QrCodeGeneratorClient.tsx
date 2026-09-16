@@ -41,7 +41,10 @@ const PLACEHOLDER_URL = "https://geradoor.com";
 const QR_SIZE = 180;
 const QUIET_ZONE = 4;
 
-const QRCodeGenerator: React.FC = () => {
+const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
+  titulo = "Gerador de QR Code",
+  descricao = "Crie um QR Code a partir de qualquer link, com a sua logo no centro. Baixe em PNG, PDF ou SVG.",
+}) => {
   const [inputValue, setInputValue] = useState<string>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
@@ -156,8 +159,8 @@ const QRCodeGenerator: React.FC = () => {
       <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
       <PageHeader
-        title="Gerador de QR Code"
-        description="Crie um QR Code a partir de qualquer link, com a sua logo no centro. Baixe em PNG, PDF ou SVG."
+        title={titulo}
+        description={descricao}
       />
 
       <div className="flex w-full flex-col space-y-4">

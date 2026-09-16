@@ -89,6 +89,21 @@ export const TEXTOS_DA_IMAGEM: Record<string, { titulo: string; subtitulo: strin
     subtitulo:
       "Tire o fundo de qualquer foto em segundos, com contorno preciso até no cabelo. Grátis e sem marca d'água.",
   },
+  "/en": { titulo: "Geradoor", subtitulo: "Free tools that run in your browser. No sign-up, no watermark, nothing uploaded that doesn't need to be." },
+  "/en/background-remover": { titulo: "Background", subtitulo: "Remove the background from any photo and download a transparent PNG at the original resolution. Free, no watermark." },
+  "/en/vectorizer": { titulo: "Vectorizer", subtitulo: "Turn an image into an SVG with redrawn curves and measured fidelity. Runs in your browser, nothing uploaded." },
+  "/en/png-to-svg": { titulo: "PNG · SVG", subtitulo: "Convert PNG to vector SVG with transparency preserved. Free, no sign-up, nothing uploaded." },
+  "/en/jpg-to-svg": { titulo: "JPG · SVG", subtitulo: "Convert JPG to vector SVG with measured fidelity. Free, no sign-up, nothing uploaded." },
+  "/en/qr-code": { titulo: "QR Code", subtitulo: "Create a QR Code from any link, with your logo in the center. PNG, PDF and SVG." },
+  "/en/ssn": { titulo: "SSN", subtitulo: "Generate SSNs that respect the ranges the SSA issues, for testing forms and databases." },
+  "/en/ein": { titulo: "EIN", subtitulo: "Generate EINs with a real IRS campus prefix, for testing forms and databases." },
+  "/en/credit-card": { titulo: "Card", subtitulo: "Card numbers that pass the Luhn check, for testing checkout forms. They authorize nothing." },
+  "/en/phone": { titulo: "Phone", subtitulo: "US phone numbers by state, following the North American Numbering Plan." },
+  "/en/instagram-qr-code": { titulo: "Instagram", subtitulo: "A QR Code that opens your profile, readable by any phone camera." },
+  "/en/whatsapp-link": { titulo: "WhatsApp", subtitulo: "Create a wa.me link that opens a chat with you, with the message already typed." },
+  "/en/privacy": { titulo: "Privacy", subtitulo: "What Geradoor collects, what it does not, and what happens to the images and links that pass through." },
+  "/en/terms": { titulo: "Terms", subtitulo: "The rules for using Geradoor: what the test data is for and the limits of our liability." },
+  "/en/cookies": { titulo: "Cookies", subtitulo: "Geradoor uses no tracking or advertising cookies. What we keep stays in your browser." },
   "/png-para-svg": {
     titulo: "PNG · SVG",
     subtitulo:
@@ -208,7 +223,7 @@ function imagemDaRaiz(): ImageResponse {
 }
 
 export function imagemDeCompartilhamento(rota: string): ImageResponse {
-  if (rota === "/") return imagemDaRaiz();
+  if (rota === "/" || rota === "/en") return imagemDaRaiz();
 
   const texto = TEXTOS_DA_IMAGEM[rota];
   if (!texto) throw new Error(`Sem texto de compartilhamento para ${rota}`);

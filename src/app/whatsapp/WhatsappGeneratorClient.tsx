@@ -53,7 +53,10 @@ import { cn } from "@/lib/utils";
 /** Lado do QR renderizado nas duas telas. */
 const QR_RENDER_SIZE = 200;
 
-const WhatsappLinkGenerator: React.FC = () => {
+const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
+  titulo = "Gerador de link do WhatsApp",
+  descricao = "Crie um link wa.me com a mensagem já preenchida. Quem clicar abre a conversa direto com você.",
+}) => {
   const [phone, setPhone] = useState<string | null>("");
   const [message, setMessage] = useState<string | null>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>("");
@@ -207,8 +210,8 @@ const WhatsappLinkGenerator: React.FC = () => {
         <div className="w-full max-w-md">
           <PageHeader
             icone={<MarcaSvg id="whatsapp" />}
-            title="Gerador de link do WhatsApp"
-            description="Crie um link wa.me com a mensagem já preenchida. Quem clicar abre a conversa direto com você."
+            title={titulo}
+            description={descricao}
           />
 
         {/* Largura pelo conteúdo: a máscara "(00) 00000-0000" mais o seletor de

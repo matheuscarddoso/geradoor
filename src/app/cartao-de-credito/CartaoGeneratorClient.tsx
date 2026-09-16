@@ -73,7 +73,10 @@ function RotuloCampo({ children, apoio }: { children: React.ReactNode; apoio?: s
   );
 }
 
-const CartaoDeCreditoGenerator: React.FC = () => {
+const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
+  titulo = "Gerador de Cartão de Crédito",
+  descricao = "Números válidos pelo algoritmo de Luhn, para testar checkout e antifraude. Não funcionam em compras reais.",
+}) => {
   const [cardData, setCardData] = useState({
     number: '',
     formattedNumber: '',
@@ -139,8 +142,8 @@ const CartaoDeCreditoGenerator: React.FC = () => {
   return (
     <div className="w-full max-w-md">
       <PageHeader
-        title="Gerador de Cartão de Crédito"
-        description="Números válidos pelo algoritmo de Luhn, para testar checkout e antifraude. Não funcionam em compras reais."
+        title={titulo}
+        description={descricao}
       />
 
       <div

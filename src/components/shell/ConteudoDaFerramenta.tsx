@@ -77,7 +77,10 @@ export function ConteudoDaFerramenta({
   // As páginas de pouso entram na busca por href junto com as ferramentas: é
   // este bloco que liga /vetorizador a /png-para-svg e de volta, e sem ele as
   // páginas novas ficariam órfãs, alcançáveis só pelo sitemap.
-  const catalogo = [...ROTAS_PUBLICAS.map((r) => traduzir(r, idioma)), ...ROTAS_DE_POUSO];
+  const catalogo = [
+    ...ROTAS_PUBLICAS.map((r) => traduzir(r, idioma)),
+    ...ROTAS_DE_POUSO.map((r) => (idioma === "en" && r.en ? r.en : r)),
+  ];
   const relacionadas = veja
     .map((href) => catalogo.find((rota) => rota.href === href))
     .filter((rota): rota is (typeof catalogo)[number] => rota !== undefined);

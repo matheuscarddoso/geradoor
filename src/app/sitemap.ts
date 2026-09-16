@@ -41,6 +41,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  /*
+   * A versão em inglês entra com a mesma estrutura e prioridade um degrau
+   * abaixo: o site nasceu em português, e as páginas de lá têm histórico que as
+   * novas ainda não têm. O hreflang é quem diz ao buscador que são a mesma
+   * página em outro idioma; a prioridade só ordena o rastreamento.
+   */
+  const ingles = [
+    { url: absolute("/en"), priority: 0.9 },
+    ...ROTAS_PUBLICAS.map((rota) => ({
+      url: absolute(rota.en.href),
+      priority: rota.grupo === "ferramenta" ? 0.8 : 0.7,
+    })),
+    ...ROTAS_DE_POUSO.flatMap((rota) => (rota.en ? [{ url: absolute(rota.en.href), priority: 0.6 }] : [])),
+  ].map(({ url, priority }) => ({
+    url,
+    lastModified: ATUALIZACAO,
+    changeFrequency: "monthly" as const,
+    priority,
+  }));
+
   return [
     {
       url: absolute("/"),
@@ -50,11 +70,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...ferramentas,
     ...pousos,
-    ...PAGINAS_LEGAIS.map(({ href }) => ({
-      url: absolute(href),
-      lastModified: ATUALIZACAO,
-      changeFrequency: "yearly" as const,
-      priority: 0.3,
-    })),
+    ...ingles,
+    ...PAGINAS_LEGAIS.flatMap(({ href, en }) => [
+      { url: absolute(href), lastModified: ATUALIZACAO, changeFrequency: "yearly" as const, priority: 0.3 },
+      { url: absolute(en.href), lastModified: ATUALIZACAO, changeFrequency: "yearly" as const, priority: 0.3 },
+    ]),
   ];
 }

@@ -1,4 +1,6 @@
 import { ATUALIZACAO_LEGAL } from "@/lib/seo";
+import { TEXTOS } from "@/lib/textos";
+import type { Idioma } from "@/lib/idioma";
 import { cn } from "@/lib/utils";
 import { SumarioLegal } from "./SumarioLegal";
 
@@ -78,7 +80,15 @@ export function Termo({ children }: { children: React.ReactNode }) {
   return <strong className="font-medium text-foreground">{children}</strong>;
 }
 
-export function PaginaLegal({ titulo, secoes }: { titulo: string; secoes: SecaoLegal[] }) {
+export function PaginaLegal({
+  titulo,
+  secoes,
+  idioma = "pt-BR",
+}: {
+  titulo: string;
+  secoes: SecaoLegal[];
+  idioma?: Idioma;
+}) {
   return (
     <>
       {/* A faixa do título ocupa a largura inteira da folha: as linhas
@@ -88,7 +98,9 @@ export function PaginaLegal({ titulo, secoes }: { titulo: string; secoes: SecaoL
           dela. */}
       <Moldura className="border-x-0 px-4 py-10 sm:px-8 sm:py-14">
         <h1 className="text-2xl font-medium tracking-tight sm:text-3xl">{titulo}</h1>
-        <p className="mt-2 text-[13px] text-muted-foreground">Atualizado em {ATUALIZACAO_LEGAL}</p>
+        <p className="mt-2 text-[13px] text-muted-foreground">
+          {TEXTOS[idioma].atualizadoEm} {ATUALIZACAO_LEGAL}
+        </p>
       </Moldura>
 
       {/* O sumário fica numa coluna própria a partir de lg. Abaixo disso não há
@@ -118,7 +130,7 @@ export function PaginaLegal({ titulo, secoes }: { titulo: string; secoes: SecaoL
         </article>
 
         <aside className="hidden lg:block">
-          <SumarioLegal secoes={secoes.map(({ titulo: t }) => ({ id: idDaSecao(t), titulo: t }))} />
+          <SumarioLegal secoes={secoes.map(({ titulo: t }) => ({ id: idDaSecao(t), titulo: t }))} idioma={idioma} />
         </aside>
       </div>
     </>

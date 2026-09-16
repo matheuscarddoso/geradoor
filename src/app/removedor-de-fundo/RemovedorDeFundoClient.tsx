@@ -41,7 +41,10 @@ function primeiraImagem(itens: FileList | DataTransferItemList | null | undefine
   return null;
 }
 
-export default function RemovedorDeFundoClient() {
+export default function RemovedorDeFundoClient({
+  titulo = "Removedor de fundo de imagem",
+  descricao = "Remova o fundo de qualquer foto em segundos e baixe em PNG transparente, na resolução original. Grátis, sem cadastro e sem marca d'água.",
+}: { titulo?: string; descricao?: string } = {}) {
   const { estado, processar, tentarDeNovo, limpar, aplicarTracos, pincelMagico } = useRemovedorDeFundo();
   const [fundo, setFundo] = useState<Fundo>(null);
   const [ferramenta, setFerramenta] = useState<Ferramenta | null>(null);
@@ -258,8 +261,8 @@ export default function RemovedorDeFundoClient() {
       <div className="px-6 pt-10 sm:px-10 md:col-start-1 md:row-start-2 md:pt-0">
         <div className="w-full max-w-md">
           <PageHeader
-            title="Removedor de fundo de imagem"
-            description="Remova o fundo de qualquer foto em segundos e baixe em PNG transparente, na resolução original. Grátis, sem cadastro e sem marca d'água."
+            title={titulo}
+            description={descricao}
           />
         </div>
       </div>

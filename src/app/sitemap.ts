@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
-import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { absolute } from "@/lib/seo";
 
 /**
@@ -32,6 +32,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: rota.grupo === "ferramenta" || rota.href === "/cpf" || rota.href === "/cnpj" ? 0.9 : 0.8,
   }));
 
+  // As páginas de pouso vêm abaixo das ferramentas em prioridade: elas atacam
+  // uma busca específica, enquanto a ferramenta atende a intenção inteira.
+  const pousos = ROTAS_DE_POUSO.map((rota) => ({
+    url: absolute(rota.href),
+    lastModified: ATUALIZACAO,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   return [
     {
       url: absolute("/"),
@@ -40,6 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     ...ferramentas,
+    ...pousos,
     ...PAGINAS_LEGAIS.map(({ href }) => ({
       url: absolute(href),
       lastModified: ATUALIZACAO,

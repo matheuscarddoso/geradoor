@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { faqSchema, jsonLd } from "@/lib/seo";
 
 /**
@@ -42,9 +42,13 @@ export function ConteudoDaFerramenta({
   /** Hrefs de ferramentas relacionadas, para a âncora sair descritiva. */
   veja: string[];
 }) {
+  // As páginas de pouso entram na busca por href junto com as ferramentas: é
+  // este bloco que liga /vetorizador a /png-para-svg e de volta, e sem ele as
+  // páginas novas ficariam órfãs, alcançáveis só pelo sitemap.
+  const catalogo = [...ROTAS_PUBLICAS, ...ROTAS_DE_POUSO];
   const relacionadas = veja
-    .map((href) => ROTAS_PUBLICAS.find((rota) => rota.href === href))
-    .filter((rota): rota is (typeof ROTAS_PUBLICAS)[number] => rota !== undefined);
+    .map((href) => catalogo.find((rota) => rota.href === href))
+    .filter((rota): rota is (typeof catalogo)[number] => rota !== undefined);
 
   return (
     <section className="border-t border-border px-6 py-12 sm:px-10 sm:py-16">

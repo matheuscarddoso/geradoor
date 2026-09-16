@@ -65,9 +65,9 @@ export const SECOES: SecaoDaFerramenta[] = [
 
 export const FAQ: PerguntaDaFerramenta[] = [
   {
-    pergunta: "Como converter PNG para SVG?",
+    pergunta: "Que tipo de imagem vale a pena vetorizar?",
     resposta:
-      "Solte o PNG na área acima e aguarde o traçado. Ajuste o número de cores e o nível de detalhe se quiser, confira a fidelidade que a página informa e baixe o SVG. Não precisa de cadastro nem de programa instalado.",
+      "Logo, ícone, ilustração de traço, desenho de cor chapada, assinatura digitalizada e captura de tela de interface. O que essas imagens têm em comum é forma nítida e pouca variação de cor dentro de cada região — é disso que o traçado consegue recuperar uma curva.",
   },
   {
     pergunta: "Funciona com foto?",
@@ -106,4 +106,4 @@ export const FAQ: PerguntaDaFerramenta[] = [
   },
 ];
 
-export const VEJA = ["/removedor-de-fundo", "/qr-code"];
+export const VEJA = ["/png-para-svg", "/jpg-para-svg", "/removedor-de-fundo"];

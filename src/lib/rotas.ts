@@ -152,3 +152,51 @@ export const ROTAS: Rota[] = [
 ];
 
 export const ROTAS_PUBLICAS: Rota[] = ROTAS.filter((rota) => !rota.privada);
+
+/**
+ * Páginas de pouso: uma por intenção de busca, movidas pela mesma ferramenta.
+ *
+ * "Vetorizador" e "converter png para svg" são a mesma função e buscas
+ * diferentes, e o buscador ranqueia a página cujo conteúdo casa com a busca.
+ * Cada uma destas tem título, texto e perguntas próprios — repetir o conteúdo
+ * do /vetorizador trocando a palavra PNG por JPG seria página fina, que é o
+ * que o próprio Google diz que não quer.
+ *
+ * Ficam fora do menu, da busca e da grade da home de propósito: quem chega
+ * pelo site encontra a ferramenta pelo nome dela. Entram no sitemap e são
+ * ligadas entre si e à ferramenta de origem pelo bloco "Veja também".
+ */
+export interface RotaDePouso {
+  href: string;
+  label: string;
+  descricao: string;
+  /** A ferramenta que atende esta busca. */
+  ferramenta: string;
+}
+
+export const ROTAS_DE_POUSO: RotaDePouso[] = [
+  {
+    href: "/png-para-svg",
+    label: "PNG para SVG",
+    descricao: "Converter PNG em vetor SVG",
+    ferramenta: "/vetorizador",
+  },
+  {
+    href: "/jpg-para-svg",
+    label: "JPG para SVG",
+    descricao: "Converter JPG em vetor SVG",
+    ferramenta: "/vetorizador",
+  },
+  {
+    href: "/validador-de-cpf",
+    label: "Validador de CPF",
+    descricao: "Conferir se um CPF é válido",
+    ferramenta: "/cpf",
+  },
+];
+
+/** Toda rota que o layout deve tratar como página de ferramenta. */
+export const HREFS_COM_CASCA = new Set<string>([
+  ...ROTAS.map((rota) => rota.href),
+  ...ROTAS_DE_POUSO.map((rota) => rota.href),
+]);

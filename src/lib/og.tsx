@@ -77,6 +77,21 @@ export const TEXTOS_DA_IMAGEM: Record<string, { titulo: string; subtitulo: strin
     subtitulo:
       "Tire o fundo de qualquer foto em segundos, com contorno preciso até no cabelo. Grátis e sem marca d'água.",
   },
+  "/png-para-svg": {
+    titulo: "PNG · SVG",
+    subtitulo:
+      "Converta PNG em vetor SVG com as curvas redesenhadas e a transparência preservada. Grátis e sem enviar o arquivo.",
+  },
+  "/jpg-para-svg": {
+    titulo: "JPG · SVG",
+    subtitulo:
+      "Converta JPG em vetor SVG com as curvas redesenhadas e a fidelidade medida. Grátis e sem enviar o arquivo.",
+  },
+  "/validador-de-cpf": {
+    titulo: "Validador",
+    subtitulo:
+      "Confira se um CPF é válido na hora. Quando não fecha, a página mostra quais dígitos eram esperados.",
+  },
   "/vetorizador": {
     titulo: "Vetorizador",
     subtitulo:

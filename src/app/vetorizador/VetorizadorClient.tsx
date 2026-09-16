@@ -39,7 +39,18 @@ function primeiraImagem(itens: FileList | DataTransferItemList | null | undefine
   return null;
 }
 
-export default function VetorizadorClient() {
+/**
+ * O cabeçalho vem de fora porque a mesma ferramenta atende buscas diferentes:
+ * /vetorizador, /png-para-svg e /jpg-para-svg compartilham o motor e têm cada
+ * um o seu próprio título e a sua própria promessa.
+ */
+export default function VetorizadorClient({
+  titulo = "Vetorizador",
+  descricao = "Transforme uma imagem em SVG: as formas são redesenhadas como curvas, nítidas em qualquer tamanho.",
+}: {
+  titulo?: string;
+  descricao?: string;
+} = {}) {
   const { estado, carregar, vetorizar, limpar } = useVetorizador();
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_INICIAIS);
   const [corDoTraco, setCorDoTraco] = useState("#000000");
@@ -152,10 +163,7 @@ export default function VetorizadorClient() {
 
       <div className="px-6 pt-10 sm:px-10 md:col-start-1 md:row-start-2 md:pt-0">
         <div className="w-full max-w-md">
-          <PageHeader
-            title="Vetorizador"
-            description="Transforme uma imagem em SVG: as formas são redesenhadas como curvas, nítidas em qualquer tamanho."
-          />
+          <PageHeader title={titulo} description={descricao} />
         </div>
       </div>
 

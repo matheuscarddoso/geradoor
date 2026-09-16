@@ -132,4 +132,4 @@ export const FAQ: PerguntaDaFerramenta[] = [
   },
 ];
 
-export const VEJA = ["/cnpj", "/cartao-de-credito", "/telefone"];
+export const VEJA = ["/validador-de-cpf", "/cnpj", "/cartao-de-credito"];

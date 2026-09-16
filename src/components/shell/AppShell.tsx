@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Rodape } from "./Rodape";
 import { Sidebar } from "./Sidebar";
 import { SearchCommand } from "./SearchCommand";
-import { ROTAS } from "@/lib/rotas";
+import { HREFS_COM_CASCA } from "@/lib/rotas";
 import { cn } from "@/lib/utils";
 
 /**
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // ferramenta recém-escolhida esconderia justamente o que se foi ver.
   useEffect(() => setGaveta(false), [caminho]);
 
-  const ehFerramenta = ROTAS.some((rota) => rota.href === caminho);
+  const ehFerramenta = HREFS_COM_CASCA.has(caminho);
   if (!ehFerramenta) return <>{children}</>;
 
   // Rotas que desenham a própria moldura: recebem a área crua, sem padding e

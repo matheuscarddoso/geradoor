@@ -1,5 +1,5 @@
 import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
-import { ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { SITE, absolute } from "@/lib/seo";
 
 /**
@@ -44,6 +44,10 @@ ${ferramentas.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
 ## Geradores
 
 ${geradores.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
+
+## Conversões específicas
+
+${ROTAS_DE_POUSO.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
 
 ## Institucional
 

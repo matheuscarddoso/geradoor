@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import { useEffect, useRef, useState } from "react";
 import {
   animate,
@@ -48,6 +50,7 @@ interface ComparadorDoVetorProps {
  * move a imagem, e a divisória só se move pelo puxador.
  */
 export function ComparadorDoVetor({ original, vetor, largura, altura, processando, nome }: ComparadorDoVetorProps) {
+  const f = useFerramentas();
   const reduzirMovimento = useReducedMotion();
   const caixaRef = useRef<HTMLDivElement>(null);
   const animacao = useRef<AnimationPlaybackControls | null>(null);
@@ -240,9 +243,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
             aria-hidden="true"
             style={{ opacity: opacidadeAntes }}
             className="pointer-events-none absolute left-3 top-3 rounded-full bg-black/45 px-2 py-0.5 text-xs font-medium text-white backdrop-blur-md"
-          >
-            Imagem
-          </motion.span>
+          >{f.vetorizador.imagem}</motion.span>
           <motion.span
             aria-hidden="true"
             style={{ opacity: opacidadeDepois }}
@@ -260,7 +261,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
             <div
               role="slider"
               tabIndex={0}
-              aria-label="Comparar a imagem com o SVG"
+              aria-label={f.vetorizador.compararSvg}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={valorAria}

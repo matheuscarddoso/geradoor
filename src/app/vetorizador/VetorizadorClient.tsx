@@ -20,6 +20,7 @@ import {
 } from "@/lib/vetorizador";
 import { ArquivoRecusado, useVetorizador, type Estado, type Resultado } from "@/lib/useVetorizador";
 import { cn } from "@/lib/utils";
+import { useFerramentas, useIdioma } from "@/lib/useTextos";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -51,6 +52,7 @@ export default function VetorizadorClient({
   titulo?: string;
   descricao?: string;
 } = {}) {
+  const f = useFerramentas();
   const { estado, carregar, vetorizar, limpar } = useVetorizador();
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_INICIAIS);
   const [corDoTraco, setCorDoTraco] = useState("#000000");
@@ -70,7 +72,7 @@ export default function VetorizadorClient({
         imediata.current = true;
         await carregar(arquivo);
       } catch (erro) {
-        toast.error(erro instanceof ArquivoRecusado ? erro.message : "Não foi possível abrir essa imagem");
+        toast.error(erro instanceof ArquivoRecusado ? erro.message : f.comum.naoFoiPossivelAbrir);
       }
     },
     [carregar]
@@ -110,7 +112,7 @@ export default function VetorizadorClient({
     if (!resultado) return;
     try {
       await navigator.clipboard.writeText(resultado.svg);
-      toast.success("Código SVG copiado");
+      toast.success(f.vetorizador.codigoCopiado);
     } catch {
       toast.error("Seu navegador não deixou copiar. Use Baixar SVG.");
     }
@@ -193,9 +195,7 @@ export default function VetorizadorClient({
           ) : estado.fase === "preparando" ? (
             <div className="absolute inset-0 grid place-items-center">
               <span className="flex items-center gap-2 text-sm text-subtle">
-                <Loader className="h-4 w-4 animate-spin" />
-                Abrindo a imagem
-              </span>
+                <Loader className="h-4 w-4 animate-spin" />{f.vetorizador.abrindoImagem}</span>
             </div>
           ) : (
             <ConviteParaSoltar mac={mac} arrastando={arrastandoArquivo} onEscolher={abrirSeletor} />
@@ -211,7 +211,7 @@ export default function VetorizadorClient({
                 transition={{ duration: 0.15, ease: EASE_OUT }}
                 className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm"
               >
-                <p className="text-base font-medium">Solte para trocar a imagem</p>
+                <p className="text-base font-medium">{f.comum.solteParaTrocar}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -262,9 +262,7 @@ export default function VetorizadorClient({
                       <RotateCcw />
                       Tentar de novo
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={abrirSeletor}>
-                      Escolher outra
-                    </Button>
+                    <Button size="sm" variant="ghost" onClick={abrirSeletor}>{f.comum.escolherOutra}</Button>
                   </div>
                 </div>
               )}
@@ -273,13 +271,9 @@ export default function VetorizadorClient({
 
               <div className="flex gap-2">
                 <Button className="flex-1" onClick={aoBaixar} disabled={!resultado}>
-                  <Download />
-                  Baixar SVG
-                </Button>
-                <Button variant="secondary" onClick={() => void aoCopiar()} disabled={!resultado} aria-label="Copiar código SVG">
-                  <Code />
-                  Copiar código
-                </Button>
+                  <Download />{f.vetorizador.baixarSvg}</Button>
+                <Button variant="secondary" onClick={() => void aoCopiar()} disabled={!resultado} aria-label={f.vetorizador.copiarCodigoSvg}>
+                  <Code />{f.vetorizador.copiarCodigo}</Button>
               </div>
 
               <div className="flex items-start justify-between gap-4 border-t border-border pt-4">
@@ -309,11 +303,13 @@ export default function VetorizadorClient({
 }
 
 function Estatisticas({ resultado }: { resultado: Resultado }) {
+  const f = useFerramentas();
+  const idioma = useIdioma();
   const itens = [
-    { rotulo: "Cores", valor: formatarNumero(resultado.cores) },
-    { rotulo: "Formas", valor: formatarNumero(resultado.caminhos) },
-    { rotulo: "Arquivo", valor: formatarBytes(resultado.bytes) },
-    { rotulo: "Fidelidade", valor: `${Math.round(resultado.fidelidade * 100)}%` },
+    { rotulo: f.vetorizador.cores, valor: formatarNumero(resultado.cores, idioma) },
+    { rotulo: f.vetorizador.formas, valor: formatarNumero(resultado.caminhos, idioma) },
+    { rotulo: f.vetorizador.arquivo, valor: formatarBytes(resultado.bytes) },
+    { rotulo: f.vetorizador.fidelidade, valor: `${Math.round(resultado.fidelidade * 100)}%` },
   ];
   return (
     <dl className="grid grid-cols-4 gap-2 rounded-xl bg-muted/60 p-3">
@@ -356,6 +352,7 @@ function StatusDoPalco({ estado }: { estado: Estado }) {
 }
 
 function ConviteParaSoltar({ mac, arrastando, onEscolher }: { mac: boolean; arrastando: boolean; onEscolher: () => void }) {
+  const f = useFerramentas();
   return (
     <button
       type="button"
@@ -396,39 +393,40 @@ function ConviteParaSoltar({ mac, arrastando, onEscolher }: { mac: boolean; arra
       </span>
 
       <span>
-        <span className="block text-lg font-medium tracking-tight">{arrastando ? "Pode soltar" : "Solte uma imagem aqui"}</span>
+        <span className="block text-lg font-medium tracking-tight">{arrastando ? f.comum.podeSoltar : f.comum.solteAqui}</span>
         <span className="mt-1.5 block text-sm text-subtle">
-          ou clique para escolher
-          <span className="apenas-mouse"> · {mac ? "⌘" : "Ctrl"}V para colar</span>
+          {f.comum.ouClique}
+          <span className="apenas-mouse"> · {mac ? "⌘" : "Ctrl"}{f.comum.paraColar}</span>
         </span>
       </span>
 
-      <span className="absolute inset-x-0 bottom-5 text-xs text-subtle">JPG, PNG, WEBP ou AVIF · até 80 MB · sai em SVG</span>
+      <span className="absolute inset-x-0 bottom-5 text-xs text-subtle">{f.vetorizador.formatos}</span>
     </button>
   );
 }
 
 function Apresentacao({ onEscolher }: { onEscolher: () => void }) {
+  const f = useFerramentas();
   return (
     <div>
       <Button className="w-full" onClick={onEscolher}>
         <ImageUp />
-        Escolher imagem
+        {f.comum.escolherImagem}
       </Button>
 
       <dl className="mt-8 grid gap-4 text-sm">
         {[
           {
-            titulo: "Curvas de verdade",
-            texto: "Cada forma vira um caminho vetorial. Amplie o quanto quiser: o contorno continua liso.",
+            titulo: f.vetorizador.curvasDeVerdade,
+            texto: f.vetorizador.curvasDeVerdadeTexto,
           },
           {
-            titulo: "Fiel à imagem",
-            texto: "As cores e o nível de detalhe são escolhidos pela imagem, e a fidelidade do resultado é medida.",
+            titulo: f.vetorizador.fielAImagem,
+            texto: f.vetorizador.fielAImagemTexto,
           },
           {
-            titulo: "Nada sai do aparelho",
-            texto: "A vetorização roda no seu navegador. A imagem não é enviada a lugar nenhum.",
+            titulo: f.vetorizador.nadaSai,
+            texto: f.vetorizador.nadaSaiTexto,
           },
         ].map(({ titulo, texto }) => (
           <div key={titulo} className="border-t border-border pt-4">

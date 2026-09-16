@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import { useEffect, useRef, useState } from "react";
 import {
   animate,
@@ -70,6 +72,7 @@ export function Comparador({
   processandoMagia,
   onTraco,
 }: ComparadorProps) {
+  const f = useFerramentas();
   const reduzirMovimento = useReducedMotion();
   const caixaRef = useRef<HTMLDivElement>(null);
   const animacao = useRef<AnimationPlaybackControls | null>(null);
@@ -243,7 +246,7 @@ export function Comparador({
             <div
               role="slider"
               tabIndex={0}
-              aria-label="Comparar o original com o recorte"
+              aria-label={f.removedor.compararOriginal}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={valorAria}

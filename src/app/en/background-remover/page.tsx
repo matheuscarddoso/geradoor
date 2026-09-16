@@ -33,13 +33,13 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <RemovedorDeFundoClient
         titulo="Background Remover"
         descricao="Remove the background from any photo in seconds and download a transparent PNG, at the original resolution. Free, no sign-up, no watermark."
       />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

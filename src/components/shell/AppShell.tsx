@@ -68,8 +68,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setBusca(true);
   };
 
+  const idioma = idiomaDoCaminho(caminho);
+
   return (
-    <div className="flex h-screen overflow-hidden">
+    /* O `lang` da subárvore fica aqui porque o shell já sabe o idioma pelo
+       caminho, e porque pôr um <div lang> dentro da página quebrava a cadeia de
+       altura da ferramenta. O <html> continua em pt-BR: lê-lo no layout raiz
+       exige headers(), e isso torna dinâmica toda página do site. */
+    <div className="flex h-screen overflow-hidden" lang={idioma === "en" ? "en" : undefined}>
       {aberta && (
         <Sidebar
           className="hidden md:flex"
@@ -114,10 +120,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             O padding do topo no celular é o espaço do botão acima: sem ele, o
             botão cobriria o título da ferramenta. */}
-        <main className={cn("min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0", aberta && "md:pt-0")}>
+        {/* `[&>*:first-child]:md:min-h-full` dá à ferramenta a altura da área
+            visível sem prendê-la ali: o conteúdo de SEO que vem depois flui
+            abaixo e a página rola normalmente.
+
+            Está aqui, e não no cliente de cada ferramenta, porque só o shell
+            conhece a altura disponível. `h-full` dentro do cliente depende de
+            todo ancestral ter altura definida — e basta alguém embrulhar a
+            página num <div> para a cadeia quebrar sem aviso, que foi o que
+            aconteceu quando as páginas em inglês ganharam um wrapper. */}
+        <main
+          className={cn(
+            "min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0",
+            "[&>*:first-child]:md:min-h-full",
+            aberta && "md:pt-0"
+          )}
+        >
           {children}
         </main>
-        <Rodape idioma={idiomaDoCaminho(caminho)} />
+        <Rodape idioma={idioma} />
       </div>
 
       <SearchCommand aberto={busca} onAberto={setBusca} />

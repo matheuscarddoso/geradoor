@@ -47,6 +47,7 @@ import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload
 import { useRecentes } from "@/lib/recentes";
 import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
 
 const QR_RENDER_SIZE = 200;
 
@@ -54,6 +55,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   titulo = "Gerador de QR Code do Instagram",
   descricao = "Crie um QR Code que abre o seu perfil. Basta informar o @ — quem escanear cai direto na sua página.",
 }) => {
+  const f = useFerramentas();
   const [arroba, setArroba] = useState("");
   const [tocado, setTocado] = useState(false);
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
@@ -94,7 +96,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
       .then((src) => ativo && setLogoSrc(src))
       .catch(() => {
         if (!ativo) return;
-        toast.error("Não foi possível carregar o ícone do Instagram");
+        toast.error(f.instagram.naoCarregouIcone);
         setUsarLogo(false);
       });
     return () => {
@@ -115,7 +117,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   const handleGenerate = async () => {
     if (!perfil.ok || !perfil.usuario) {
       setTocado(true);
-      toast.error(perfil.motivo ?? "Esse @ não é válido");
+      toast.error(perfil.motivo ?? f.instagram.arrobaInvalido);
       return;
     }
 
@@ -129,7 +131,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: perfilUrl(perfil.usuario), shortcode }),
       });
-      if (!resposta.ok) throw new Error("Erro ao criar QR Code");
+      if (!resposta.ok) throw new Error(f.qr.erroAoCriar);
 
       const dados = await resposta.json();
       const criado = baseUrl + dados.shortcode;
@@ -142,7 +144,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
-      toast.error("Erro ao criar QR Code");
+      toast.error(f.qr.erroAoCriar);
     } finally {
       setCarregando(false);
     }
@@ -160,7 +162,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
       toast.error(
         error instanceof QrDownloadError
           ? error.message
-          : "Não foi possível baixar o QR Code"
+          : f.qr.naoBaixou
       );
     } finally {
       setBaixando(null);
@@ -170,7 +172,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   const copiarLink = () => {
     if (!qrCodeValue) return;
     navigator.clipboard.writeText(qrCodeValue);
-    toast.success("Link copiado!");
+    toast.success(f.qr.linkCopiado);
   };
 
   return (
@@ -205,7 +207,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   autoCorrect="off"
                   spellCheck={false}
                   maxLength={MAX_ARROBA + 30}
-                  placeholder="seu.perfil"
+                  placeholder={f.instagram.seuPerfil}
                   className={cn(
                     "bg-background ps-8",
                     mostrarErro &&
@@ -235,14 +237,14 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   Ícone do Instagram no centro
                 </Label>
                 <p className="mt-1 text-xs text-subtle">
-                  A marca aparece no meio do QR Code
+                  {f.qr.marcaNoMeio}
                 </p>
               </div>
               <Switch
                 id="logo-instagram"
                 checked={usarLogo}
                 onCheckedChange={setUsarLogo}
-                aria-label="Usar o ícone do Instagram no centro do QR Code"
+                aria-label={f.instagram.usarIcone}
               />
             </div>
 
@@ -276,9 +278,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   className="mt-4 w-full"
                   onClick={handleGenerate}
                   disabled={!perfil.ok || carregando}
-                >
-                  Gerar meu QR Code
-                </Button>
+                >{f.instagram.gerarQr}</Button>
               </DialogTrigger>
               <DialogContent>
                 {carregando ? (
@@ -289,8 +289,8 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   <>
                     <Loader className="mx-auto h-11 w-11 animate-spin p-2 text-subtle" />
                     <DialogHeader>
-                      <DialogTitle>Criando seu QR Code</DialogTitle>
-                      <DialogDescription>Estamos gerando o código do seu perfil.</DialogDescription>
+                      <DialogTitle>{f.instagram.criandoQr}</DialogTitle>
+                      <DialogDescription>{f.instagram.gerandoPerfil}</DialogDescription>
                     </DialogHeader>
                   </>
                 ) : (
@@ -337,9 +337,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                             {baixando ? (
                               <Loader className="h-4 w-4 animate-spin" />
                             ) : (
-                              <>
-                                Baixar
-                                <ChevronDown className="ms-1 h-4 w-4 opacity-60" />
+                              <>{f.comum.baixar}<ChevronDown className="ms-1 h-4 w-4 opacity-60" />
                               </>
                             )}
                           </Button>
@@ -357,7 +355,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      <Button onClick={copiarLink}>Copiar link</Button>
+                      <Button onClick={copiarLink}>{f.qr.copiarLink}</Button>
                     </DialogAcoes>
                   </>
                 )}

@@ -1497,8 +1497,14 @@ export function formatarBytes(bytes: number): string {
   return `${(mb < 10 ? mb.toFixed(1) : Math.round(mb).toString()).replace(".", ",")} MB`;
 }
 
-export function formatarNumero(n: number): string {
-  return n.toLocaleString("pt-BR");
+/**
+ * O número na convenção do idioma da página.
+ *
+ * Importa mais do que parece: "1.234 formas" em português é mil duzentos e
+ * trinta e quatro; a mesma string em inglês se lê como um e pouco.
+ */
+export function formatarNumero(n: number, idioma: string = "pt-BR"): string {
+  return n.toLocaleString(idioma);
 }
 
 export const NOMES_DOS_ESTILOS: Record<Estilo, string> = {

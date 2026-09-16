@@ -25,10 +25,10 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <WhatsappGeneratorClient titulo="WhatsApp Link Generator" descricao="Create a wa.me link that opens a chat with you, message ready. Nobody needs to save your contact." />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

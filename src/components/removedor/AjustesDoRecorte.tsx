@@ -6,34 +6,44 @@ import { Slider } from "dialkit";
 import { Switch } from "@/components/ui/switch";
 import { TAMANHO_MAXIMO, TAMANHO_MINIMO, type Ferramenta } from "@/lib/pincel";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
+import type { Ferramentas } from "@/lib/textosDasFerramentas";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
-const FERRAMENTAS: Array<{
+/**
+ * As duas ferramentas do pincel, montadas do dicionário.
+ *
+ * Função e não constante de módulo: rótulo e dica dependem do idioma, que só
+ * se conhece dentro do componente.
+ */
+function ferramentas(f: Ferramentas): Array<{
   id: Ferramenta;
   rotulo: string;
   tecla: string;
   icone: LucideIcon;
   dica: string;
   dicaMagica: string;
-}> = [
-  {
-    id: "apagar",
-    rotulo: "Apagar",
-    tecla: "E",
-    icone: CircleMinus,
-    dica: "Pinte o que sobrou de fundo para tirar do recorte.",
-    dicaMagica: "Passe sobre o que quer tirar: o elemento sai inteiro, com a borda dele.",
-  },
-  {
-    id: "restaurar",
-    rotulo: "Restaurar",
-    tecla: "R",
-    icone: CirclePlus,
-    dica: "Pinte sobre a foto apagada para trazer de volta o que o recorte levou.",
-    dicaMagica: "Passe sobre o que quer de volta: o elemento volta inteiro, com a borda dele.",
-  },
-];
+}> {
+  return [
+    {
+      id: "apagar",
+      rotulo: f.removedor.apagar,
+      tecla: "E",
+      icone: CircleMinus,
+      dica: f.removedor.pincelTirar,
+      dicaMagica: f.removedor.magicoTirar,
+    },
+    {
+      id: "restaurar",
+      rotulo: f.removedor.restaurar,
+      tecla: "R",
+      icone: CirclePlus,
+      dica: f.removedor.pincelDevolver,
+      dicaMagica: f.removedor.magicoDevolver,
+    },
+  ];
+}
 
 function Tecla({ children }: { children: React.ReactNode }) {
   return (
@@ -78,6 +88,8 @@ export function AjustesDoRecorte({
   onMagico,
   mac,
 }: AjustesDoRecorteProps) {
+  const f = useFerramentas();
+  const FERRAMENTAS = ferramentas(f);
   const reduzirMovimento = useReducedMotion();
   const ativa = FERRAMENTAS.find((f) => f.id === ferramenta);
   const comando = mac ? "⌘" : "Ctrl+";
@@ -174,7 +186,7 @@ export function AjustesDoRecorte({
               </div>
               <div className="mt-3.5 flex items-center justify-between gap-3">
                 <label htmlFor="pincel-magico" className="min-w-0">
-                  <span className="block text-sm font-medium leading-none tracking-tight">Pincel mágico</span>
+                  <span className="block text-sm font-medium leading-none tracking-tight">{f.removedor.pincelMagico}</span>
                   <span className="mt-1 block text-xs text-subtle">
                     Recorta o elemento inteiro. Cada pincelada conta como um recorte.
                   </span>

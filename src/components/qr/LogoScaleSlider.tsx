@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import React from "react";
 import { Slider } from "dialkit";
 
@@ -29,11 +31,14 @@ interface LogoScaleSliderProps {
  * CSS dela nessa classe, normalmente aplicada pelo `DialRoot`. Um `Slider`
  * avulso sem esse ancestral renderiza sem nenhuma medida e desaparece.
  */
-export function LogoScaleSlider({ scale, onScaleChange, label = "Tamanho" }: LogoScaleSliderProps) {
+export function LogoScaleSlider({ scale, onScaleChange, label }: LogoScaleSliderProps) {
+  const f = useFerramentas();
+  const rotulo = label ?? f.comum.tamanho;
+
   return (
     <div className="dialkit-root">
       <Slider
-        label={label}
+        label={rotulo}
         value={Math.round(scale * 100)}
         onChange={(proximo) => onScaleChange(proximo / 100)}
         min={LOGO_MIN_SCALE * 100}

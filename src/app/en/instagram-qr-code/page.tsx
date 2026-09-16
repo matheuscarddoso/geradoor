@@ -25,10 +25,10 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <InstagramGeneratorClient titulo="Instagram QR Code" descricao="A QR Code that opens your Instagram profile. Any phone camera reads it, with no app needed." />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

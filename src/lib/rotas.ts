@@ -326,6 +326,7 @@ export const ROTAS_DE_POUSO: RotaDePouso[] = [
 /** Toda rota que o layout deve tratar como página de ferramenta. */
 export const HREFS_COM_CASCA = new Set<string>([
   ...ROTAS.map((rota) => rota.href),
+  ...ROTAS.map((rota) => rota.en.href),
   ...ROTAS_DE_POUSO.map((rota) => rota.href),
   ...ROTAS_DE_POUSO.flatMap((rota) => (rota.en ? [rota.en.href] : [])),
 ]);

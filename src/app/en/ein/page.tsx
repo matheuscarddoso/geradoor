@@ -26,12 +26,12 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <Palco>
         <EinClient />
       </Palco>
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

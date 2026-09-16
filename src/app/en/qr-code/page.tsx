@@ -25,13 +25,13 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <QrCodeGeneratorClient
         titulo="QR Code Generator"
         descricao="Create a QR Code from any link, with your logo in the center. Download as PNG, PDF or SVG."
       />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

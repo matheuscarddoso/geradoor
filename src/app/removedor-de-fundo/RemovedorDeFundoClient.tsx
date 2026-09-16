@@ -27,6 +27,7 @@ import {
   type Estado,
 } from "@/lib/useRemovedorDeFundo";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -45,6 +46,7 @@ export default function RemovedorDeFundoClient({
   titulo = "Removedor de fundo de imagem",
   descricao = "Remova o fundo de qualquer foto em segundos e baixe em PNG transparente, na resolução original. Grátis, sem cadastro e sem marca d'água.",
 }: { titulo?: string; descricao?: string } = {}) {
+  const f = useFerramentas();
   const { estado, processar, tentarDeNovo, limpar, aplicarTracos, pincelMagico } = useRemovedorDeFundo();
   const [fundo, setFundo] = useState<Fundo>(null);
   const [ferramenta, setFerramenta] = useState<Ferramenta | null>(null);
@@ -69,7 +71,7 @@ export default function RemovedorDeFundoClient({
         await processar(arquivo);
       } catch (erro) {
         toast.error(
-          erro instanceof ArquivoRecusado ? erro.message : "Não foi possível abrir essa imagem"
+          erro instanceof ArquivoRecusado ? erro.message : f.comum.naoFoiPossivelAbrir
         );
       }
     },
@@ -177,7 +179,7 @@ export default function RemovedorDeFundoClient({
   };
 
   const gerarArquivo = async (): Promise<Blob> => {
-    if (!pronto) throw new Error("Sem recorte");
+    if (!pronto) throw new Error(f.removedor.semRecorte);
     const base = await recorteAjustado();
     return fundo ? recorteSobreCor(base, fundo) : base;
   };
@@ -188,7 +190,7 @@ export default function RemovedorDeFundoClient({
     try {
       baixar(await gerarArquivo(), nomeDoRecorte(pronto.imagem.nome));
     } catch {
-      toast.error("Não foi possível gerar o PNG");
+      toast.error(f.removedor.naoGerouPng);
     } finally {
       setExportando(null);
     }
@@ -202,9 +204,9 @@ export default function RemovedorDeFundoClient({
       // aceita escrever na área de transferência dentro do gesto do clique, e
       // um await no meio já o encerra.
       await navigator.clipboard.write([new ClipboardItem({ "image/png": gerarArquivo() })]);
-      toast.success("Imagem copiada");
+      toast.success(f.removedor.imagemCopiada);
     } catch {
-      toast.error("Seu navegador não deixou copiar. Use Baixar PNG.");
+      toast.error(f.removedor.naoCopiou);
     } finally {
       setExportando(null);
     }
@@ -304,7 +306,7 @@ export default function RemovedorDeFundoClient({
                 transition={{ duration: 0.15, ease: EASE_OUT }}
                 className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm"
               >
-                <p className="text-base font-medium">Solte para trocar a imagem</p>
+                <p className="text-base font-medium">{f.comum.solteParaTrocar}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -363,6 +365,7 @@ function ConviteParaSoltar({
   arrastando: boolean;
   onEscolher: () => void;
 }) {
+  const f = useFerramentas();
   return (
     <button
       type="button"
@@ -404,16 +407,16 @@ function ConviteParaSoltar({
 
       <span>
         <span className="block text-lg font-medium tracking-tight">
-          {arrastando ? "Pode soltar" : "Solte uma imagem aqui"}
+          {arrastando ? f.comum.podeSoltar : f.comum.solteAqui}
         </span>
         <span className="mt-1.5 block text-sm text-subtle">
-          ou clique para escolher
-          <span className="apenas-mouse"> · {mac ? "⌘" : "Ctrl"}V para colar</span>
+          {f.comum.ouClique}
+          <span className="apenas-mouse"> · {mac ? "⌘" : "Ctrl"}{f.comum.paraColar}</span>
         </span>
       </span>
 
       <span className="absolute inset-x-0 bottom-5 text-xs text-subtle">
-        JPG, PNG, WEBP ou AVIF · até 80 MB · sai na resolução original
+        {f.removedor.formatos}
       </span>
     </button>
   );
@@ -440,6 +443,7 @@ function Palco({
   onTraco: (traco: Traco) => void;
   onSairDaFerramenta: () => void;
 }) {
+  const f = useFerramentas();
   const reduzirMovimento = useReducedMotion();
   if (estado.fase === "vazio" || !estado.imagem) return null;
   const { imagem } = estado;
@@ -491,7 +495,7 @@ function Palco({
                   ? "Recortando o elemento"
                   : `${ferramenta === "apagar" ? "Apagando" : "Restaurando"}${magico ? " com o pincel mágico" : ""}`}
               </span>
-              {!processandoMagia && <span className="apenas-mouse text-xs text-subtle">Esc para sair</span>}
+              {!processandoMagia && <span className="apenas-mouse text-xs text-subtle">{f.comum.escParaSair}</span>}
               <button
                 type="button"
                 onClick={onSairDaFerramenta}
@@ -561,26 +565,27 @@ function StatusDoPalco({ estado }: { estado: Estado }) {
    ------------------------------------------------------------------------- */
 
 function Apresentacao({ onEscolher }: { onEscolher: () => void }) {
+  const f = useFerramentas();
   return (
     <div>
       <Button className="w-full" onClick={onEscolher}>
         <ImageUp />
-        Escolher imagem
+        {f.comum.escolherImagem}
       </Button>
 
       <dl className="mt-8 grid gap-4 text-sm">
         {[
           {
-            titulo: "Contorno preciso",
-            texto: "Um modelo de segmentação em alta resolução separa cabelo, roupa e objeto do fundo.",
+            titulo: f.removedor.contornoPreciso,
+            texto: f.removedor.contornoPrecisoTexto,
           },
           {
-            titulo: "Resolução original",
-            texto: "O PNG sai no tamanho da sua foto, com transparência e sem marca d'água.",
+            titulo: f.removedor.resolucaoOriginal,
+            texto: f.removedor.resolucaoOriginalTexto,
           },
           {
-            titulo: "Nada fica guardado",
-            texto: "A imagem é processada na hora e descartada. Não salvamos nenhuma cópia.",
+            titulo: f.removedor.nadaGuardado,
+            texto: f.removedor.nadaGuardadoTexto,
           },
         ].map(({ titulo, texto }) => (
           <div key={titulo} className="border-t border-border pt-4">
@@ -616,6 +621,7 @@ function Controles({
   onTentarDeNovo: () => void;
   onLimpar: () => void;
 }) {
+  const f = useFerramentas();
   if (estado.fase === "vazio" || !estado.imagem) return null;
   const { imagem } = estado;
   const pronto = estado.fase === "pronto";
@@ -674,7 +680,7 @@ function Controles({
       ) : (
         <>
           <div>
-            <p className="mb-3 text-sm font-medium leading-none tracking-tight">Fundo</p>
+            <p className="mb-3 text-sm font-medium leading-none tracking-tight">{f.comum.fundo}</p>
             <SeletorDeFundo valor={fundo} onChange={onFundo} />
           </div>
 

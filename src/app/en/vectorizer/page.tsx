@@ -29,13 +29,13 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <VetorizadorClient
         titulo="Image Vectorizer"
         descricao="Turn an image into an SVG: shapes are redrawn as curves, sharp at any size. Nothing is uploaded."
       />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

@@ -49,6 +49,7 @@ import Link from "next/link";
 import WhatsappChatPreview from "@/components/whatsapp/WhatsappChatPreview";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
 
 /** Lado do QR renderizado nas duas telas. */
 const QR_RENDER_SIZE = 200;
@@ -57,6 +58,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
   titulo = "Gerador de link do WhatsApp",
   descricao = "Crie um link wa.me com a mensagem já preenchida. Quem clicar abre a conversa direto com você.",
 }) => {
+  const f = useFerramentas();
   const [phone, setPhone] = useState<string | null>("");
   const [message, setMessage] = useState<string | null>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>("");
@@ -92,7 +94,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao criar QR Code");
+        throw new Error(f.qr.erroAoCriar);
       }
 
       const data = await response.json();
@@ -107,14 +109,14 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
       toast.success("QR Code criado com sucesso!");
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
-      toast.error("Erro ao criar QR Code");
+      toast.error(f.qr.erroAoCriar);
     }
   };
 
   const copyLink = () => {
     navigator.clipboard.writeText(qrCodeValue ?? "");
-    toast("Link copiado para a área de transferência", {
-      description: "Link copiado com sucesso!",
+    toast(f.qr.linkCopiado, {
+      description: f.whatsapp.linkCopiadoSucesso,
       action: {
         label: "Cancelar",
         onClick: () => {},
@@ -189,7 +191,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
       toast.error(
         error instanceof QrDownloadError
           ? error.message
-          : "Não foi possível baixar o QR Code"
+          : f.qr.naoBaixou
       );
     } finally {
       setBaixando(null);
@@ -229,7 +231,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
             uma linha, e num campo de linha única o texto rola na horizontal e
             some da vista enquanto se digita. */}
         <Textarea
-          placeholder="Customize sua mensagem"
+          placeholder={f.whatsapp.customizeMensagem}
           className="bg-background mt-4 min-h-[84px] resize-y"
           value={message ?? ""}
           onChange={(e) => setMessage(e.target.value)}
@@ -245,14 +247,14 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
               Ícone do WhatsApp no centro
             </Label>
             <p className="mt-1 text-xs text-subtle">
-              A marca aparece no meio do QR Code
+              {f.qr.marcaNoMeio}
             </p>
           </div>
           <Switch
             id="logo-whatsapp"
             checked={usarLogo}
             onCheckedChange={setUsarLogo}
-            aria-label="Usar o ícone do WhatsApp no centro do QR Code"
+            aria-label={f.whatsapp.usarIcone}
           />
         </div>
 
@@ -282,9 +284,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
           }}
         >
         <DialogTrigger asChild>
-        <Button className="w-full mt-4" onClick={handleGenerate} disabled={phone == ""}>
-        Gerar meu link
-        </Button>
+        <Button className="w-full mt-4" onClick={handleGenerate} disabled={phone == ""}>{f.whatsapp.gerarLink}</Button>
         </DialogTrigger>
         <DialogContent>
           {loadingQrCode ? (
@@ -295,8 +295,8 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
             <>
               <Loader className="mx-auto h-11 w-11 animate-spin p-2 text-subtle" />
               <DialogHeader>
-                <DialogTitle>Criando seu link</DialogTitle>
-                <DialogDescription>Estamos gerando o link e o QR Code do seu WhatsApp.</DialogDescription>
+                <DialogTitle>{f.whatsapp.criandoLink}</DialogTitle>
+                <DialogDescription>{f.whatsapp.gerandoLink}</DialogDescription>
               </DialogHeader>
             </>
           ) : (
@@ -344,9 +344,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
                       {baixando ? (
                         <Loader className="h-4 w-4 animate-spin" />
                       ) : (
-                        <>
-                          Baixar
-                          <ChevronDown className="ms-1 h-4 w-4 opacity-60" />
+                        <>{f.comum.baixar}<ChevronDown className="ms-1 h-4 w-4 opacity-60" />
                         </>
                       )}
                     </Button>
@@ -367,7 +365,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button onClick={copyLink}>Copiar link</Button>
+                <Button onClick={copyLink}>{f.qr.copiarLink}</Button>
               </DialogAcoes>
             </>
           )}

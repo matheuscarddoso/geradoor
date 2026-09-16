@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
 import { v4 as uuidv4 } from "uuid";
 import LogoPicker, { DEFAULT_LOGO, type LogoConfig } from "@/components/qr/LogoPicker";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
@@ -45,6 +46,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   titulo = "Gerador de QR Code",
   descricao = "Crie um QR Code a partir de qualquer link, com a sua logo no centro. Baixe em PNG, PDF ou SVG.",
 }) => {
+  const f = useFerramentas();
   const [inputValue, setInputValue] = useState<string>("");
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
   const [loadingQrCode, setLoadingQrCode] = useState<boolean>(false);
@@ -73,13 +75,13 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
 
   const handleGenerate = async () => {
     if (!inputValue) {
-      toast.error("Por favor, preencha o link antes de gerar o QR Code");
+      toast.error(f.qr.preenchaOLink);
       return;
     }
 
     if (!link.ok || !link.url) {
       setTouched(true);
-      toast.error(link.reason ?? "Esse link não é válido");
+      toast.error(link.reason ?? f.qr.linkInvalido);
       return;
     }
 
@@ -96,7 +98,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
         body: JSON.stringify({ url, shortcode }),
       });
 
-      if (!response.ok) throw new Error("Erro ao criar QR Code");
+      if (!response.ok) throw new Error(f.qr.erroAoCriar);
 
       const data = await response.json();
       const criado = baseUrl + data.shortcode;
@@ -107,10 +109,10 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
         href: hrefRecente("/qr-code", data.shortcode),
       });
       setModalAberto(true);
-      toast.success("QR Code criado com sucesso!");
+      toast.success(f.qr.criadoComSucesso);
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
-      toast.error("Erro ao criar QR Code");
+      toast.error(f.qr.erroAoCriar);
     } finally {
       setLoadingQrCode(false);
     }
@@ -135,7 +137,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
       toast.error(
         error instanceof QrDownloadError
           ? error.message
-          : "Não foi possível baixar o QR Code"
+          : f.qr.naoBaixou
       );
     } finally {
       setBaixando(null);
@@ -145,7 +147,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   const copyLink = () => {
     if (!qrCodeValue) return;
     navigator.clipboard.writeText(qrCodeValue);
-    toast.success("Link copiado!");
+    toast.success(f.qr.linkCopiado);
   };
 
   return (
@@ -206,7 +208,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
               onClick={handleGenerate}
               disabled={!link.ok || loadingQrCode}
             >
-              {loadingQrCode ? <Loader className="animate-spin h-4 w-4" /> : "Criar QRCode"}
+              {loadingQrCode ? <Loader className="animate-spin h-4 w-4" /> : f.qr.criar}
             </Button>
 
             {/* Modal de sucesso, igual ao do WhatsApp e do Instagram. Abre ao
@@ -226,7 +228,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                 <DialogHeader>
                   <DialogTitle>QR Code criado</DialogTitle>
                   <DialogDescription>
-                    Quem escanear vai direto para o link que você encurtou.
+                    {f.qr.quemEscanear}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -268,9 +270,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                         {baixando ? (
                           <Loader className="h-4 w-4 animate-spin" />
                         ) : (
-                          <>
-                            Baixar
-                            <ChevronDown className="ms-1 h-4 w-4 opacity-60" />
+                          <>{f.comum.baixar}<ChevronDown className="ms-1 h-4 w-4 opacity-60" />
                           </>
                         )}
                       </Button>
@@ -291,7 +291,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
 
-                  <Button onClick={copyLink}>Copiar link</Button>
+                  <Button onClick={copyLink}>{f.qr.copiarLink}</Button>
                 </DialogAcoes>
               </DialogContent>
             </Dialog>
@@ -385,11 +385,10 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   className="text-xs text-zinc-500 dark:text-zinc-400 text-center max-w-[220px] leading-relaxed"
                 >
                   <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    Prévia ilustrativa
+                    {f.qr.previaIlustrativa}
                   </span>
                   <br />
-                  Este desenho não é escaneável. Clique em criar para gerar o
-                  código real.
+                  {f.qr.naoEscaneavel}
                 </motion.p>
               )}
             </AnimatePresence>

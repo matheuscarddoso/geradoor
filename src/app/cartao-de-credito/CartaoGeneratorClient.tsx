@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +79,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
   titulo = "Gerador de Cartão de Crédito",
   descricao = "Números válidos pelo algoritmo de Luhn, para testar checkout e antifraude. Não funcionam em compras reais.",
 }) => {
+  const f = useFerramentas();
   const [cardData, setCardData] = useState({
     number: '',
     formattedNumber: '',
@@ -176,7 +179,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
         </Select>
 
         <Button className="w-full" onClick={handleGenerate}>
-          Gerar Cartão
+          {f.cartao.gerar}
         </Button>
 
         {/* Clicar no campo copia, além do botão: o valor é somente-leitura e só
@@ -189,19 +192,19 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
               <Input
                 readOnly
                 type="text"
-                placeholder="Número do cartão"
-                title="Clique para copiar"
+                placeholder={f.cartao.numeroDoCartao}
+                title={f.comum.cliqueParaCopiar}
                 className="w-full cursor-pointer bg-background pr-10"
                 value={cardData.formattedNumber}
                 onClick={(evento) => {
                   evento.currentTarget.select();
-                  copiar(cardData.number, "Número do cartão", "numero");
+                  copiar(cardData.number, f.cartao.numeroDoCartao, "numero");
                 }}
               />
               <BotaoCopiar
-                rotulo="Copiar número do cartão"
+                rotulo={f.cartao.copiarNumero}
                 copiado={copiado === "numero"}
-                onCopiar={() => copiar(cardData.number, "Número do cartão", "numero")}
+                onCopiar={() => copiar(cardData.number, f.cartao.numeroDoCartao, "numero")}
               />
             </div>
           </div>
@@ -216,7 +219,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
                   readOnly
                   type="text"
                   placeholder="Validade"
-                  title="Clique para copiar"
+                  title={f.comum.cliqueParaCopiar}
                   className="w-full cursor-pointer bg-background pr-10"
                   value={cardData.expirationDate}
                   onClick={(evento) => {
@@ -225,7 +228,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
                   }}
                 />
                 <BotaoCopiar
-                  rotulo="Copiar data de validade"
+                  rotulo={f.cartao.copiarValidade}
                   copiado={copiado === "validade"}
                   onCopiar={() =>
                     copiar(cardData.expirationDate, "Data de validade", "validade")
@@ -241,7 +244,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
                   readOnly
                   type="text"
                   placeholder={nomeCodigo}
-                  title="Clique para copiar"
+                  title={f.comum.cliqueParaCopiar}
                   className="w-full cursor-pointer bg-background pr-10"
                   value={cardData.securityCode}
                   onClick={(evento) => {
@@ -250,7 +253,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
                   }}
                 />
                 <BotaoCopiar
-                  rotulo={`Copiar ${nomeCodigo}`}
+                  rotulo={`${f.cartao.copiarPrefixo} ${nomeCodigo}`}
                   copiado={copiado === "codigo"}
                   onCopiar={() => copiar(cardData.securityCode, nomeCodigo, "codigo")}
                 />

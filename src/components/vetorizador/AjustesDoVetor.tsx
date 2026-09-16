@@ -13,19 +13,32 @@ import {
 } from "@/lib/vetorizador";
 import type { Resultado } from "@/lib/useVetorizador";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
+import type { Ferramentas } from "@/lib/textosDasFerramentas";
 
-const ESTILOS: Array<{ id: Estilo; rotulo: string; dica: string }> = [
-  { id: "automatico", rotulo: "Auto", dica: "Escolhe o estilo e o número de cores olhando a imagem." },
-  { id: "logo", rotulo: "Logo", dica: "Poucas cores chapadas e contornos precisos, para marcas e ícones." },
-  { id: "ilustracao", rotulo: "Ilustração", dica: "Mais cores e formas menores, para desenhos e artes." },
-  { id: "foto", rotulo: "Foto", dica: "Efeito pôster: suaviza o ruído e agrupa os tons." },
-  { id: "traco", rotulo: "Traço", dica: "Só a tinta, sem fundo, para desenho, assinatura e carimbo." },
-];
+/**
+ * Os estilos e as cores de traço, montados a partir do dicionário.
+ *
+ * São funções, e não constantes de módulo: o rótulo e a dica dependem do
+ * idioma, que só se conhece dentro do componente. Uma constante congelaria o
+ * português no momento em que o módulo é carregado.
+ */
+function estilos(f: Ferramentas): Array<{ id: Estilo; rotulo: string; dica: string }> {
+  return [
+    { id: "automatico", rotulo: f.vetorizador.automatico, dica: f.vetorizador.escolhaOEstilo },
+    { id: "logo", rotulo: f.vetorizador.logo, dica: f.vetorizador.dicaLogo },
+    { id: "ilustracao", rotulo: f.vetorizador.ilustracao, dica: f.vetorizador.dicaIlustracao },
+    { id: "foto", rotulo: f.vetorizador.foto, dica: f.vetorizador.dicaFoto },
+    { id: "traco", rotulo: f.vetorizador.traco, dica: f.vetorizador.dicaTraco },
+  ];
+}
 
-const CORES_DO_TRACO = [
-  { cor: "#000000", rotulo: "Preto" },
-  { cor: "#ffffff", rotulo: "Branco" },
-];
+function coresDoTraco(f: Ferramentas) {
+  return [
+    { cor: "#000000", rotulo: f.vetorizador.preto },
+    { cor: "#ffffff", rotulo: f.vetorizador.branco },
+  ];
+}
 
 interface AjustesDoVetorProps {
   ajustes: Ajustes;
@@ -62,6 +75,9 @@ function LinhaAutomatica({ automatico, texto, onAutomatico }: { automatico: bool
  * valor, e um toque volta ao automático.
  */
 export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, resultado }: AjustesDoVetorProps) {
+  const f = useFerramentas();
+  const ESTILOS = estilos(f);
+  const CORES_DO_TRACO = coresDoTraco(f);
   const alterar = (parcial: Partial<Ajustes>) => onAjustes({ ...ajustes, ...parcial });
   const estiloAtual = ESTILOS.find((e) => e.id === ajustes.estilo) ?? ESTILOS[0];
   const traco = ajustes.estilo === "traco";
@@ -71,7 +87,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="mb-3 text-sm font-medium leading-none tracking-tight">Estilo</p>
+        <p className="mb-3 text-sm font-medium leading-none tracking-tight">{f.vetorizador.estilo}</p>
         {/* Colunas do tamanho do rótulo, repartindo a sobra: "Ilustração" não
             cabe num quinto da largura no celular, e cortado não se lê. */}
         <div role="radiogroup" aria-label="Estilo" className="grid grid-cols-[repeat(5,minmax(max-content,1fr))] gap-1 rounded-xl bg-muted/60 p-1">
@@ -117,7 +133,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
             />
             <LinhaAutomatica
               automatico={ajustes.limiar === "auto"}
-              texto={ajustes.limiar === "auto" ? "Automático: separa a tinta do papel sozinho." : "Mais alto pega tons mais claros como tinta."}
+              texto={ajustes.limiar === "auto" ? f.vetorizador.dicaAutomatico : f.vetorizador.limiarMaisAlto}
               onAutomatico={() => alterar({ limiar: "auto" })}
             />
           </>
@@ -138,7 +154,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
                   ? resultado
                     ? `Automático: ${resultado.cores} ${resultado.cores === 1 ? "cor" : "cores"}.`
                     : "Automático."
-                  : "Menos cores deixam o arquivo menor e mais limpo."
+                  : f.vetorizador.menosCores
               }
               onAutomatico={() => alterar({ cores: "auto" })}
             />
@@ -150,7 +166,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
 
       {traco ? (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium leading-none tracking-tight">Cor do traço</span>
+          <span className="text-sm font-medium leading-none tracking-tight">{f.vetorizador.corDoTraco}</span>
           <div role="radiogroup" aria-label="Cor do traço" className="flex items-center gap-2">
             {CORES_DO_TRACO.map(({ cor, rotulo }) => (
               <button
@@ -196,8 +212,8 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
         <div>
           <div className="flex items-center justify-between gap-3">
             <label htmlFor="fundo-transparente" className="min-w-0">
-              <span className="block text-sm font-medium leading-none tracking-tight">Fundo transparente</span>
-              <span className="mt-1 block text-xs text-subtle">Tira o fundo liso que encosta nas bordas.</span>
+              <span className="block text-sm font-medium leading-none tracking-tight">{f.vetorizador.fundoTransparente}</span>
+              <span className="mt-1 block text-xs text-subtle">{f.vetorizador.fundoTransparenteTexto}</span>
             </label>
             <Switch
               id="fundo-transparente"

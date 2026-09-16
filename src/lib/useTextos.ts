@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { idiomaDoCaminho, type Idioma } from "./idioma";
 import { TEXTOS, type Dicionario } from "./textos";
+import { FERRAMENTAS } from "./textosDasFerramentas";
 
 /**
  * O idioma da página atual, no cliente.
@@ -18,4 +19,9 @@ export function useIdioma(): Idioma {
 /** O dicionário da página atual. */
 export function useTextos(): Dicionario {
   return TEXTOS[useIdioma()];
+}
+
+/** O dicionário das ferramentas, no idioma da página atual. */
+export function useFerramentas() {
+  return FERRAMENTAS[useIdioma()];
 }

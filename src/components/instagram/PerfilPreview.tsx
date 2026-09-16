@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import { QRCodeSVG } from "qrcode.react";
 import { LOGO_PRESETS } from "@/components/qr/presets";
 import { perfilUrl } from "@/lib/instagram";
@@ -23,7 +25,8 @@ const MARCA = LOGO_PRESETS.find((p) => p.id === "instagram");
  * decorativo, em vez do código do modal.
  */
 export function PerfilPreview({ usuario }: { usuario: string }) {
-  const arroba = usuario.trim() || "seu.perfil";
+  const f = useFerramentas();
+  const arroba = usuario.trim() || f.instagram.seuPerfil;
 
   return (
     <div

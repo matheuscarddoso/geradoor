@@ -1,5 +1,7 @@
 "use client";
 
+import { useFerramentas } from "@/lib/useTextos";
+
 import React, { useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { ImagePlus, Trash2, Loader } from "lucide-react";
@@ -45,6 +47,7 @@ interface LogoPickerProps {
 }
 
 const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) => {
+  const f = useFerramentas();
   const [open, setOpen] = useState(false);
   const [loadingPreset, setLoadingPreset] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +70,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
       toast.error(
         error instanceof LogoImageError
           ? error.message
-          : "Não foi possível carregar a imagem"
+          : f.qr.naoCarregouImagem
       );
     } finally {
       setLoadingPreset(null);
@@ -84,7 +87,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
       const src = await rasterizeSvgMarkup(presetMarkup(preset));
       onChange({ ...value, src, presetId: preset.id });
     } catch {
-      toast.error("Não foi possível aplicar este ícone");
+      toast.error(f.qr.naoAplicouIcone);
     } finally {
       setLoadingPreset(null);
     }
@@ -96,12 +99,8 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
     <div>
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-medium leading-none tracking-tight">
-            Logo no centro
-          </p>
-          <p className="mt-1 truncate text-xs text-subtle">
-            Sua marca dentro do código
-          </p>
+          <p className="text-sm font-medium leading-none tracking-tight">{f.qr.logoNoCentro}</p>
+          <p className="mt-1 truncate text-xs text-subtle">{f.qr.logoNoCentroTexto}</p>
         </div>
         <Switch
           checked={open}
@@ -138,7 +137,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                     "hover:border-zinc-400 dark:hover:border-zinc-600",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                   )}
-                  aria-label="Enviar imagem do logo"
+                  aria-label={f.qr.enviarLogo}
                 >
                   {value.src ? (
                     <motion.img
@@ -168,9 +167,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
                     PNG, JPG, WEBP ou SVG.
-                    <br />
-                    Até 4 MB.
-                  </p>
+                    <br />{f.qr.ate4mb}</p>
                 </div>
 
                 <AnimatePresence>
@@ -289,7 +286,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                           onCheckedChange={(excavate) =>
                             onChange({ ...value, excavate })
                           }
-                          aria-label="Limpar fundo atrás do logo"
+                          aria-label={f.qr.limparFundoDoLogo}
                         />
                       </div>
                     </div>

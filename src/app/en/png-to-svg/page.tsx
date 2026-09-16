@@ -30,10 +30,10 @@ const schema = [
 
 export default function Page() {
   return (
-    <div lang="en">
+    <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schema) }} />
       <VetorizadorClient titulo="Convert PNG to SVG" descricao="Drop a PNG and download an SVG: shapes are redrawn as curves, and a transparent background stays transparent." />
       <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} idioma="en" />
-    </div>
+    </>
   );
 }

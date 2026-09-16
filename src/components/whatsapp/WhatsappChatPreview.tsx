@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
 
 /**
  * Conversa do WhatsApp no iOS, para rodar dentro do PhoneFrame.
@@ -126,6 +127,7 @@ interface WhatsappChatPreviewProps {
 const PLACEHOLDER_PHONE = "+55 11 99999-9999";
 
 const WhatsappChatPreview: React.FC<WhatsappChatPreviewProps> = ({ phone, message, className }) => {
+  const f = useFerramentas();
   const reduceMotion = useReducedMotion();
   const temMensagem = message.trim().length > 0;
 
@@ -218,7 +220,7 @@ const WhatsappChatPreview: React.FC<WhatsappChatPreviewProps> = ({ phone, messag
             }}
           >
             <BubbleTail />
-            {temMensagem ? message : "Sua mensagem aparece aqui"}
+            {temMensagem ? message : "{f.whatsapp.suaMensagem}"}
             {/* Espaçador invisível: reserva, na última linha, o lugar da hora e
                 dos vistos, que ficam posicionados por cima. É como o próprio
                 WhatsApp resolve — sem ele o texto passa por baixo do horário. */}

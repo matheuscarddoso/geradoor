@@ -796,9 +796,6 @@ Cada teste de recorte completo consome cota do mês, do dia e do seu IP.
 
 ### Pendências
 
-- [ ] **Voltar `LIMITE_POR_IP_DIA` de 150 para 40** em
-  `workers/removedor-de-fundo/wrangler.jsonc` e rodar
-  `npm run deploy:removedor`.
 - [ ] Deploys de preview da Vercel usam o modo leve, porque a origem não está
   liberada no Worker (ver o manual do Worker, seção 10).
 - [ ] Remover a etiqueta "Novo" (`novo: true` em `src/lib/rotas.ts`) quando a

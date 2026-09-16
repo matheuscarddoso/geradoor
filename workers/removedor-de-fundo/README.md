@@ -200,7 +200,7 @@ Cloudflare. Motivos:
 | 4 | Rajada por IP | 15 por 60 s | `wrangler.jsonc` → `ratelimits` |
 | 5 | Rajada global | 90 por 60 s | `wrangler.jsonc` → `ratelimits` |
 | 6 | Formato e dimensões reais | 4096 px de lado, 16 MP | `src/index.ts` |
-| 7 | Limite por IP por dia | **150** (temporário; o planejado é 40) | `wrangler.jsonc` → `LIMITE_POR_IP_DIA` |
+| 7 | Limite por IP por dia | **40** | `wrangler.jsonc` → `LIMITE_POR_IP_DIA` |
 | 8 | Limite global por dia | 300 | `wrangler.jsonc` → `LIMITE_DIARIO` |
 | 9 | Limite global por mês | 4.800 | `wrangler.jsonc` → `LIMITE_MENSAL` |
 | 10 | Teto absoluto mensal | **4.900**, ignora configuração acima disso | `src/cota.ts` → `TETO_ABSOLUTO_MENSAL` |
@@ -290,7 +290,7 @@ forçar pode apagar o contador — e com ele o controle do mês corrente.
 | `REMOVEDOR_ATIVO` | `"true"` | Qualquer outro valor, ou a variável ausente, desliga o recorte (`pausado`). |
 | `LIMITE_MENSAL` | `"4800"` | Recortes por mês, somando todos. Nunca passa de 4.900. |
 | `LIMITE_DIARIO` | `"300"` | Recortes por dia, somando todos. |
-| `LIMITE_POR_IP_DIA` | `"150"` | Recortes por IP por dia. **Temporário**: voltar para `"40"`. |
+| `LIMITE_POR_IP_DIA` | `"40"` | Recortes por IP por dia. |
 | `ORIGENS_PERMITIDAS` | `https://www.geradoor.com,https://geradoor.com,http://localhost:3000,http://localhost:3001,http://localhost:3100` | Origens que recebem CORS. Separadas por vírgula, comparadas por igualdade exata. |
 
 ### Outras opções
@@ -361,9 +361,6 @@ imagem) consome um recorte do mês, do dia e do seu IP.
 
 O novo valor vale na próxima requisição. Os contadores não são zerados:
 baixar o limite abaixo do uso atual bloqueia na hora; subir libera na hora.
-
-**Pendência atual:** `LIMITE_POR_IP_DIA` está em `150`, liberado para testes.
-Deve voltar para `40`.
 
 ### Pausar em emergência
 
@@ -513,8 +510,6 @@ tipa o mínimo usado do módulo.
 
 ## 10. Pendências conhecidas
 
-- **`LIMITE_POR_IP_DIA` em 150**, liberado para testes. Voltar para `40` e
-  publicar.
 - **Previews da Vercel caem no modo leve**, porque as origens de preview mudam
   a cada deploy e não estão em `ORIGENS_PERMITIDAS`. Para testar o recorte
   completo num preview, libere a origem daquele preview temporariamente.

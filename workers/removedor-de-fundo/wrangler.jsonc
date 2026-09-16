@@ -47,7 +47,7 @@
     // levar mais que 6% do mês.
     "LIMITE_MENSAL": "4800",
     "LIMITE_DIARIO": "300",
-    "LIMITE_POR_IP_DIA": "150",
+    "LIMITE_POR_IP_DIA": "40",
 
     // Só estas origens recebem os headers de CORS. Os localhost são do
     // desenvolvimento; CORS não é barreira contra quem chama fora do

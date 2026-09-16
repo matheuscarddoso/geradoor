@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useCallback, useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/AppShell";
 import { useRecentes } from "@/lib/recentes";
-import { hrefRecente, useQrDeRecente } from "@/lib/qrRecente";
+import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
@@ -49,10 +49,11 @@ const QRCodeGenerator: React.FC = () => {
   const [modalAberto, setModalAberto] = useState(false);
 
   // Clicar num recente reabre o modal de sucesso com aquele QR.
-  const { aoFechar: limparQrDaUrl } = useQrDeRecente((valor) => {
+  const limparQrDaUrl = useLimparQrDaUrl();
+  const restaurarQr = useCallback((valor: string) => {
     setQrCodeValue(valor);
     setModalAberto(true);
-  });
+  }, []);
   const [logo, setLogo] = useState<LogoConfig>(DEFAULT_LOGO);
   const [touched, setTouched] = useState(false);
   const { registrar } = useRecentes();
@@ -148,6 +149,10 @@ const QRCodeGenerator: React.FC = () => {
     /* Mesmo wireframe do /whatsapp: a página recebe a área crua do shell
        (SEM_MOLDURA) e o painel da direita encosta na borda. */
     <div className="flex h-full min-h-[620px] w-full">
+      {/* Não desenha nada: lê a query e reabre o QR vindo de um recente.
+          Fica aqui, e não em volta da página, para o <Suspense> dele não
+          tirar o resto do conteúdo da geração estática. */}
+      <RestauradorDeQr aoRestaurar={restaurarQr} />
       <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
       <PageHeader

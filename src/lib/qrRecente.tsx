@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 /**
@@ -59,18 +59,27 @@ export function codigoDoLink(valor: string): string | null {
 /**
  * Observa a query e avisa quando há um QR a restaurar.
  *
- * Devolve `aoFechar`, que limpa a query. Sem isso, fechar o modal e clicar no
- * MESMO recente de novo não faria nada: a query já estaria lá, sem mudança
- * para o efeito reagir. Limpar também evita que um F5 reabra o modal sozinho.
+ * É um componente, e não um hook, por um motivo de indexação: `useSearchParams`
+ * tira da geração estática tudo que está abaixo do <Suspense> mais próximo.
+ * Quando o gerador inteiro ficava sob esse boundary, o HTML servido de
+ * /qr-code, /instagram e /whatsapp saía vazio — sem <h1> e sem texto nenhum —,
+ * e só ganhava conteúdo depois da hidratação: buscador e robô de IA liam a
+ * casca.
  *
- * Depende de `useSearchParams`, então quem usa precisa estar sob um <Suspense>
- * — caso contrário o Next tira a página da geração estática.
+ * Isolando a leitura da query aqui, com o <Suspense> em volta só dela, o resto
+ * da página volta a ser pré-renderizado. Este componente não desenha nada; só
+ * avisa.
  */
-export function useQrDeRecente(aoRestaurar: (valorDoQr: string) => void) {
-  const params = useSearchParams();
-  const rota = usePathname();
-  const router = useRouter();
-  const shortcode = params.get(PARAM);
+export function RestauradorDeQr({ aoRestaurar }: { aoRestaurar: (valorDoQr: string) => void }) {
+  return (
+    <Suspense>
+      <LeitorDaQuery aoRestaurar={aoRestaurar} />
+    </Suspense>
+  );
+}
+
+function LeitorDaQuery({ aoRestaurar }: { aoRestaurar: (valorDoQr: string) => void }) {
+  const shortcode = useSearchParams().get(PARAM);
 
   useEffect(() => {
     if (!shortcode) return;
@@ -80,9 +89,24 @@ export function useQrDeRecente(aoRestaurar: (valorDoQr: string) => void) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shortcode]);
 
-  const aoFechar = () => {
-    if (shortcode) router.replace(rota, { scroll: false });
-  };
+  return null;
+}
 
-  return { restaurando: Boolean(shortcode), aoFechar };
+/**
+ * Limpa a query depois que o modal fecha.
+ *
+ * Sem isso, fechar o modal e clicar no MESMO recente de novo não faria nada: a
+ * query já estaria lá, sem mudança para o efeito reagir. Limpar também evita
+ * que um F5 reabra o modal sozinho.
+ *
+ * Lê `location.search` direto em vez de `useSearchParams`: roda só no clique,
+ * já no navegador, e assim não arrasta a página para fora da geração estática.
+ */
+export function useLimparQrDaUrl() {
+  const rota = usePathname();
+  const router = useRouter();
+
+  return useCallback(() => {
+    if (window.location.search.includes(`${PARAM}=`)) router.replace(rota, { scroll: false });
+  }, [rota, router]);
 }

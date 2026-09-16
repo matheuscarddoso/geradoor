@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import VetorizadorClient from "./VetorizadorClient";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
-const TITLE = "Vetorizar imagem online e grátis: PNG e JPG para SVG";
+const TITLE = "Vetorizar imagem: PNG e JPG para SVG grátis";
 const DESCRIPTION =
-  "Transforme logos, ilustrações, desenhos e fotos em SVG vetorial, com as curvas redesenhadas e fidelidade medida. Grátis, sem cadastro e sem enviar a imagem: tudo roda no seu navegador.";
+  "Transforme logo, ilustração ou foto em SVG, com as curvas redesenhadas e a fidelidade medida. Grátis e sem enviar a imagem: roda no seu navegador.";
 
 export const metadata: Metadata = pageMetadata({
   title: TITLE,

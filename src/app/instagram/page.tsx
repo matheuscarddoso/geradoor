@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import InstagramGeneratorClient from "./InstagramGeneratorClient";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
@@ -37,9 +36,7 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
-      <Suspense>
-        <InstagramGeneratorClient />
-      </Suspense>
+      <InstagramGeneratorClient />
     </>
   );
 }

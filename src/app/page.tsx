@@ -27,21 +27,33 @@ export const metadata: Metadata = {
  */
 const DESTAQUE = ROTAS_PUBLICAS.find((rota) => rota.novo) ?? ROTAS_PUBLICAS[0];
 
+/**
+ * A lista de ferramentas, na ordem em que a home as mostra.
+ *
+ * Era um segundo nó `WebSite` — com a mesma url do que o layout raiz já
+ * declara e com outra descrição. Dois `WebSite` para o mesmo endereço, com
+ * textos divergentes, é ambiguidade gratuita para quem lê. Aqui vai só o que a
+ * página é: uma lista.
+ */
 const schema = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: SITE.name,
-  url: SITE.url,
-  description: DESCRIPTION,
-  inLanguage: "pt-BR",
-  // A lista que a home mostra, na ordem em que ela aparece.
-  hasPart: ROTAS_PUBLICAS.map((rota) => ({
-    "@type": "WebApplication",
-    name: rota.label,
-    description: rota.descricao,
-    url: absolute(rota.href),
-    applicationCategory: "UtilitiesApplication",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+  "@type": "ItemList",
+  name: `Ferramentas do ${SITE.name}`,
+  itemListOrder: "https://schema.org/ItemListOrderAscending",
+  numberOfItems: ROTAS_PUBLICAS.length,
+  itemListElement: ROTAS_PUBLICAS.map((rota, indice) => ({
+    "@type": "ListItem",
+    position: indice + 1,
+    item: {
+      "@type": "WebApplication",
+      name: rota.label,
+      description: rota.descricao,
+      url: absolute(rota.href),
+      applicationCategory: "UtilitiesApplication",
+      inLanguage: "pt-BR",
+      isAccessibleForFree: true,
+      offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+    },
   })),
 };
 

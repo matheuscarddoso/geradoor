@@ -1,36 +1,50 @@
 import type { MetadataRoute } from "next";
+import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
+import { ROTAS_PUBLICAS } from "@/lib/rotas";
 import { absolute } from "@/lib/seo";
 
 /**
- * Faltavam /cnpj e /cartao-de-credito, que são duas das páginas com maior
- * intenção de busca. /docs fica fora enquanto o conteúdo for placeholder, e
- * /admin e /[shortcode] nunca entram: painel e redirect não são conteúdo.
+ * O mapa do site, derivado das rotas.
+ *
+ * Era uma lista escrita à mão e, como toda lista escrita à mão ao lado de
+ * outra, saiu de sincronia. Agora vem de `ROTAS_PUBLICAS` — a mesma fonte do
+ * menu e da busca —, então ferramenta nova entra sozinha e rota marcada como
+ * privada nunca entra. /admin, /docs e /[shortcode] continuam fora: painel,
+ * rascunho e redirecionamento não são conteúdo.
  */
+
+/**
+ * A data de modificação.
+ *
+ * Fixa, e não `new Date()`: com a data do build, toda página aparecia mudada a
+ * cada deploy, mesmo sem uma vírgula alterada. Buscador que aprende que o
+ * `lastmod` de um site mente passa a ignorá-lo.
+ */
+const ATUALIZACAO = new Date("2026-09-16T00:00:00.000Z");
+
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  const ferramentas = ROTAS_PUBLICAS.map((rota) => ({
+    url: absolute(rota.href),
+    lastModified: ATUALIZACAO,
+    changeFrequency: "monthly" as const,
+    // As ferramentas de imagem e os geradores de documento são as páginas com
+    // intenção de busca de verdade; QR, Instagram e WhatsApp vêm logo atrás.
+    priority: rota.grupo === "ferramenta" || rota.href === "/cpf" || rota.href === "/cnpj" ? 0.9 : 0.8,
+  }));
 
   return [
-    { path: "/", priority: 1, changeFrequency: "monthly" as const },
-    { path: "/cpf", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/cnpj", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/cartao-de-credito", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/telefone", priority: 0.9, changeFrequency: "monthly" as const },
-    // O gerador de código de barras não entra: é de uso interno, atrás de
-    // senha, e responde redirecionamento para quem não tem sessão.
-    { path: "/removedor-de-fundo", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/vetorizador", priority: 0.9, changeFrequency: "monthly" as const },
-    { path: "/qr-code", priority: 0.8, changeFrequency: "monthly" as const },
-    { path: "/instagram", priority: 0.8, changeFrequency: "monthly" as const },
-    { path: "/whatsapp", priority: 0.8, changeFrequency: "monthly" as const },
-    // As páginas legais entram com prioridade baixa: existem para serem
-    // encontradas por quem procura, não para disputar busca.
-    { path: "/privacidade", priority: 0.3, changeFrequency: "yearly" as const },
-    { path: "/termos", priority: 0.3, changeFrequency: "yearly" as const },
-    { path: "/cookies", priority: 0.3, changeFrequency: "yearly" as const },
-  ].map(({ path, priority, changeFrequency }) => ({
-    url: absolute(path),
-    lastModified,
-    changeFrequency,
-    priority,
-  }));
+    {
+      url: absolute("/"),
+      lastModified: ATUALIZACAO,
+      changeFrequency: "monthly" as const,
+      priority: 1,
+    },
+    ...ferramentas,
+    ...PAGINAS_LEGAIS.map(({ href }) => ({
+      url: absolute(href),
+      lastModified: ATUALIZACAO,
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    })),
+  ];
 }

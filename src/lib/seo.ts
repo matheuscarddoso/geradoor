@@ -24,7 +24,7 @@ export const SITE = {
   url: "https://www.geradoor.com",
   locale: "pt_BR",
   description:
-    "Geradores online de dados de teste: CPF, CNPJ, cartão de crédito, QR Code e link de WhatsApp. Grátis, sem cadastro e sem marca d'água.",
+    "Ferramentas online grátis: removedor de fundo, vetorizador de imagem, gerador de QR Code e geradores de CPF, CNPJ, cartão e telefone para teste. Sem cadastro e sem marca d'água.",
   twitter: "@geradoor",
 } as const;
 
@@ -135,7 +135,13 @@ export function pageMetadata({
   return {
     title,
     description,
-    alternates: { canonical: url },
+    // O site é monolíngue. Declarar pt-BR e x-default na mesma URL custa duas
+    // linhas e evita que o buscador trate a página como português genérico —
+    // concorrente que serve pt-PT para busca brasileira perde por isso.
+    alternates: {
+      canonical: url,
+      languages: { "pt-BR": url, "x-default": url },
+    },
     openGraph: {
       type: "website" as const,
       siteName: SITE.name,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import { QRCodeSVG } from "qrcode.react";
@@ -45,7 +45,7 @@ import { rasterizeSvgMarkup } from "@/lib/image";
 import { MAX_ARROBA, parseArroba, perfilUrl } from "@/lib/instagram";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import { useRecentes } from "@/lib/recentes";
-import { hrefRecente, useQrDeRecente } from "@/lib/qrRecente";
+import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
 
 const QR_RENDER_SIZE = 200;
@@ -58,10 +58,11 @@ const InstagramGenerator: React.FC = () => {
   const [modalAberto, setModalAberto] = useState(false);
 
   // Clicar num recente reabre este modal com o QR daquele item.
-  const { aoFechar: limparQrDaUrl } = useQrDeRecente((valor) => {
+  const limparQrDaUrl = useLimparQrDaUrl();
+  const restaurarQr = useCallback((valor: string) => {
     setQrCodeValue(valor);
     setModalAberto(true);
-  });
+  }, []);
   const [baixando, setBaixando] = useState<QrFormat | null>(null);
   const [usarLogo, setUsarLogo] = useState(true);
   const [logoScale, setLogoScale] = useState(LOGO_DEFAULT_SCALE);
@@ -171,6 +172,10 @@ const InstagramGenerator: React.FC = () => {
 
   return (
     <div className="flex h-full min-h-[620px] w-full">
+      {/* Não desenha nada: lê a query e reabre o QR vindo de um recente.
+          Fica aqui, e não em volta da página, para o <Suspense> dele não
+          tirar o resto do conteúdo da geração estática. */}
+      <RestauradorDeQr aoRestaurar={restaurarQr} />
       <div className="flex min-w-0 flex-1 flex-col justify-center px-6 py-10 sm:px-10">
         <div className="w-full max-w-md">
           <PageHeader

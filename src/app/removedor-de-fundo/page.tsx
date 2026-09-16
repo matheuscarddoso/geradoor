@@ -4,7 +4,7 @@ import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Removedor de fundo de imagem online e grátis";
 const DESCRIPTION =
-  "Remova o fundo de fotos em segundos, com contorno preciso até no cabelo, e baixe em PNG transparente na resolução original. Grátis, sem marca d'água, sem cadastro e sem guardar a imagem.";
+  "Remova o fundo de fotos em segundos, com contorno preciso até no cabelo, e baixe em PNG transparente na resolução original. Grátis e sem marca d'água.";
 
 export const metadata: Metadata = pageMetadata({
   title: TITLE,

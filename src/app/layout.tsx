@@ -33,7 +33,10 @@ export const metadata: Metadata = {
   creator: SITE.name,
   publisher: SITE.name,
   // Cada página define o seu canonical. Aqui fica só a raiz, como fallback.
-  alternates: { canonical: SITE.url },
+  alternates: {
+    canonical: SITE.url,
+    languages: { "pt-BR": SITE.url, "x-default": SITE.url },
+  },
   openGraph: {
     type: "website",
     siteName: SITE.name,

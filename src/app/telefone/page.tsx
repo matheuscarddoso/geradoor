@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Palco } from "@/components/shell/AppShell";
 import TelefoneGeneratorClient from "./TelefoneGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de telefone celular com DDD por estado";
@@ -40,6 +42,7 @@ export default function Page() {
       <Palco>
         <TelefoneGeneratorClient />
       </Palco>
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

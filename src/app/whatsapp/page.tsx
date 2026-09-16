@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import WhatsappGeneratorClient from "./WhatsappGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de link do WhatsApp com mensagem pronta";
@@ -37,6 +39,7 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
       <WhatsappGeneratorClient />
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

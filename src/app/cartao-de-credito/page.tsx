@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Palco } from "@/components/shell/AppShell";
 import CartaoGeneratorClient from "./CartaoGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de cartão de crédito para teste";
@@ -40,6 +42,7 @@ export default function Page() {
       <Palco>
         <CartaoGeneratorClient />
       </Palco>
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

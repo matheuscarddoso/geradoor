@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Palco } from "@/components/shell/AppShell";
 import CnpjGeneratorClient from "./CnpjGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de CNPJ válido online e grátis";
@@ -40,6 +42,7 @@ export default function Page() {
       <Palco>
         <CnpjGeneratorClient />
       </Palco>
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import InstagramGeneratorClient from "./InstagramGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de QR Code do Instagram";
@@ -37,6 +39,7 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
       <InstagramGeneratorClient />
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

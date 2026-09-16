@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import RemovedorDeFundoClient from "./RemovedorDeFundoClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Removedor de fundo de imagem online e grátis";
@@ -38,6 +40,7 @@ export default function Page() {
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
       <RemovedorDeFundoClient />
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

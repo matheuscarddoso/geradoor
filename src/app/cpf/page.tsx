@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { Palco } from "@/components/shell/AppShell";
 import CpfGeneratorClient from "./CpfGeneratorClient";
+import { ConteudoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
+import { FAQ, SECOES, VEJA } from "./conteudo";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de CPF válido online e grátis";
@@ -36,7 +39,10 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
-      <CpfGeneratorClient />
+      <Palco>
+        <CpfGeneratorClient />
+      </Palco>
+      <ConteudoDaFerramenta secoes={SECOES} faq={FAQ} veja={VEJA} />
     </>
   );
 }

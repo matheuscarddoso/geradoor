@@ -1,5 +1,9 @@
 export function generateCPF(): string {
-  const randomDigits = (): number => Math.floor(Math.random() * 9);
+  // * 10, não * 9: com 9 o sorteio devolve 0 a 8 e o dígito 9 nunca sai. Em
+  // 200 mil CPFs gerados, cada dígito de 0 a 8 aparecia em 11,1% das posições e
+  // o 9 em nenhuma — um décimo do espaço de números era inalcançável, e a falta
+  // do 9 é visível a olho nu numa lista.
+  const randomDigits = (): number => Math.floor(Math.random() * 10);
 
   const cpf: number[] = Array.from({ length: 9 }, randomDigits);
 

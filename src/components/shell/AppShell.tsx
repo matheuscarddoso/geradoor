@@ -17,16 +17,6 @@ import { cn } from "@/lib/utils";
  * dá a sensação de app em vez de site. As rotas que não são ferramenta
  * (/admin, /docs) passam direto, sem casca.
  */
-/** Rotas cujo layout encosta nas bordas da área de conteúdo. */
-const SEM_MOLDURA = new Set([
-  "/whatsapp",
-  "/qr-code",
-  "/instagram",
-  "/codigo-de-barras",
-  "/removedor-de-fundo",
-  "/vetorizador",
-]);
-
 const CHAVE_DA_SIDEBAR = "geradoor:sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -70,7 +60,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Rotas que desenham a própria moldura: recebem a área crua, sem padding e
   // sem centralização, para poderem encostar nas bordas.
-  const semMoldura = SEM_MOLDURA.has(caminho);
   const abrirBusca = () => {
     setGaveta(false);
     setBusca(true);
@@ -123,22 +112,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             O padding do topo no celular é o espaço do botão acima: sem ele, o
             botão cobriria o título da ferramenta. */}
         <main className={cn("min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0", aberta && "md:pt-0")}>
-          {semMoldura ? (
-            children
-          ) : (
-            /* min-h-full com items-center centraliza quando o conteúdo cabe e
-               deixa crescer quando não cabe, sem cortar o topo — que é o que
-               acontece com justify-center puro em contêiner que rola. */
-            <div className="flex min-h-full items-center justify-center px-6 py-10 sm:px-8">
-              {children}
-            </div>
-          )}
+          {children}
         </main>
         <Rodape />
       </div>
 
       <SearchCommand aberto={busca} onAberto={setBusca} />
     </div>
+  );
+}
+
+/**
+ * A moldura centrada das ferramentas que não encostam nas bordas.
+ *
+ * Era um `if` aqui dentro, decidido por uma lista de rotas. Virou componente
+ * quando as páginas ganharam texto embaixo da ferramenta: com a moldura
+ * envolvendo tudo, o texto entrava como segundo item de uma linha flex e ficava
+ * ao LADO do gerador. Agora a página diz onde a moldura começa e termina, e o
+ * texto vem depois dela.
+ *
+ * min-h-full com items-center centraliza quando a ferramenta cabe e deixa
+ * crescer quando não cabe, sem cortar o topo — que é o que acontece com
+ * justify-center puro em contêiner que rola.
+ */
+export function Palco({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-full items-center justify-center px-6 py-10 sm:px-8">{children}</div>
   );
 }
 

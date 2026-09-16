@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Palco } from "@/components/shell/AppShell";
 import CartaoGeneratorClient from "./CartaoGeneratorClient";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
@@ -36,7 +37,9 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
-      <CartaoGeneratorClient />
+      <Palco>
+        <CartaoGeneratorClient />
+      </Palco>
     </>
   );
 }

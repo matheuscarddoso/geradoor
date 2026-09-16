@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Palco } from "@/components/shell/AppShell";
 import TelefoneGeneratorClient from "./TelefoneGeneratorClient";
 import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
@@ -36,7 +37,9 @@ export default function Page() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(schema) }}
       />
-      <TelefoneGeneratorClient />
+      <Palco>
+        <TelefoneGeneratorClient />
+      </Palco>
     </>
   );
 }

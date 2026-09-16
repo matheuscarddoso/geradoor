@@ -122,10 +122,22 @@ export const FAQ: PerguntaDaFerramenta[] = [
 const DESTAQUE = traduzir(ROTAS_PUBLICAS.find((r) => r.novo) ?? ROTAS_PUBLICAS[0], "en");
 
 export const HOME: ConteudoDaHome = {
-  aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
-  titulo: { antes: "Tools that do the job", destaque: "and get out of the way" },
-  subtitulo:
-    "Background removal, vectorizing, QR Codes and test data. No sign-up, no watermark, and nothing uploaded that doesn't need to leave your browser.",
+  hero: {
+    aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
+    titulo: { antes: "Tools that do the job", destaque: "and get out of the way" },
+    subtitulo:
+      "Background removal, vectorizing, QR Codes and test data — most of it without ever uploading your file.",
+    acao: { texto: "Open the vectorizer", href: "/en/vectorizer" },
+    secundaria: { texto: "See every tool", href: "#ferramentas" },
+    nota: "Free, no sign-up and no watermark.",
+    legendaDaTela:
+      "The Geradoor vectorizer with a logo converted to SVG: a slider comparing image and vector, colour and detail controls, and 98% measured fidelity.",
+  },
+  ferramentas: {
+    marcador: "The tools",
+    pilula: "Nine, and none asks for an account",
+    titulo: { antes: "Images, codes and test data", destaque: "in one place" },
+  },
   pilares: {
     marcador: "How it works",
     pilula: "The essentials",

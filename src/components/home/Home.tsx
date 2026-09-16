@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Cpu, EyeOff, Gauge } from "lucide-react";
-import { MarcaGeradoor } from "@/components/ui/marca-geradoor";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Rodape } from "@/components/shell/Rodape";
 import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
 import { ConteudoDaFerramenta, type PerguntaDaFerramenta, type SecaoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
 import { BlocoDeChamada, CartaoNumerado, MarcadorDeSecao, Pilula, TituloDaSecao } from "./Secoes";
+import { Hero, TelaDoProduto, type TextoDaHero } from "./Hero";
 import { rotasPublicas } from "@/lib/rotas";
 import type { Idioma } from "@/lib/idioma";
 
@@ -23,9 +22,8 @@ import type { Idioma } from "@/lib/idioma";
  */
 
 export type ConteudoDaHome = {
-  aviso: { texto: string; href: string };
-  titulo: { antes: string; destaque: string };
-  subtitulo: string;
+  hero: TextoDaHero;
+  ferramentas: { marcador: string; pilula: string; titulo: { antes: string; destaque: string } };
   pilares: {
     marcador: string;
     pilula: string;
@@ -48,39 +46,33 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
 
   return (
     <div className="flex min-h-dvh flex-col" lang={idioma === "en" ? "en" : undefined}>
-      {/* A hero ocupa a tela inteira e nada mais: quem chega vê a lista de
-          ferramentas sem rolar. O conteúdo abaixo existe para a página ter o
-          que um buscador possa ranquear. */}
-      <div className="flex h-dvh shrink-0 flex-col overflow-hidden">
-        <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
-          <Link href={inicio} className="flex items-center gap-2 text-foreground">
-            <MarcaGeradoor size={22} />
-            <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>
-          </Link>
-          <ThemeToggle />
-        </header>
+      <Hero idioma={idioma} texto={conteudo.hero}>
+        <TelaDoProduto>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/hero-produto.webp"
+            alt={conteudo.hero.legendaDaTela}
+            width={1440}
+            height={900}
+            className="w-full"
+          />
+        </TelaDoProduto>
+      </Hero>
 
-        <main className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 px-4 pb-4 sm:gap-12 sm:px-8">
-          <div className="flex flex-col items-center gap-5 text-center">
-            <Link
-              href={conteudo.aviso.href}
-              className="group inline-flex items-center gap-2 rounded-full border border-border py-1 pe-2.5 ps-1.5 text-[13px] text-zinc-500 transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400"
-            >
-              <EtiquetaNovo idioma={idioma} />
-              <span className="truncate">{conteudo.aviso.texto}</span>
-              <ArrowRight className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" />
-            </Link>
-
-            <h1 className="max-w-3xl text-balance text-3xl font-medium leading-[1.08] tracking-[-0.03em] sm:text-5xl">
-              {conteudo.titulo.antes}{" "}
-              <span className="text-blue-600 dark:text-blue-400">{conteudo.titulo.destaque}</span>
-            </h1>
-            <p className="max-w-xl text-balance text-[15px] leading-relaxed text-muted-foreground sm:text-base">
-              {conteudo.subtitulo}
-            </p>
+      {/* [01] As ferramentas, na grade de fios. Saiu da hero: ali competia com
+          o título, e aqui tem a seção inteira para si. */}
+      <div className="pt-24 sm:pt-32">
+        <MarcadorDeSecao numero={1}>{conteudo.ferramentas.marcador}</MarcadorDeSecao>
+      </div>
+      <section id="ferramentas" className="scroll-mt-4 border-b border-border px-4 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="flex flex-col items-start gap-4">
+            <Pilula>{conteudo.ferramentas.pilula}</Pilula>
+            <TituloDaSecao destaque={conteudo.ferramentas.titulo.destaque}>
+              {conteudo.ferramentas.titulo.antes}
+            </TituloDaSecao>
           </div>
-
-          <nav className="w-full max-w-5xl overflow-y-auto border-t border-border">
+          <nav className="mt-10 border-t border-border">
             <ul className="grid grid-cols-2 border-s border-border sm:grid-cols-3">
               {rotas.map(({ href, label, labelCurto, descricao, icon: Icone, novo }, indice) => (
                 <li
@@ -115,11 +107,11 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
               ))}
             </ul>
           </nav>
-        </main>
-      </div>
+        </div>
+      </section>
 
-      {/* [01] Os três pilares, na fileira de cartões numerados. */}
-      <MarcadorDeSecao numero={1}>{conteudo.pilares.marcador}</MarcadorDeSecao>
+      {/* [02] Os três pilares, na fileira de cartões numerados. */}
+      <MarcadorDeSecao numero={2}>{conteudo.pilares.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 py-12 sm:px-8 sm:py-16">
         <div className="mx-auto max-w-5xl">
           <div className="flex flex-col items-start gap-4">
@@ -146,8 +138,8 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
         </div>
       </section>
 
-      {/* [02] O texto longo: o que sai do aparelho, o cadastro, o dado de teste. */}
-      <MarcadorDeSecao numero={2}>{conteudo.detalhe.marcador}</MarcadorDeSecao>
+      {/* [03] O texto longo: o que sai do aparelho, o cadastro, o dado de teste. */}
+      <MarcadorDeSecao numero={3}>{conteudo.detalhe.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 pt-12 sm:px-8 sm:pt-16">
         <div className="mx-auto flex max-w-5xl flex-col items-start gap-4">
           <Pilula>{conteudo.detalhe.pilula}</Pilula>
@@ -158,8 +150,8 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
         <ConteudoDaFerramenta secoes={conteudo.secoes} faq={[]} veja={[]} idioma={idioma} nivel={3} />
       </section>
 
-      {/* [03] As perguntas. */}
-      <MarcadorDeSecao numero={3}>{conteudo.perguntas.marcador}</MarcadorDeSecao>
+      {/* [04] As perguntas. */}
+      <MarcadorDeSecao numero={4}>{conteudo.perguntas.marcador}</MarcadorDeSecao>
       <section className="border-b border-border px-4 pt-12 sm:px-8 sm:pt-16">
         <div className="mx-auto flex max-w-5xl flex-col items-start gap-4">
           <Pilula>{conteudo.perguntas.pilula}</Pilula>

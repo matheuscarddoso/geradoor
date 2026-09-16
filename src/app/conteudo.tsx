@@ -138,10 +138,22 @@ export const FAQ: PerguntaDaFerramenta[] = [
 const DESTAQUE = ROTAS_PUBLICAS.find((rota) => rota.novo) ?? ROTAS_PUBLICAS[0];
 
 export const HOME: ConteudoDaHome = {
-  aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
-  titulo: { antes: "Ferramentas que fazem o trabalho", destaque: "e somem" },
-  subtitulo:
-    "Recorte de imagem, vetorização, QR Code e dados de teste. Sem cadastro, sem marca d'água e sem enviar o que não precisa sair do seu navegador.",
+  hero: {
+    aviso: { texto: DESTAQUE.descricao, href: DESTAQUE.href },
+    titulo: { antes: "Ferramentas que fazem o", destaque: "trabalho e somem" },
+    subtitulo:
+      "Recorte de imagem, vetorização, QR Code e dados de teste — a maior parte sem nunca enviar o arquivo para lugar nenhum.",
+    acao: { texto: "Abrir o vetorizador", href: "/vetorizador" },
+    secundaria: { texto: "Ver todas as ferramentas", href: "#ferramentas" },
+    nota: "Grátis, sem cadastro e sem marca d'água.",
+    legendaDaTela:
+      "O vetorizador do Geradoor com uma logo convertida em SVG: comparador entre a imagem e o vetor, controles de cor e detalhe, e 98% de fidelidade medida.",
+  },
+  ferramentas: {
+    marcador: "As ferramentas",
+    pilula: "Nove, e nenhuma pede cadastro",
+    titulo: { antes: "Imagem, código e dado de teste", destaque: "num lugar só" },
+  },
   pilares: {
     marcador: "Como funciona",
     pilula: "O essencial",

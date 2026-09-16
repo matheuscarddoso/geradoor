@@ -11,6 +11,7 @@ import {
   Spline,
   type LucideIcon,
 } from "lucide-react";
+import type { Idioma } from "./idioma";
 
 /**
  * A que família a rota pertence.
@@ -55,6 +56,24 @@ export interface Rota {
    * para sempre deixa de ser lida.
    */
   novo?: true;
+  /**
+   * A mesma ferramenta em inglês: endereço, nome e termos de busca próprios.
+   *
+   * Fica dentro da rota, e não numa lista paralela, porque o par é a unidade —
+   * é ele que o hreflang declara. Duas listas separadas sairiam de sincronia no
+   * dia em que alguém acrescentasse uma ferramenta em só uma delas.
+   *
+   * O endereço em inglês é escrito em inglês, e não `/en/vetorizador`: quem
+   * busca "vectorizer" não digita "vetorizador", e o endereço é um dos lugares
+   * onde o buscador procura a palavra.
+   */
+  en: {
+    href: string;
+    label: string;
+    labelCurto?: string;
+    descricao: string;
+    termos: string[];
+  };
 }
 
 /** Fonte única das ferramentas: topo, sidebar e busca leem daqui. */
@@ -70,6 +89,13 @@ export const ROTAS: Rota[] = [
     termos: ["remover fundo", "tirar fundo", "png transparente", "recortar", "remove bg", "imagem", "foto"],
     icon: Eraser,
     novo: true,
+    en: {
+      href: "/en/background-remover",
+      label: "Background Remover",
+      labelCurto: "Remove BG",
+      descricao: "Remove the background from a photo",
+      termos: ["remove background", "background remover", "transparent png", "cutout", "remove bg", "photo", "image"],
+    },
   },
   {
     href: "/vetorizador",
@@ -80,6 +106,13 @@ export const ROTAS: Rota[] = [
     termos: ["vetorizar", "vetor", "svg", "png para svg", "jpg para svg", "logo", "traço", "converter", "imagem"],
     icon: Spline,
     novo: true,
+    en: {
+      href: "/en/vectorizer",
+      label: "Vectorizer",
+      labelCurto: "Vectorize",
+      descricao: "Turn an image into an SVG",
+      termos: ["vectorize", "vector", "svg", "png to svg", "jpg to svg", "logo", "trace", "convert", "image"],
+    },
   },
   {
     href: "/qr-code",
@@ -88,6 +121,12 @@ export const ROTAS: Rota[] = [
     descricao: "Criar QR Code a partir de um link",
     termos: ["qrcode", "código", "link", "logo"],
     icon: QrCode,
+    en: {
+      href: "/en/qr-code",
+      label: "QR Code",
+      descricao: "Create a QR Code from a link",
+      termos: ["qrcode", "qr", "code", "link", "logo"],
+    },
   },
   {
     href: "/codigo-de-barras",
@@ -98,6 +137,13 @@ export const ROTAS: Rota[] = [
     termos: ["code 128", "barcode", "etiqueta", "formulário", "numeração", "gráfica", "pdf"],
     icon: Barcode,
     privada: true,
+    en: {
+      href: "/en/barcode",
+      label: "Barcode",
+      labelCurto: "Barcode",
+      descricao: "Generate a numbered PDF in Code 128",
+      termos: ["barcode", "code 128", "label", "pdf", "print"],
+    },
   },
 
   {
@@ -107,6 +153,12 @@ export const ROTAS: Rota[] = [
     descricao: "Gerar CPF válido para teste",
     termos: ["documento", "pessoa física", "cadastro de pessoa física"],
     icon: IdCard,
+    en: {
+      href: "/en/ssn",
+      label: "SSN",
+      descricao: "Generate a valid SSN for testing",
+      termos: ["ssn", "social security", "social security number", "test data", "fake ssn"],
+    },
   },
   {
     href: "/cnpj",
@@ -115,6 +167,12 @@ export const ROTAS: Rota[] = [
     descricao: "Gerar CNPJ válido para teste",
     termos: ["empresa", "pessoa jurídica", "cadastro nacional"],
     icon: Building2,
+    en: {
+      href: "/en/ein",
+      label: "EIN",
+      descricao: "Generate a valid EIN for testing",
+      termos: ["ein", "employer identification", "tax id", "test data", "fake ein"],
+    },
   },
   {
     href: "/cartao-de-credito",
@@ -124,6 +182,13 @@ export const ROTAS: Rota[] = [
     descricao: "Gerar número de cartão para teste",
     termos: ["luhn", "visa", "mastercard", "checkout", "pagamento"],
     icon: CreditCard,
+    en: {
+      href: "/en/credit-card",
+      label: "Credit Card",
+      labelCurto: "Card",
+      descricao: "Generate a card number for testing",
+      termos: ["credit card", "card number", "luhn", "test card", "visa", "mastercard", "amex"],
+    },
   },
   {
     href: "/telefone",
@@ -132,6 +197,13 @@ export const ROTAS: Rota[] = [
     descricao: "Gerar celular com DDD por estado",
     termos: ["celular", "ddd", "número", "fone", "whatsapp"],
     icon: Smartphone,
+    en: {
+      href: "/en/phone",
+      label: "Phone Number",
+      labelCurto: "Phone",
+      descricao: "Generate a phone number by country and state",
+      termos: ["phone", "phone number", "area code", "test data", "us phone", "cell"],
+    },
   },
   {
     href: "/instagram",
@@ -140,6 +212,12 @@ export const ROTAS: Rota[] = [
     descricao: "QR Code que abre o seu perfil",
     termos: ["insta", "perfil", "arroba", "@", "bio"],
     icon: Instagram,
+    en: {
+      href: "/en/instagram-qr-code",
+      label: "Instagram",
+      descricao: "QR Code that opens your profile",
+      termos: ["instagram", "qr code", "profile", "bio"],
+    },
   },
   {
     href: "/whatsapp",
@@ -148,10 +226,51 @@ export const ROTAS: Rota[] = [
     descricao: "Criar link wa.me com mensagem pronta",
     termos: ["wa.me", "zap", "mensagem", "telefone"],
     icon: MessageCircle,
+    en: {
+      href: "/en/whatsapp-link",
+      label: "WhatsApp",
+      descricao: "Create a wa.me link with a preset message",
+      termos: ["whatsapp", "wa.me", "link", "chat", "message"],
+    },
   },
 ];
 
 export const ROTAS_PUBLICAS: Rota[] = ROTAS.filter((rota) => !rota.privada);
+
+/**
+ * A rota vista no idioma pedido: endereço, nome e descrição já resolvidos.
+ *
+ * Existe para quem desenha menu e lista não precisar escrever `idioma === "en"`
+ * em cada campo — o `if` acontece uma vez, aqui.
+ */
+export interface RotaTraduzida {
+  href: string;
+  grupo: GrupoDaRota;
+  label: string;
+  labelCurto?: string;
+  descricao: string;
+  termos: string[];
+  icon: LucideIcon;
+  novo?: true;
+  privada?: true;
+}
+
+export function traduzir(rota: Rota, idioma: Idioma): RotaTraduzida {
+  const { en, ...base } = rota;
+  if (idioma === "pt-BR") return base;
+  return { ...base, href: en.href, label: en.label, labelCurto: en.labelCurto, descricao: en.descricao, termos: en.termos };
+}
+
+/** As ferramentas públicas no idioma pedido, na mesma ordem. */
+export function rotasPublicas(idioma: Idioma): RotaTraduzida[] {
+  return ROTAS_PUBLICAS.map((rota) => traduzir(rota, idioma));
+}
+
+/** O par de endereços de uma página, para o hreflang. Null se não for rota de ferramenta. */
+export function parDeIdiomas(href: string): { "pt-BR": string; en: string } | null {
+  const rota = ROTAS.find((r) => r.href === href || r.en.href === href);
+  return rota ? { "pt-BR": rota.href, en: rota.en.href } : null;
+}
 
 /**
  * Páginas de pouso: uma por intenção de busca, movidas pela mesma ferramenta.

@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { idiomaDoCaminho } from "@/lib/idioma";
+import { CABECALHO_DO_CAMINHO } from "@/middleware";
 import { PERFIS_DO_AUTOR, RESPONSAVEL, SITE, jsonLd } from "@/lib/seo";
 import { AppShell } from "@/components/shell/AppShell";
 import { GeistSans } from "geist/font";
@@ -99,13 +102,23 @@ const siteSchema = [
   },
 ];
 
-export default function RootLayout({
+/**
+ * O `lang` do documento sai do caminho, e o caminho vem do middleware.
+ *
+ * Componente de servidor não recebe a rota por outro meio, e o atributo precisa
+ * estar certo: é dele que leitor de tela tira a pronúncia e que o buscador tira
+ * o idioma da página. `await headers()` torna o layout dinâmico, então as
+ * páginas seguem sendo geradas no build — o que muda é só este atributo.
+ */
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const caminho = (await headers()).get(CABECALHO_DO_CAMINHO) ?? "/";
+
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+    <html lang={idiomaDoCaminho(caminho)} suppressHydrationWarning>
       <head>
         <meta name="google-adsense-account" content="ca-pub-5073478672232880" />
         <script

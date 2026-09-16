@@ -7,6 +7,14 @@ import {
   ROTA_PROTEGIDA,
 } from "@/lib/acessoDaGrafica";
 import { SESSION_COOKIE, createSessionToken, verifySessionToken } from "@/lib/session";
+import {
+  COOKIE_DO_IDIOMA,
+  IDIOMAS,
+  PREFIXO,
+  VALIDADE_DO_COOKIE,
+  idiomaPreferido,
+  type Idioma,
+} from "@/lib/idioma";
 
 const naoIndexar = (res: NextResponse) => {
   res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
@@ -96,20 +104,75 @@ async function guardarGrafica(req: NextRequest): Promise<NextResponse> {
   return res;
 }
 
+/** Cabeçalho com o caminho pedido, para o layout raiz saber o idioma da página. */
+export const CABECALHO_DO_CAMINHO = "x-caminho";
+
+/**
+ * Leva quem chega na raiz para a versão no idioma do navegador.
+ *
+ * Três regras de contenção, e cada uma existe por um motivo:
+ *
+ * 1. **Só a raiz redireciona.** Página interna nunca. Se `/cpf` mandasse um
+ *    navegador em inglês para `/en/ssn`, o buscador — que rastreia dos Estados
+ *    Unidos — receberia o desvio ao pedir `/cpf`, e a página em português
+ *    sairia do índice. As duas versões precisam responder no próprio endereço,
+ *    sempre.
+ * 2. **Uma vez só.** Depois do primeiro desvio fica um cookie, e quem voltar à
+ *    raiz de propósito continua onde escolheu ficar.
+ * 3. **Sem cabeçalho, sem desvio.** Requisição sem Accept-Language — o caso do
+ *    Googlebot — cai no padrão e fica em português.
+ */
+function levarAoIdioma(req: NextRequest): NextResponse | null {
+  if (req.nextUrl.pathname !== "/") return null;
+
+  const guardado = req.cookies.get(COOKIE_DO_IDIOMA)?.value;
+  const escolhido = IDIOMAS.includes(guardado as Idioma)
+    ? (guardado as Idioma)
+    : idiomaPreferido(req.headers.get("accept-language"));
+
+  if (PREFIXO[escolhido] === "") {
+    if (guardado) return null;
+    // Grava a escolha para não recalcular a cada visita.
+    const res = NextResponse.next();
+    res.cookies.set(COOKIE_DO_IDIOMA, escolhido, { path: "/", maxAge: VALIDADE_DO_COOKIE, sameSite: "lax" });
+    return res;
+  }
+
+  const destino = req.nextUrl.clone();
+  destino.pathname = PREFIXO[escolhido];
+  const res = NextResponse.redirect(destino, 307);
+  res.cookies.set(COOKIE_DO_IDIOMA, escolhido, { path: "/", maxAge: VALIDADE_DO_COOKIE, sameSite: "lax" });
+  return res;
+}
+
 export async function middleware(req: NextRequest) {
-  return req.nextUrl.pathname.startsWith(ROTA_PROTEGIDA)
-    ? guardarGrafica(req)
-    : guardarAdmin(req);
+  const { pathname } = req.nextUrl;
+
+  if (pathname.startsWith(ROTA_PROTEGIDA)) return guardarGrafica(req);
+  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) return guardarAdmin(req);
+
+  const desvio = levarAoIdioma(req);
+  if (desvio) return desvio;
+
+  // O layout raiz precisa do caminho para decidir o `lang` do documento, e
+  // componente de servidor não recebe a rota por outro meio.
+  const cabecalhos = new Headers(req.headers);
+  cabecalhos.set(CABECALHO_DO_CAMINHO, pathname);
+  return NextResponse.next({ request: { headers: cabecalhos } });
 }
 
 export const config = {
-  // A rota exata e as filhas, listadas em separado: `/:path*` sozinho é
-  // ambíguo quanto ao segmento vazio, e aqui errar para o lado permissivo
-  // deixaria o gerador aberto.
   matcher: [
-    "/admin/:path*",
-    "/api/admin/qrcode/:path*",
-    "/codigo-de-barras",
-    "/codigo-de-barras/:path*",
+    /*
+     * Tudo que é página. Fica de fora o que não é: arquivo estático, imagem de
+     * compartilhamento, modelo, fonte e os arquivos de robô. Rodar o
+     * middleware neles só gastaria tempo, e desviar idioma num PNG não faz
+     * sentido.
+     *
+     * As rotas protegidas continuam batendo aqui e são tratadas primeiro, na
+     * função acima — trocar a lista exata por este padrão amplo não afrouxa o
+     * portão, porque quem decide é o `startsWith`, não o matcher.
+     */
+    "/((?!_next/static|_next/image|favicon\\.ico|icon\\.svg|robots\\.txt|sitemap\\.xml|llms\\.txt|modelos/|wasm/|fonts/|opengraph-image|twitter-image).*)",
   ],
 };

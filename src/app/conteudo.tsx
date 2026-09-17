@@ -147,7 +147,7 @@ export const HOME: ConteudoDaHome = {
     secundaria: { texto: "Ver todas as ferramentas", href: "#ferramentas" },
     nota: "Grátis, sem cadastro e sem marca d'água.",
     legendaDaTela:
-      "O vetorizador do Geradoor com uma logo convertida em SVG: comparador entre a imagem e o vetor, controles de cor e detalhe, e 98% de fidelidade medida.",
+      "O vetorizador do Geradoor com um desenho convertido em SVG: comparador entre a imagem e o vetor, controles de cor e detalhe, e 86% de fidelidade medida.",
   },
   ferramentas: {
     marcador: "As ferramentas",

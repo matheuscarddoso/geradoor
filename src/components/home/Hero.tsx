@@ -116,17 +116,3 @@ export function Hero({
     </div>
   );
 }
-
-/**
- * A moldura da tela do produto.
- *
- * Borda clara e sombra funda: é o que dá a ela a aparência de um objeto pousado
- * sobre a fotografia, e não de um recorte colado nela.
- */
-export function TelaDoProduto({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="overflow-hidden rounded-xl border border-zinc-900/10 bg-zinc-950 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.35)] dark:border-white/12 dark:shadow-[0_24px_80px_-12px_rgba(0,0,0,0.7)]">
-      {children}
-    </div>
-  );
-}

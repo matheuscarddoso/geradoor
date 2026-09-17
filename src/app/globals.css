@@ -616,3 +616,27 @@ html:not(.dark) .dialkit-root {
     background-image: url("/hero-noite.webp");
   }
 }
+
+/**
+ * A tela do produto que avança sobre a seção seguinte.
+ *
+ * Fundo em CSS, e não <img>, pelo mesmo motivo da foto acima: o navegador só
+ * baixa a imagem da regra que vence, então cada tema carrega um arquivo e não
+ * dois. A troca é por classe, não por `prefers-color-scheme`, para seguir o
+ * tema que a pessoa escolheu no site em vez do que o sistema dela pede.
+ *
+ * A moldura da janela e a sombra já vêm na imagem, com transparência em volta.
+ * Por isso nada de borda ou `box-shadow` aqui: seria uma segunda moldura em
+ * cima da primeira.
+ */
+.home-produto {
+  aspect-ratio: 2000 / 1211;
+  background-image: url("/home-produto-dia.webp");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dark .home-produto {
+  background-image: url("/home-produto-noite.webp");
+}

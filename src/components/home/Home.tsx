@@ -4,7 +4,7 @@ import { Rodape } from "@/components/shell/Rodape";
 import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
 import { ConteudoDaFerramenta, type PerguntaDaFerramenta, type SecaoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
 import { BlocoDeChamada, CabecalhoDaSecao, CartaoNumerado, MarcadorDeSecao } from "./Secoes";
-import { Hero, TelaDoProduto, type TextoDaHero } from "./Hero";
+import { Hero, type TextoDaHero } from "./Hero";
 import { rotasPublicas } from "@/lib/rotas";
 import type { Idioma } from "@/lib/idioma";
 
@@ -55,16 +55,13 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
   return (
     <div className="flex min-h-dvh flex-col" lang={idioma === "en" ? "en" : undefined}>
       <Hero idioma={idioma} texto={conteudo.hero}>
-        <TelaDoProduto>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/hero-produto.webp"
-            alt={conteudo.hero.legendaDaTela}
-            width={1440}
-            height={900}
-            className="w-full"
-          />
-        </TelaDoProduto>
+        {/* `role="img"` porque o desenho é um fundo de CSS: sem isso a captura
+            de tela não teria nome nenhum para quem usa leitor. */}
+        <div
+          role="img"
+          aria-label={conteudo.hero.legendaDaTela}
+          className="home-produto w-full"
+        />
       </Hero>
 
       {/* [01] As ferramentas, na grade de fios. Saiu da hero: ali competia com

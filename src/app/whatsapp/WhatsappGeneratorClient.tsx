@@ -237,7 +237,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
           onChange={(e) => setMessage(e.target.value)}
           maxLength={500}
         />
-        <p className="mt-2 text-sm font-normal leading-4 tracking-tight text-subtle">Exemplo: &quot;Olá, eu gostaria de receber mais informações sobre o produto&quot;</p>
+        <p className="mt-2 text-sm font-normal leading-4 tracking-tight text-subtle">{f.whatsapp.exemploMensagem}</p>
         <div className="mt-5 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <Label
@@ -352,11 +352,11 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
                   <DropdownMenuContent align="center" className="min-w-[9rem]">
                     <DropdownMenuItem onClick={() => handleDownload("png")}>
                       PNG
-                      <span className="ms-auto text-xs text-subtle">imagem</span>
+                      <span className="ms-auto text-xs text-subtle">{f.qr.imagemMinuscula}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDownload("pdf")}>
                       PDF
-                      <span className="ms-auto text-xs text-subtle">impressão</span>
+                      <span className="ms-auto text-xs text-subtle">{f.qr.impressao}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleDownload("svg")}>
                       SVG

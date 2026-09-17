@@ -117,8 +117,8 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
               <button
                 type="button"
                 onClick={limpar}
-                aria-label="Limpar histórico"
-                title="Limpar histórico"
+                aria-label={t.limparRecentes}
+                title={t.limparRecentes}
                 className="mt-2 rounded-md p-1.5 text-zinc-400 transition-colors duration-150 hover:text-foreground dark:hover:text-zinc-100"
               >
                 <Trash2 className="h-3.5 w-3.5" />

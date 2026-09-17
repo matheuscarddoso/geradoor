@@ -187,7 +187,7 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
             foi para a área de transferência. */}
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <RotuloCampo apoio={cardData.brand}>Número</RotuloCampo>
+            <RotuloCampo apoio={cardData.brand}>{f.cartao.numero}</RotuloCampo>
             <div className="relative flex">
               <Input
                 readOnly
@@ -213,12 +213,12 @@ const CartaoDeCreditoGenerator: React.FC<{ titulo?: string; descricao?: string }
               conteúdo: 7 caracteres de data contra 3 ou 4 de código. */}
           <div className="flex gap-2">
             <div className="flex w-[calc(6.5ch+3.5rem)] flex-none flex-col gap-1.5">
-              <RotuloCampo>Validade</RotuloCampo>
+              <RotuloCampo>{f.cartao.validade}</RotuloCampo>
               <div className="relative flex">
                 <Input
                   readOnly
                   type="text"
-                  placeholder="Validade"
+                  placeholder={f.cartao.validade}
                   title={f.comum.cliqueParaCopiar}
                   className="w-full cursor-pointer bg-background pr-10"
                   value={cardData.expirationDate}

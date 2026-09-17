@@ -106,7 +106,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
           checked={open}
           onCheckedChange={handleToggle}
           disabled={disabled}
-          aria-label="Ativar logo no centro do QR Code"
+          aria-label={f.qr.ativarLogo}
         />
       </div>
 

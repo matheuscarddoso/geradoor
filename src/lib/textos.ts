@@ -28,6 +28,8 @@ export type Dicionario = {
   abrirMenu: string;
   recolherMenu: string;
   trocarTema: string;
+  temaClaro: string;
+  temaEscuro: string;
   /** Rodapé. */
   privacidade: string;
   termos: string;
@@ -52,6 +54,8 @@ export const TEXTOS: Record<Idioma, Dicionario> = {
     abrirMenu: "Abrir menu",
     recolherMenu: "Recolher menu",
     trocarTema: "Trocar tema",
+    temaClaro: "Ativar tema claro",
+    temaEscuro: "Ativar tema escuro",
     privacidade: "Privacidade",
     termos: "Termos de uso",
     cookies: "Cookies",
@@ -72,6 +76,8 @@ export const TEXTOS: Record<Idioma, Dicionario> = {
     abrirMenu: "Open menu",
     recolherMenu: "Collapse menu",
     trocarTema: "Toggle theme",
+    temaClaro: "Switch to light theme",
+    temaEscuro: "Switch to dark theme",
     privacidade: "Privacy",
     termos: "Terms",
     cookies: "Cookies",

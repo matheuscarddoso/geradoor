@@ -90,7 +90,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
         <p className="mb-3 text-sm font-medium leading-none tracking-tight">{f.vetorizador.estilo}</p>
         {/* Colunas do tamanho do rótulo, repartindo a sobra: "Ilustração" não
             cabe num quinto da largura no celular, e cortado não se lê. */}
-        <div role="radiogroup" aria-label="Estilo" className="grid grid-cols-[repeat(5,minmax(max-content,1fr))] gap-1 rounded-xl bg-muted/60 p-1">
+        <div role="radiogroup" aria-label={f.vetorizador.estilo} className="grid grid-cols-[repeat(5,minmax(max-content,1fr))] gap-1 rounded-xl bg-muted/60 p-1">
           {ESTILOS.map(({ id, rotulo }) => {
             const selecionado = ajustes.estilo === id;
             return (
@@ -124,7 +124,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
         {traco ? (
           <>
             <Slider
-              label="Limiar"
+              label={f.vetorizador.limiar}
               value={limiarMostrado}
               onChange={(limiar) => alterar({ limiar })}
               min={0}
@@ -140,7 +140,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
         ) : (
           <>
             <Slider
-              label="Cores"
+              label={f.vetorizador.cores}
               value={coresMostradas}
               onChange={(cores) => alterar({ cores })}
               min={CORES_MINIMAS}
@@ -160,14 +160,14 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
             />
           </>
         )}
-        <Slider label="Detalhe" value={ajustes.detalhe} onChange={(detalhe) => alterar({ detalhe })} min={0} max={100} step={1} unit="%" />
-        <Slider label="Suavidade" value={ajustes.suavidade} onChange={(suavidade) => alterar({ suavidade })} min={0} max={100} step={1} unit="%" />
+        <Slider label={f.vetorizador.detalhe} value={ajustes.detalhe} onChange={(detalhe) => alterar({ detalhe })} min={0} max={100} step={1} unit="%" />
+        <Slider label={f.vetorizador.suavidade} value={ajustes.suavidade} onChange={(suavidade) => alterar({ suavidade })} min={0} max={100} step={1} unit="%" />
       </div>
 
       {traco ? (
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-medium leading-none tracking-tight">{f.vetorizador.corDoTraco}</span>
-          <div role="radiogroup" aria-label="Cor do traço" className="flex items-center gap-2">
+          <div role="radiogroup" aria-label={f.vetorizador.corDoTraco} className="flex items-center gap-2">
             {CORES_DO_TRACO.map(({ cor, rotulo }) => (
               <button
                 key={cor}
@@ -186,7 +186,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
               />
             ))}
             <label
-              title="Outra cor"
+              title={f.vetorizador.outraCor}
               className={cn(
                 "relative h-7 w-7 cursor-pointer overflow-hidden rounded-full ring-1 ring-inset ring-black/10 dark:ring-white/15",
                 !CORES_DO_TRACO.some((c) => c.cor === corDoTraco) &&
@@ -198,7 +198,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
                   : corDoTraco,
               }}
             >
-              <span className="sr-only">Outra cor</span>
+              <span className="sr-only">{f.vetorizador.outraCor}</span>
               <input
                 type="color"
                 value={corDoTraco}
@@ -231,7 +231,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
             </p>
           )}
           {ajustes.fundoTransparente && resultado?.fundo === "ja-transparente" && (
-            <p className="mt-2 text-xs leading-relaxed text-subtle">Esta imagem já tem o fundo transparente.</p>
+            <p className="mt-2 text-xs leading-relaxed text-subtle">{f.vetorizador.jaTransparente}</p>
           )}
         </div>
       )}

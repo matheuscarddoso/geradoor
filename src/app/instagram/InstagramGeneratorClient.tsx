@@ -102,7 +102,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
     return () => {
       ativo = false;
     };
-  }, [usarLogo, logoSrc]);
+  }, [usarLogo, logoSrc, f.instagram.naoCarregouIcone]);
 
   const logoAtivo = usarLogo && logoSrc !== null;
   const imageSettings = logoAtivo
@@ -344,10 +344,10 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="center" className="min-w-[9rem]">
                           <DropdownMenuItem onClick={() => handleDownload("png")}>
-                            PNG<span className="ms-auto text-xs text-subtle">imagem</span>
+                            PNG<span className="ms-auto text-xs text-subtle">{f.qr.imagemMinuscula}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload("pdf")}>
-                            PDF<span className="ms-auto text-xs text-subtle">impressão</span>
+                            PDF<span className="ms-auto text-xs text-subtle">{f.qr.impressao}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload("svg")}>
                             SVG<span className="ms-auto text-xs text-subtle">vetor</span>

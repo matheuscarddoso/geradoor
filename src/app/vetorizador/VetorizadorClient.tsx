@@ -75,7 +75,7 @@ export default function VetorizadorClient({
         toast.error(erro instanceof ArquivoRecusado ? erro.message : f.comum.naoFoiPossivelAbrir);
       }
     },
-    [carregar]
+    [carregar, f.comum.naoFoiPossivelAbrir]
   );
 
   // Imagem nova ou ajuste novo: vetoriza, com espera para ajustes em sequência.

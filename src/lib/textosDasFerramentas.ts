@@ -19,6 +19,8 @@ import type { Idioma } from "./idioma";
 export type Ferramentas = {
   /** Comum a mais de uma ferramenta. */
   comum: {
+    pesquisarPais: string;
+    paisNaoEncontrado: string;
     copiar: string;
     copiado: string;
     baixar: string;
@@ -90,6 +92,8 @@ export type Ferramentas = {
     foto: string;
     traco: string;
     corDoTraco: string;
+    limiar: string;
+    outraCor: string;
     fundoTransparente: string;
     fundoTransparenteTexto: string;
     jaTransparente: string;
@@ -121,8 +125,10 @@ export type Ferramentas = {
     previaIlustrativa: string;
     quemEscanear: string;
     impressao: string;
+    imagemMinuscula: string;
     logoNoCentro: string;
     logoNoCentroTexto: string;
+    ativarLogo: string;
     marcaNoMeio: string;
     enviarLogo: string;
     limparFundoDoLogo: string;
@@ -138,6 +144,10 @@ export type Ferramentas = {
     usarIcone: string;
     naoCarregouIcone: string;
     seuPerfil: string;
+    compartilharPerfil: string;
+    copiarLink: string;
+    baixar: string;
+    refazer: string;
   };
   whatsapp: {
     criandoLink: string;
@@ -147,6 +157,7 @@ export type Ferramentas = {
     usarIcone: string;
     suaMensagem: string;
     linkCopiadoSucesso: string;
+    exemploMensagem: string;
   };
   cartao: {
     numero: string;
@@ -158,12 +169,16 @@ export type Ferramentas = {
     copiarCvv: string;
     /** Verbo isolado, para montar "Copy CVV" e afins com o nome do código. */
     copiarPrefixo: string;
+    validade: string;
+    codigo: string;
   };
 };
 
 export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
   "pt-BR": {
     comum: {
+      pesquisarPais: "Pesquisar país...",
+      paisNaoEncontrado: "País não encontrado.",
       copiar: "Copiar",
       copiado: "Copiado!",
       baixar: "Baixar",
@@ -234,6 +249,8 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       foto: "Foto",
       traco: "Traço",
       corDoTraco: "Cor do traço",
+      limiar: "Limiar",
+      outraCor: "Outra cor",
       fundoTransparente: "Fundo transparente",
       fundoTransparenteTexto: "Tira o fundo liso que encosta nas bordas.",
       jaTransparente: "Esta imagem já tem o fundo transparente.",
@@ -265,8 +282,10 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       previaIlustrativa: "Prévia ilustrativa",
       quemEscanear: "Quem escanear vai direto para o link que você encurtou.",
       impressao: "impressão",
+      imagemMinuscula: "imagem",
       logoNoCentro: "Logo no centro",
       logoNoCentroTexto: "Sua marca dentro do código",
+      ativarLogo: "Ativar logo no centro do QR Code",
       marcaNoMeio: "A marca aparece no meio do QR Code",
       enviarLogo: "Enviar imagem do logo",
       limparFundoDoLogo: "Limpar fundo atrás do logo",
@@ -282,6 +301,10 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       usarIcone: "Usar o ícone do Instagram no centro do QR Code",
       naoCarregouIcone: "Não foi possível carregar o ícone do Instagram",
       seuPerfil: "seu.perfil",
+      compartilharPerfil: "Compartilhar perfil",
+      copiarLink: "Copiar link",
+      baixar: "Baixar",
+      refazer: "Refazer",
     },
     whatsapp: {
       criandoLink: "Criando seu link",
@@ -291,6 +314,7 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       usarIcone: "Usar o ícone do WhatsApp no centro do QR Code",
       suaMensagem: "Sua mensagem aparece aqui",
       linkCopiadoSucesso: "Link copiado com sucesso!",
+      exemploMensagem: 'Exemplo: "Olá, eu gostaria de receber mais informações sobre o produto"',
     },
     cartao: {
       numero: "Número",
@@ -301,10 +325,14 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       copiarCid: "Copiar CID",
       copiarCvv: "Copiar CVV",
       copiarPrefixo: "Copiar",
+      validade: "Validade",
+      codigo: "Código",
     },
   },
   en: {
     comum: {
+      pesquisarPais: "Search country...",
+      paisNaoEncontrado: "No country found.",
       copiar: "Copy",
       copiado: "Copied!",
       baixar: "Download",
@@ -375,6 +403,8 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       foto: "Photo",
       traco: "Line art",
       corDoTraco: "Line color",
+      limiar: "Threshold",
+      outraCor: "Another color",
       fundoTransparente: "Transparent background",
       fundoTransparenteTexto: "Removes the flat background that touches the edges.",
       jaTransparente: "This image already has a transparent background.",
@@ -406,8 +436,10 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       previaIlustrativa: "Illustrative preview",
       quemEscanear: "Whoever scans it goes straight to the link you shortened.",
       impressao: "print",
+      imagemMinuscula: "image",
       logoNoCentro: "Logo in the center",
       logoNoCentroTexto: "Your mark inside the code",
+      ativarLogo: "Put a logo in the center of the QR Code",
       marcaNoMeio: "The mark appears in the middle of the QR Code",
       enviarLogo: "Upload a logo image",
       limparFundoDoLogo: "Clear the background behind the logo",
@@ -423,6 +455,10 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       usarIcone: "Use the Instagram icon in the center of the QR Code",
       naoCarregouIcone: "Could not load the Instagram icon",
       seuPerfil: "your.profile",
+      compartilharPerfil: "Share profile",
+      copiarLink: "Copy link",
+      baixar: "Download",
+      refazer: "Retake",
     },
     whatsapp: {
       criandoLink: "Creating your link",
@@ -432,6 +468,7 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       usarIcone: "Use the WhatsApp icon in the center of the QR Code",
       suaMensagem: "Your message appears here",
       linkCopiadoSucesso: "Link copied",
+      exemploMensagem: 'Example: "Hi, I\'d like to know more about the product"',
     },
     cartao: {
       numero: "Number",
@@ -442,6 +479,8 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       copiarCid: "Copy CID",
       copiarCvv: "Copy CVV",
       copiarPrefixo: "Copy",
+      validade: "Expiry",
+      codigo: "Security code",
     },
   },
 };

@@ -75,7 +75,7 @@ export default function RemovedorDeFundoClient({
         );
       }
     },
-    [processar]
+    [processar, f.comum.naoFoiPossivelAbrir]
   );
 
   // Colar de qualquer lugar da página: é o jeito mais rápido de trazer um

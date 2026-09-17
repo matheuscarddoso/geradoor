@@ -1,5 +1,7 @@
 "use client";
 
+import { useTextos } from "@/lib/useTextos";
+
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
@@ -14,6 +16,7 @@ import { cn } from "@/lib/utils";
  * um espaço da mesma dimensão, para o layout não saltar.
  */
 export function ThemeToggle({ className }: { className?: string }) {
+  const t = useTextos();
   const { resolvedTheme, setTheme } = useTheme();
   const [montado, setMontado] = useState(false);
 
@@ -30,10 +33,10 @@ export function ThemeToggle({ className }: { className?: string }) {
    * corrige sozinho. Antes de montar, o botão é neutro.
    */
   const rotulo = !montado
-    ? "Alternar tema"
+    ? t.trocarTema
     : escuro
-      ? "Ativar tema claro"
-      : "Ativar tema escuro";
+      ? t.temaClaro
+      : t.temaEscuro;
 
   return (
     <button

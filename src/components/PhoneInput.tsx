@@ -16,6 +16,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import { useFerramentas } from "@/lib/useTextos";
 import {
   Popover,
   PopoverContent,
@@ -87,6 +88,8 @@ const CountrySelect = ({
   options: countryList,
   onChange,
 }: CountrySelectProps) => {
+  const f = useFerramentas();
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -110,10 +113,10 @@ const CountrySelect = ({
       </PopoverTrigger>
       <PopoverContent className="w-[min(300px,calc(100vw-2rem))] p-0">
         <Command>
-          <CommandInput placeholder="Pesquisar país..." />
+          <CommandInput placeholder={f.comum.pesquisarPais} />
           <CommandList>
             <ScrollArea className="h-72">
-              <CommandEmpty>País não encontrado.</CommandEmpty>
+              <CommandEmpty>{f.comum.paisNaoEncontrado}</CommandEmpty>
               <CommandGroup>
                 {countryList.map(({ value, label }) =>
                   value ? (

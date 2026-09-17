@@ -1,4 +1,7 @@
+"use client";
+
 import { cn } from "@/lib/utils";
+import { useIdioma } from "@/lib/useTextos";
 import type { Idioma } from "@/lib/idioma";
 
 /**
@@ -8,7 +11,12 @@ import type { Idioma } from "@/lib/idioma";
  * funciona: um azul entre cinzas se lê de relance sem gritar. O azul é o dos
  * links do site, então não inaugura uma cor nova no sistema.
  */
-export function EtiquetaNovo({ className, idioma = "pt-BR" }: { className?: string; idioma?: Idioma }) {
+export function EtiquetaNovo({ className, idioma }: { className?: string; idioma?: Idioma }) {
+  /* Sem prop, o idioma sai do caminho. O padrão em português que havia aqui
+     antes era um convite ao erro: a sidebar e a busca esqueciam de passá-la e
+     mostravam "Novo" no site em inglês, sem nada quebrar para avisar. */
+  const doCaminho = useIdioma();
+  const atual = idioma ?? doCaminho;
   return (
     <span
       className={cn(
@@ -19,7 +27,7 @@ export function EtiquetaNovo({ className, idioma = "pt-BR" }: { className?: stri
         className
       )}
     >
-      {idioma === "en" ? "New" : "Novo"}
+      {atual === "en" ? "New" : "Novo"}
     </span>
   );
 }

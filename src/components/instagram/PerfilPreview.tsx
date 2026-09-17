@@ -153,9 +153,9 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
           style={{ gap: pt(9), marginTop: pt(14) }}
         >
           {[
-            ["Share profile", "M12 15V4m0 0L8 8m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"],
-            ["Copy link", "M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"],
-            ["Download", "M12 4v11m0 0 4-4m-4 4-4-4M4 19h16"],
+            [f.instagram.compartilharPerfil, "M12 15V4m0 0L8 8m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"],
+            [f.instagram.copiarLink, "M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"],
+            [f.instagram.baixar, "M12 4v11m0 0 4-4m-4 4-4-4M4 19h16"],
           ].map(([rotulo, d]) => (
             <div
               key={rotulo}
@@ -209,7 +209,7 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
             <path d="M14.5 4h-5L8 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-4l-1.5-2Z" />
             <circle cx="12" cy="13" r="3.5" />
           </svg>
-          Retake
+          {f.instagram.refazer}
         </span>
       </div>
     </div>

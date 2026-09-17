@@ -79,7 +79,11 @@ const siteSchema = [
     name: SITE.name,
     url: SITE.url,
     description: SITE.description,
-    inLanguage: "pt-BR",
+    // O nó WebSite descreve o domínio inteiro, não a página, e o domínio serve
+    // as duas línguas. Declarar só pt-BR aqui contradiz os hreflang das rotas
+    // /en. Fica no layout — ler o caminho exigiria `headers()`, que tornaria
+    // todas as páginas dinâmicas.
+    inLanguage: ["pt-BR", "en"],
   },
   {
     "@context": "https://schema.org",

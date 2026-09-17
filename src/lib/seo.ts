@@ -1,3 +1,4 @@
+import { idiomaDoCaminho } from "./idioma";
 import { parDeIdiomas } from "./rotas";
 /**
  * Constantes e blocos de dados estruturados do site.
@@ -76,6 +77,11 @@ interface ToolSchemaInput {
  * de política e derruba todos os rich results do domínio.
  */
 export function toolSchema({ name, description, path, features }: ToolSchemaInput) {
+  // O próprio caminho carrega o idioma (`/en/...`), então o schema acompanha a
+  // página sem que nenhum call site precise repetir a informação — e sem ler
+  // header nenhum, que tornaria a rota dinâmica.
+  const ingles = idiomaDoCaminho(path) === "en";
+
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -84,14 +90,14 @@ export function toolSchema({ name, description, path, features }: ToolSchemaInpu
     url: absolute(path),
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Any",
-    browserRequirements: "Requer JavaScript",
-    inLanguage: "pt-BR",
+    browserRequirements: ingles ? "Requires JavaScript" : "Requer JavaScript",
+    inLanguage: ingles ? "en" : "pt-BR",
     isAccessibleForFree: true,
     featureList: features,
     offers: {
       "@type": "Offer",
       price: "0",
-      priceCurrency: "BRL",
+      priceCurrency: ingles ? "USD" : "BRL",
     },
     publisher: {
       "@type": "Organization",

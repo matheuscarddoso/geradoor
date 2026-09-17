@@ -220,7 +220,7 @@ const WhatsappChatPreview: React.FC<WhatsappChatPreviewProps> = ({ phone, messag
             }}
           >
             <BubbleTail />
-            {temMensagem ? message : "{f.whatsapp.suaMensagem}"}
+            {temMensagem ? message : f.whatsapp.suaMensagem}
             {/* Espaçador invisível: reserva, na última linha, o lugar da hora e
                 dos vistos, que ficam posicionados por cima. É como o próprio
                 WhatsApp resolve — sem ele o texto passa por baixo do horário. */}

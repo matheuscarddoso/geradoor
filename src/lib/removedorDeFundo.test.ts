@@ -135,8 +135,8 @@ describe("interpretarFalha", () => {
   it("cotas diárias caem no modo leve, cada uma com o seu aviso", () => {
     const doDia = interpretarFalha(503, "cota-diaria");
     const doIp = interpretarFalha(429, "limite-ip-dia");
-    expect(doDia).toEqual({ modoLeve: true, aviso: expect.stringContaining("limite de hoje") });
-    expect(doIp).toEqual({ modoLeve: true, aviso: expect.stringContaining("recortes completos de hoje") });
+    expect(doDia).toEqual({ modoLeve: true, codigo: "cota-do-dia" });
+    expect(doIp).toEqual({ modoLeve: true, codigo: "limite-do-ip" });
   });
 
   it("desligado no interruptor cai no modo leve como fora do ar", () => {
@@ -144,10 +144,7 @@ describe("interpretarFalha", () => {
   });
 
   it("limite de rajada por IP não cai no modo leve: diz para esperar", () => {
-    expect(interpretarFalha(429, "limite")).toEqual({
-      modoLeve: false,
-      mensagem: expect.stringContaining("Espere um minuto"),
-    });
+    expect(interpretarFalha(429, "limite")).toEqual({ modoLeve: false, codigo: "ritmo" });
     expect(interpretarFalha(429, null).modoLeve).toBe(false);
   });
 

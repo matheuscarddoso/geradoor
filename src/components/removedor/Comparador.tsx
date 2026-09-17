@@ -1,6 +1,7 @@
 "use client";
 
 import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -203,7 +204,7 @@ export function Comparador({
           magico={magico}
           processandoMagia={processandoMagia}
           onTraco={onTraco}
-          descricao={`${nome}, sem o fundo`}
+          descricao={preencher(f.removedor.semOFundo, { nome })}
         />
       )}
 
@@ -250,7 +251,7 @@ export function Comparador({
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={valorAria}
-              aria-valuetext={`${valorAria}% do original à mostra`}
+              aria-valuetext={preencher(f.removedor.doOriginalAMostra, { valor: valorAria })}
               data-touch-target
               onKeyDown={(evento) => {
                 const atual = posicao.get();

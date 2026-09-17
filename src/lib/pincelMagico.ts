@@ -12,7 +12,7 @@
  * Tudo aqui é puro, para o critério de seleção ser conferido por teste.
  */
 
-import { mediaEmCaixa, type Dimensoes, type Falha } from "./removedorDeFundo";
+import { mediaEmCaixa, type CodigoDaFalha, type Dimensoes, type Falha } from "./removedorDeFundo";
 import { carimbos, type Regiao, type Traco } from "./pincel";
 
 export type { Regiao };
@@ -371,20 +371,26 @@ export function elementoDoTraco(
 }
 
 /**
- * O aviso quando o pincel mágico não consegue e o traço vira pincel comum.
+ * Por que o pincel mágico recuou e o traço virou pincel comum.
  *
  * O traço nunca é jogado fora: quem pintou recebe o que pintou, com um aviso
  * do porquê, e desfaz se não quiser. Descartar em silêncio — ou com um erro
  * e nada na tela — faz a ferramenta parecer quebrada.
+ *
+ * Aqui sai o motivo, não a frase: quem monta o texto é o gancho, que sabe em
+ * que língua a página está.
  */
-export function avisoDeRecuo(motivo: { tipo: "sem-elemento" } | { tipo: "falha"; falha: Falha }): string {
-  if (motivo.tipo === "sem-elemento") {
-    return "Não encontrei um elemento definido aí, então apliquei o pincel comum na área pintada.";
-  }
-  if (motivo.falha.modoLeve) {
-    return "O pincel mágico não está disponível agora, então apliquei o pincel comum na área pintada.";
-  }
-  return `${motivo.falha.mensagem} Por enquanto, apliquei o pincel comum na área pintada.`;
+export type RecuoDoPincel =
+  | { tipo: "sem-elemento" }
+  | { tipo: "modo-leve" }
+  | { tipo: "depois-da-falha"; codigo: CodigoDaFalha };
+
+export function avisoDeRecuo(
+  motivo: { tipo: "sem-elemento" } | { tipo: "falha"; falha: Falha }
+): RecuoDoPincel {
+  if (motivo.tipo === "sem-elemento") return { tipo: "sem-elemento" };
+  if (motivo.falha.modoLeve) return { tipo: "modo-leve" };
+  return { tipo: "depois-da-falha", codigo: motivo.falha.codigo };
 }
 
 /* -------------------------------------------------------------------------

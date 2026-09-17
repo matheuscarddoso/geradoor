@@ -273,17 +273,21 @@ describe("ocultarOQueJaFicou", () => {
 });
 
 describe("avisoDeRecuo", () => {
-  it("sem elemento, diz que aplicou o pincel comum", () => {
-    expect(avisoDeRecuo({ tipo: "sem-elemento" })).toContain("apliquei o pincel comum");
+  it("sem elemento vira o motivo próprio", () => {
+    expect(avisoDeRecuo({ tipo: "sem-elemento" })).toEqual({ tipo: "sem-elemento" });
   });
 
-  it("serviço fora ou cota, diz que o mágico não está disponível", () => {
-    expect(avisoDeRecuo({ tipo: "falha", falha: { modoLeve: true, aviso: "x" } })).toContain("não está disponível");
+  it("serviço fora ou cota vira modo leve, sem carregar o código adiante", () => {
+    expect(avisoDeRecuo({ tipo: "falha", falha: { modoLeve: true, codigo: "fora-do-ar" } })).toEqual({
+      tipo: "modo-leve",
+    });
   });
 
-  it("ritmo ou imagem, repete o motivo e diz o que foi feito", () => {
-    const aviso = avisoDeRecuo({ tipo: "falha", falha: { modoLeve: false, mensagem: "Espere um minuto." } });
-    expect(aviso).toMatch(/^Espere um minuto\. .*pincel comum/);
+  it("ritmo ou imagem passa o código adiante, para o texto citar o motivo", () => {
+    expect(avisoDeRecuo({ tipo: "falha", falha: { modoLeve: false, codigo: "ritmo" } })).toEqual({
+      tipo: "depois-da-falha",
+      codigo: "ritmo",
+    });
   });
 });
 

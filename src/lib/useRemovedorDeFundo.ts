@@ -9,6 +9,7 @@ import {
   limiteDePixels,
   interpretarFalha,
   validarArquivo,
+  type CodigoDaFalha,
   type Dimensoes,
   type Falha,
   type PedidoAoWorker,
@@ -17,7 +18,9 @@ import {
   type RespostaDoWorker,
 } from "@/lib/removedorDeFundo";
 import type { Traco } from "@/lib/pincel";
-import { avisoDeRecuo, regiaoDoTraco } from "@/lib/pincelMagico";
+import { avisoDeRecuo, regiaoDoTraco, type RecuoDoPincel } from "@/lib/pincelMagico";
+import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 export interface ImagemCarregada {
   nome: string;
@@ -210,6 +213,55 @@ async function enviarAoRemovedor(
 }
 
 export function useRemovedorDeFundo() {
+  const f = useFerramentas();
+
+  /**
+   * O código da falha, dito na língua da página.
+   *
+   * O gancho é o primeiro ponto do caminho que tem dicionário: a função pura
+   * que classifica a falha e o worker que roda fora da árvore do React não
+   * têm. Daqui para baixo o estado já carrega texto pronto, e a página não
+   * precisa saber que existiu um código.
+   */
+  const textoDaFalha = useCallback(
+    (codigo: CodigoDaFalha): string => {
+      switch (codigo) {
+        case "cota-do-mes":
+          return f.removedor.falhaCotaDoMes;
+        case "cota-do-dia":
+          return f.removedor.falhaCotaDoDia;
+        case "limite-do-ip":
+          return f.removedor.falhaLimiteDoIp;
+        case "fora-do-ar":
+          return f.removedor.falhaForaDoAr;
+        case "ritmo":
+          return f.removedor.falhaRitmo;
+        case "imagem-ilegivel":
+          return f.removedor.falhaImagemIlegivel;
+        case "imagem-grande":
+          return f.removedor.falhaImagemGrande;
+      }
+    },
+    [f]
+  );
+
+  /** O recuo do pincel mágico, idem. */
+  const textoDoRecuo = useCallback(
+    (recuo: RecuoDoPincel): string => {
+      switch (recuo.tipo) {
+        case "sem-elemento":
+          return f.removedor.recuoSemElemento;
+        case "modo-leve":
+          return f.removedor.recuoModoLeve;
+        case "depois-da-falha":
+          return preencher(f.removedor.recuoDepoisDaFalha, {
+            motivo: textoDaFalha(recuo.codigo),
+          });
+      }
+    },
+    [f, textoDaFalha]
+  );
+
   const [estado, setEstado] = useState<Estado>({ fase: "vazio" });
   const workerRecorte = useRef<Worker | null>(null);
   const workerLocal = useRef<Worker | null>(null);
@@ -353,7 +405,7 @@ export function useRemovedorDeFundo() {
           concluir(resposta.id, resposta.recorte, resposta.previa, "leve");
           return;
         case "erro":
-          falhar(resposta.id, resposta.mensagem);
+          falhar(resposta.id, f.removedor.falhaNoRecorte);
       }
     });
     worker.addEventListener("error", (evento) => {
@@ -364,7 +416,7 @@ export function useRemovedorDeFundo() {
     });
     workerLocal.current = worker;
     return worker;
-  }, [concluir, falhar]);
+  }, [concluir, falhar, f.removedor.falhaNoRecorte]);
 
   const processar = useCallback(
     async (arquivo: File) => {
@@ -412,15 +464,15 @@ export function useRemovedorDeFundo() {
 
       if (!resultado.falha.modoLeve) {
         bitmap.close();
-        falhar(id, resultado.falha.mensagem);
+        falhar(id, textoDaFalha(resultado.falha.codigo));
         return;
       }
 
-      avisoAtual.current = resultado.falha.aviso;
+      avisoAtual.current = textoDaFalha(resultado.falha.codigo);
       const pedido: PedidoAoWorker = { tipo: "remover", id, imagem: bitmap };
       obterWorkerLocal().postMessage(pedido, [bitmap]);
     },
-    [criarUrl, falhar, obterWorkerLocal, obterWorkerRecorte, revogarTudo]
+    [criarUrl, falhar, obterWorkerLocal, obterWorkerRecorte, revogarTudo, textoDaFalha]
   );
 
   /** Um pedido avulso ao worker de recorte, com a resposta como promessa. */
@@ -478,7 +530,7 @@ export function useRemovedorDeFundo() {
     async (traco: Traco, tracosAtuais: readonly Traco[]): Promise<{ traco: Traco; aviso: string | null }> => {
       const generico = {
         traco,
-        aviso: "O pincel mágico não conseguiu processar este traço, então apliquei o pincel comum na área pintada.",
+        aviso: f.removedor.recuoGenerico,
       };
       if (estado.fase !== "pronto" || !arquivoAtual.current) return generico;
       const original = arquivoAtual.current;
@@ -508,7 +560,8 @@ export function useRemovedorDeFundo() {
         const tempoLimite = setTimeout(() => controlador.abort(), TEMPO_LIMITE_MS);
         const resultado = await enviarAoRemovedor(preparada.imagem, controlador.signal);
         clearTimeout(tempoLimite);
-        if ("falha" in resultado) return { traco, aviso: avisoDeRecuo({ tipo: "falha", falha: resultado.falha }) };
+        if ("falha" in resultado)
+          return { traco, aviso: textoDoRecuo(avisoDeRecuo({ tipo: "falha", falha: resultado.falha })) };
 
         const selecao = await pedirAvulso((id) => ({
           tipo: "selecionar-elemento",
@@ -518,14 +571,15 @@ export function useRemovedorDeFundo() {
           regiao,
           trabalho,
         }));
-        if (selecao.tipo === "elemento-vazio") return { traco, aviso: avisoDeRecuo({ tipo: "sem-elemento" }) };
+        if (selecao.tipo === "elemento-vazio")
+          return { traco, aviso: textoDoRecuo(avisoDeRecuo({ tipo: "sem-elemento" })) };
         if (selecao.tipo !== "elemento-pronto") return generico;
         return { traco: { ...traco, magia: { regiao, mascara: selecao.mascara } }, aviso: null };
       } catch {
         return generico;
       }
     },
-    [estado, pedirAvulso]
+    [estado, pedirAvulso, f.removedor.recuoGenerico, textoDoRecuo]
   );
 
   const tentarDeNovo = useCallback(() => {

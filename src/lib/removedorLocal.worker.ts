@@ -177,7 +177,7 @@ async function remover({ id, imagem }: PedidoAoWorker) {
     enviar({ tipo: "pronto", id, recorte, previa, duracaoMs: performance.now() - inicio });
   } catch (erro) {
     console.error("[removedor-de-fundo]", erro);
-    enviar({ tipo: "erro", id, mensagem: "Não foi possível remover o fundo desta imagem." });
+    enviar({ tipo: "erro", id });
   } finally {
     imagem.close();
   }

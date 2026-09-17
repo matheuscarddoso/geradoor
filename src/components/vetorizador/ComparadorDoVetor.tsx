@@ -1,6 +1,7 @@
 "use client";
 
 import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 import { useEffect, useRef, useState } from "react";
 import {
@@ -265,7 +266,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={valorAria}
-              aria-valuetext={`${valorAria}% da imagem à mostra`}
+              aria-valuetext={preencher(f.vetorizador.daImagemAMostra, { valor: valorAria })}
               data-touch-target
               onPointerDown={(evento) => {
                 // O puxador sempre move a divisória, mesmo com zoom.

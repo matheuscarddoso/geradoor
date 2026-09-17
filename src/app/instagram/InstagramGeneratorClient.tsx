@@ -42,12 +42,13 @@ import {
   LogoScaleSlider,
 } from "@/components/qr/LogoScaleSlider";
 import { rasterizeSvgMarkup } from "@/lib/image";
-import { MAX_ARROBA, parseArroba, perfilUrl } from "@/lib/instagram";
+import { MAX_ARROBA, parseArroba, perfilUrl, type MotivoDoArroba } from "@/lib/instagram";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import { useRecentes } from "@/lib/recentes";
 import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 const QR_RENDER_SIZE = 200;
 
@@ -56,6 +57,24 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   descricao = "Crie um QR Code que abre o seu perfil. Basta informar o @ — quem escanear cai direto na sua página.",
 }) => {
   const f = useFerramentas();
+
+  /** O código que `parseArroba` devolve, dito na língua da página. */
+  const motivoEmTexto = (motivo: MotivoDoArroba | undefined) => {
+    switch (motivo) {
+      case "vazio":
+        return f.instagram.arrobaVazio;
+      case "longo":
+        return preencher(f.instagram.arrobaLongo, { max: MAX_ARROBA });
+      case "caracteres":
+        return f.instagram.arrobaCaracteres;
+      case "ponto-na-ponta":
+        return f.instagram.arrobaPontoNaPonta;
+      case "pontos-seguidos":
+        return f.instagram.arrobaPontosSeguidos;
+      default:
+        return undefined;
+    }
+  };
   const [arroba, setArroba] = useState("");
   const [tocado, setTocado] = useState(false);
   const [qrCodeValue, setQrCodeValue] = useState<string | null>(null);
@@ -117,7 +136,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   const handleGenerate = async () => {
     if (!perfil.ok || !perfil.usuario) {
       setTocado(true);
-      toast.error(perfil.motivo ?? f.instagram.arrobaInvalido);
+      toast.error(motivoEmTexto(perfil.motivo) ?? f.instagram.arrobaInvalido);
       return;
     }
 
@@ -226,7 +245,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
               </div>
               {mostrarErro && (
                 <p id="arroba-erro" role="alert" className="text-xs text-red-500">
-                  {perfil.motivo}
+                  {motivoEmTexto(perfil.motivo)}
                 </p>
               )}
             </div>

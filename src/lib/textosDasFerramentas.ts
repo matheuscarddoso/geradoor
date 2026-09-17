@@ -16,6 +16,22 @@ import type { Idioma } from "./idioma";
  * atrás de senha, sem página em inglês.
  */
 
+/**
+ * Troca `{chave}` pelo valor correspondente.
+ *
+ * As frases com número ou nome no meio ficam aqui inteiras, com um marcador,
+ * em vez de serem montadas por concatenação no componente. Concatenar assume
+ * que as duas línguas põem as partes na mesma ordem, e elas não põem: "{nome},
+ * sem o fundo" vira "{nome}, with the background removed", e um dia vira algo
+ * que começa pelo sufixo. Com a frase inteira no dicionário, quem traduz move
+ * o marcador para onde a língua pedir.
+ */
+export function preencher(modelo: string, valores: Record<string, string | number>): string {
+  return modelo.replace(/\{(\w+)\}/g, (inteiro, chave: string) =>
+    chave in valores ? String(valores[chave]) : inteiro
+  );
+}
+
 export type Ferramentas = {
   /** Comum a mais de uma ferramenta. */
   comum: {
@@ -65,6 +81,30 @@ export type Ferramentas = {
     mudamTamanho: string;
     apagar: string;
     restaurar: string;
+    apagando: string;
+    comPincelMagico: string;
+    recortadoEm: string;
+    recortadoNoModoLeve: string;
+    semOFundo: string;
+    doOriginalAMostra: string;
+    corPersonalizada: string;
+    corPersonalizadaCom: string;
+    outraCor: string;
+    semFundoNoArquivo: string;
+    processadaNaHora: string;
+    /** As falhas do recorte completo, por código (ver `CodigoDaFalha`). */
+    falhaCotaDoMes: string;
+    falhaCotaDoDia: string;
+    falhaLimiteDoIp: string;
+    falhaForaDoAr: string;
+    falhaRitmo: string;
+    falhaImagemIlegivel: string;
+    falhaImagemGrande: string;
+    falhaNoRecorte: string;
+    recuoSemElemento: string;
+    recuoModoLeve: string;
+    recuoDepoisDaFalha: string;
+    recuoGenerico: string;
   };
   vetorizador: {
     formatos: string;
@@ -110,6 +150,12 @@ export type Ferramentas = {
     compararSvg: string;
     imagem: string;
     vetorizadoAqui: string;
+    tratandoComo: string;
+    automaticoCores: string;
+    automaticoSozinho: string;
+    cor: string;
+    daImagemAMostra: string;
+    nomeDoArquivo: string;
   };
   qr: {
     criar: string;
@@ -148,6 +194,11 @@ export type Ferramentas = {
     copiarLink: string;
     baixar: string;
     refazer: string;
+    arrobaVazio: string;
+    arrobaLongo: string;
+    arrobaCaracteres: string;
+    arrobaPontoNaPonta: string;
+    arrobaPontosSeguidos: string;
   };
   whatsapp: {
     criandoLink: string;
@@ -222,6 +273,36 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       mudamTamanho: "mudam o tamanho.",
       apagar: "Apagar",
       restaurar: "Restaurar",
+      apagando: "Apagando",
+      comPincelMagico: " com o pincel mágico",
+      recortadoEm: "Recortado em {tempo}. A imagem não fica guardada.",
+      recortadoNoModoLeve: "Recortado no modo leve em {tempo}, sem sair do aparelho.",
+      semOFundo: "{nome}, sem o fundo",
+      doOriginalAMostra: "{valor}% do original à mostra",
+      corPersonalizada: "Cor personalizada",
+      corPersonalizadaCom: "Cor personalizada, {cor}",
+      outraCor: "Outra cor",
+      semFundoNoArquivo: "sem-fundo",
+      processadaNaHora: "Processada na hora e descartada. Não salvamos nenhuma cópia.",
+      falhaCotaDoMes:
+        "O removedor completo atingiu o limite do mês, então este recorte foi feito no modo leve, no seu aparelho. A borda pode sair menos precisa.",
+      falhaCotaDoDia:
+        "O removedor completo atingiu o limite de hoje, então este recorte foi feito no modo leve, no seu aparelho. Amanhã ele volta ao normal.",
+      falhaLimiteDoIp:
+        "Você já usou todos os recortes completos de hoje, então este foi feito no modo leve, no seu aparelho. Amanhã eles voltam.",
+      falhaForaDoAr:
+        "O removedor completo não respondeu, então este recorte foi feito no modo leve, no seu aparelho. A borda pode sair menos precisa.",
+      falhaRitmo: "Muitas imagens em sequência. Espere um minuto e tente de novo.",
+      falhaImagemIlegivel: "Não foi possível ler essa imagem. Tente outra em JPG, PNG ou WEBP.",
+      falhaImagemGrande: "Essa imagem passou do tamanho que o removedor aceita.",
+      falhaNoRecorte: "Não foi possível remover o fundo desta imagem.",
+      recuoSemElemento:
+        "Não encontrei um elemento definido aí, então apliquei o pincel comum na área pintada.",
+      recuoModoLeve:
+        "O pincel mágico não está disponível agora, então apliquei o pincel comum na área pintada.",
+      recuoDepoisDaFalha: "{motivo} Por enquanto, apliquei o pincel comum na área pintada.",
+      recuoGenerico:
+        "O pincel mágico não conseguiu processar este traço, então apliquei o pincel comum na área pintada.",
     },
     vetorizador: {
       formatos: "JPG, PNG, WEBP ou AVIF · até 80 MB · sai em SVG",
@@ -266,6 +347,12 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       branco: "Branco",
       compararSvg: "Comparar a imagem com o SVG",
       imagem: "Imagem",
+      tratandoComo: " Tratando como {estilo}.",
+      automaticoCores: "Automático: {cores}.",
+      automaticoSozinho: "Automático.",
+      cor: "cor",
+      daImagemAMostra: "{valor}% da imagem à mostra",
+      nomeDoArquivo: "imagem",
       vetorizadoAqui: "Vetorizado no seu aparelho. A imagem não é enviada a lugar nenhum.",
     },
     qr: {
@@ -305,6 +392,11 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       copiarLink: "Copiar link",
       baixar: "Baixar",
       refazer: "Refazer",
+      arrobaVazio: "Informe o @ do perfil",
+      arrobaLongo: "No máximo {max} caracteres",
+      arrobaCaracteres: "Use apenas letras, números, ponto e _",
+      arrobaPontoNaPonta: "Não pode começar nem terminar com ponto",
+      arrobaPontosSeguidos: "Não pode ter dois pontos seguidos",
     },
     whatsapp: {
       criandoLink: "Criando seu link",
@@ -376,6 +468,36 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       mudamTamanho: "change the size.",
       apagar: "Erase",
       restaurar: "Restore",
+      apagando: "Erasing",
+      comPincelMagico: " with the magic brush",
+      recortadoEm: "Cut out in {tempo}. The image is not kept.",
+      recortadoNoModoLeve: "Cut out in light mode in {tempo}, without leaving your device.",
+      semOFundo: "{nome}, with the background removed",
+      doOriginalAMostra: "{valor}% of the original showing",
+      corPersonalizada: "Custom color",
+      corPersonalizadaCom: "Custom color, {cor}",
+      outraCor: "Another color",
+      semFundoNoArquivo: "no-background",
+      processadaNaHora: "Processed on the spot and discarded. We keep no copy.",
+      falhaCotaDoMes:
+        "The full remover hit its monthly limit, so this cutout was made in light mode, on your device. The edge may come out less precise.",
+      falhaCotaDoDia:
+        "The full remover hit today's limit, so this cutout was made in light mode, on your device. It goes back to normal tomorrow.",
+      falhaLimiteDoIp:
+        "You have used all of today's full cutouts, so this one was made in light mode, on your device. They come back tomorrow.",
+      falhaForaDoAr:
+        "The full remover did not answer, so this cutout was made in light mode, on your device. The edge may come out less precise.",
+      falhaRitmo: "Too many images in a row. Wait a minute and try again.",
+      falhaImagemIlegivel: "Could not read that image. Try another one in JPG, PNG or WEBP.",
+      falhaImagemGrande: "That image is past the size the remover accepts.",
+      falhaNoRecorte: "Could not remove the background from this image.",
+      recuoSemElemento:
+        "I did not find a defined subject there, so I applied the plain brush to the painted area.",
+      recuoModoLeve:
+        "The magic brush is not available right now, so I applied the plain brush to the painted area.",
+      recuoDepoisDaFalha: "{motivo} For now, I applied the plain brush to the painted area.",
+      recuoGenerico:
+        "The magic brush could not process this stroke, so I applied the plain brush to the painted area.",
     },
     vetorizador: {
       formatos: "JPG, PNG, WEBP or AVIF · up to 80 MB · comes out as SVG",
@@ -420,6 +542,12 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       branco: "White",
       compararSvg: "Compare the image with the SVG",
       imagem: "Image",
+      tratandoComo: " Treating it as {estilo}.",
+      automaticoCores: "Automatic: {cores}.",
+      automaticoSozinho: "Automatic.",
+      cor: "color",
+      daImagemAMostra: "{valor}% of the image showing",
+      nomeDoArquivo: "image",
       vetorizadoAqui: "Vectorized on your device. The image is never uploaded anywhere.",
     },
     qr: {
@@ -459,6 +587,11 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       copiarLink: "Copy link",
       baixar: "Download",
       refazer: "Retake",
+      arrobaVazio: "Enter the profile @",
+      arrobaLongo: "At most {max} characters",
+      arrobaCaracteres: "Use only letters, numbers, dot and _",
+      arrobaPontoNaPonta: "Cannot start or end with a dot",
+      arrobaPontosSeguidos: "Cannot have two dots in a row",
     },
     whatsapp: {
       criandoLink: "Creating your link",

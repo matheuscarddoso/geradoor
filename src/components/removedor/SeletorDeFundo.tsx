@@ -3,6 +3,8 @@
 import { useRef } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 /** Nulo é transparente. */
 export type Fundo = string | null;
@@ -39,6 +41,7 @@ interface SeletorDeFundoProps {
  * de botões soltos daria quatro paradas de Tab para uma decisão.
  */
 export function SeletorDeFundo({ valor, onChange, desabilitado }: SeletorDeFundoProps) {
+  const f = useFerramentas();
   const seletorDeCor = useRef<HTMLInputElement>(null);
   const botoes = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -138,8 +141,12 @@ export function SeletorDeFundo({ valor, onChange, desabilitado }: SeletorDeFundo
           type="button"
           role="radio"
           aria-checked={indiceAtivo === OPCOES.length}
-          aria-label={personalizada ? `Cor personalizada, ${personalizada}` : "Cor personalizada"}
-          title="Outra cor"
+          aria-label={
+            personalizada
+              ? preencher(f.removedor.corPersonalizadaCom, { cor: personalizada })
+              : f.removedor.corPersonalizada
+          }
+          title={f.removedor.outraCor}
           tabIndex={indiceAtivo === OPCOES.length ? 0 : -1}
           disabled={desabilitado}
           onClick={() => {

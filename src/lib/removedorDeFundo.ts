@@ -41,12 +41,25 @@ export function dimensoesDeEnvio(original: Dimensoes, ladoMaximo = LADO_MAXIMO_D
   };
 }
 
-export type Falha =
-  | { modoLeve: true; aviso: string }
-  | { modoLeve: false; mensagem: string };
+/**
+ * Por que o recorte completo não veio.
+ *
+ * Código, e não a frase pronta: o site fala duas línguas e esta função é pura.
+ * Quem exibe — o gancho, que tem acesso ao dicionário — é que traduz. Antes a
+ * frase em português nascia aqui e chegava intacta à página em inglês.
+ */
+export type CodigoDaFalha =
+  | "cota-do-mes"
+  | "cota-do-dia"
+  | "limite-do-ip"
+  | "fora-do-ar"
+  | "ritmo"
+  | "imagem-ilegivel"
+  | "imagem-grande";
 
-const AVISO_FORA_DO_AR =
-  "O removedor completo não respondeu, então este recorte foi feito no modo leve, no seu aparelho. A borda pode sair menos precisa.";
+export type Falha =
+  | { modoLeve: true; codigo: CodigoDaFalha }
+  | { modoLeve: false; codigo: CodigoDaFalha };
 
 /**
  * O que fazer quando a Cloudflare não devolve o recorte.
@@ -60,37 +73,25 @@ const AVISO_FORA_DO_AR =
 export function interpretarFalha(status: number | null, motivo: string | null): Falha {
   switch (motivo) {
     case "cota":
-      return {
-        modoLeve: true,
-        aviso:
-          "O removedor completo atingiu o limite do mês, então este recorte foi feito no modo leve, no seu aparelho. A borda pode sair menos precisa.",
-      };
+      return { modoLeve: true, codigo: "cota-do-mes" };
     case "cota-diaria":
-      return {
-        modoLeve: true,
-        aviso:
-          "O removedor completo atingiu o limite de hoje, então este recorte foi feito no modo leve, no seu aparelho. Amanhã ele volta ao normal.",
-      };
+      return { modoLeve: true, codigo: "cota-do-dia" };
     case "limite-ip-dia":
-      return {
-        modoLeve: true,
-        aviso:
-          "Você já usou todos os recortes completos de hoje, então este foi feito no modo leve, no seu aparelho. Amanhã eles voltam.",
-      };
+      return { modoLeve: true, codigo: "limite-do-ip" };
     case "limite":
-      return { modoLeve: false, mensagem: "Muitas imagens em sequência. Espere um minuto e tente de novo." };
+      return { modoLeve: false, codigo: "ritmo" };
     case "formato":
     case "imagem":
-      return { modoLeve: false, mensagem: "Não foi possível ler essa imagem. Tente outra em JPG, PNG ou WEBP." };
+      return { modoLeve: false, codigo: "imagem-ilegivel" };
     case "tamanho":
-      return { modoLeve: false, mensagem: "Essa imagem passou do tamanho que o removedor aceita." };
+      return { modoLeve: false, codigo: "imagem-grande" };
   }
   if (status === 429) {
-    return { modoLeve: false, mensagem: "Muitas imagens em sequência. Espere um minuto e tente de novo." };
+    return { modoLeve: false, codigo: "ritmo" };
   }
   // Sem rede (status nulo), origem recusada, 5xx ou resposta que não se
   // entende: tudo isso é do serviço.
-  return { modoLeve: true, aviso: AVISO_FORA_DO_AR };
+  return { modoLeve: true, codigo: "fora-do-ar" };
 }
 
 /**
@@ -498,8 +499,16 @@ export function hexDoDigest(digest: ArrayBuffer): string {
  *
  * Sai sempre em PNG, porque é o único formato comum com transparência que
  * todo programa abre. Caracteres que o sistema de arquivos recusa viram hífen.
+ *
+ * O nome cai na pasta de downloads da pessoa, então segue a língua da página:
+ * quem usa o site em inglês baixa "photo-no-background.png". As duas palavras
+ * chegam de fora porque esta função é pura e não tem como saber o idioma. O
+ * padrão em português existe para quem chamar sem dicionário.
  */
-export function nomeDoRecorte(nomeOriginal: string): string {
+export function nomeDoRecorte(
+  nomeOriginal: string,
+  textos: { padrao: string; sufixo: string } = { padrao: "imagem", sufixo: "sem-fundo" }
+): string {
   const semExtensao = nomeOriginal.replace(/\.[^./\\]+$/, "");
   const limpo = semExtensao
     .replace(/[\\/:*?"<>|\x00-\x1f]+/g, "-")
@@ -507,7 +516,7 @@ export function nomeDoRecorte(nomeOriginal: string): string {
     // Hífen nas pontas vinha de caractere inválido no começo ou no fim, e
     // colado ao sufixo virava "nome--sem-fundo".
     .replace(/^[\s-]+|[\s-]+$/g, "");
-  return `${limpo || "imagem"}-sem-fundo.png`;
+  return `${limpo || textos.padrao}-${textos.sufixo}.png`;
 }
 
 /** "5,5 MB", com uma casa só abaixo de 10 — onde a casa ainda informa. */
@@ -597,4 +606,4 @@ export type RespostaDoWorker =
       /** Inferência e recorte, sem o carregamento dos modelos. */
       duracaoMs: number;
     }
-  | { tipo: "erro"; id: number; mensagem: string };
+  | { tipo: "erro"; id: number };

@@ -105,7 +105,10 @@ export default function VetorizadorClient({
 
   const aoBaixar = () => {
     if (!resultado || !imagem) return;
-    baixar(new Blob([resultado.svg], { type: "image/svg+xml" }), nomeDoVetor(imagem.nome));
+    baixar(
+      new Blob([resultado.svg], { type: "image/svg+xml" }),
+      nomeDoVetor(imagem.nome, f.vetorizador.nomeDoArquivo)
+    );
   };
 
   const aoCopiar = async () => {
@@ -235,7 +238,7 @@ export default function VetorizadorClient({
                   </p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={abrirSeletor}>
-                  Trocar
+                  {f.comum.trocar}
                 </Button>
               </div>
 
@@ -279,7 +282,7 @@ export default function VetorizadorClient({
               <div className="flex items-start justify-between gap-4 border-t border-border pt-4">
                 <p className="flex items-start gap-2 text-xs leading-relaxed text-subtle">
                   <Lock className="mt-0.5 h-3 w-3 shrink-0" />
-                  Vetorizado no seu aparelho. A imagem não é enviada a lugar nenhum.
+                  {f.vetorizador.vetorizadoAqui}
                 </p>
                 <button
                   type="button"
@@ -289,7 +292,7 @@ export default function VetorizadorClient({
                   }}
                   className="shrink-0 text-xs text-subtle underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
                 >
-                  Limpar
+                  {f.comum.limpar}
                 </button>
               </div>
             </div>

@@ -28,6 +28,7 @@ import {
 } from "@/lib/useRemovedorDeFundo";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
 
@@ -188,7 +189,13 @@ export default function RemovedorDeFundoClient({
     if (!pronto) return;
     setExportando("baixar");
     try {
-      baixar(await gerarArquivo(), nomeDoRecorte(pronto.imagem.nome));
+      baixar(
+        await gerarArquivo(),
+        nomeDoRecorte(pronto.imagem.nome, {
+          padrao: f.vetorizador.nomeDoArquivo,
+          sufixo: f.removedor.semFundoNoArquivo,
+        })
+      );
     } catch {
       toast.error(f.removedor.naoGerouPng);
     } finally {
@@ -492,8 +499,8 @@ function Palco({
               <span className="flex items-center gap-2 font-medium">
                 {processandoMagia && <Loader className="h-3.5 w-3.5 animate-spin" />}
                 {processandoMagia
-                  ? "Recortando o elemento"
-                  : `${ferramenta === "apagar" ? "Apagando" : "Restaurando"}${magico ? " com o pincel mágico" : ""}`}
+                  ? f.removedor.recortando
+                  : `${ferramenta === "apagar" ? f.removedor.apagando : f.removedor.restaurando}${magico ? f.removedor.comPincelMagico : ""}`}
               </span>
               {!processandoMagia && <span className="apenas-mouse text-xs text-subtle">{f.comum.escParaSair}</span>}
               <button
@@ -697,7 +704,7 @@ function Controles({
               variant="secondary"
               onClick={onCopiar}
               disabled={!pronto || exportando !== null}
-              aria-label="Copiar imagem"
+              aria-label={f.removedor.copiarImagem}
             >
               {exportando === "copiar" ? <Loader className="animate-spin" /> : <Copy />}
               Copiar
@@ -719,12 +726,15 @@ function Controles({
  * "nada é enviado" nos dois casos seria mentir em um deles.
  */
 function Rodape({ estado, onLimpar }: { estado: Estado; onLimpar: () => void }) {
-  let texto = "Processada na hora e descartada. Não salvamos nenhuma cópia.";
+  const f = useFerramentas();
+
+  let texto = f.removedor.processadaNaHora;
   if (estado.fase === "pronto") {
-    texto =
-      estado.modo === "nuvem"
-        ? `Recortado em ${formatarDuracao(estado.duracaoMs)}. A imagem não fica guardada.`
-        : `Recortado no modo leve em ${formatarDuracao(estado.duracaoMs)}, sem sair do aparelho.`;
+    const tempo = formatarDuracao(estado.duracaoMs);
+    texto = preencher(
+      estado.modo === "nuvem" ? f.removedor.recortadoEm : f.removedor.recortadoNoModoLeve,
+      { tempo }
+    );
   }
 
   return (

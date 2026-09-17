@@ -1372,14 +1372,18 @@ export function contarCores(svg: string): number {
   return new Set(svg.match(/fill="#[0-9A-Fa-f]{6}"/g) ?? []).size;
 }
 
-/** Nome do arquivo exportado: o original sem extensão, em .svg. */
-export function nomeDoVetor(nomeOriginal: string): string {
+/**
+ * Nome do arquivo exportado: o original sem extensão, em .svg.
+ *
+ * O nome de reserva segue a língua da página — ver `nomeDoRecorte`.
+ */
+export function nomeDoVetor(nomeOriginal: string, padrao = "imagem"): string {
   const semExtensao = nomeOriginal.replace(/\.[^./\\]+$/, "");
   const limpo = semExtensao
     .replace(/[\\/:*?"<>|\x00-\x1f]+/g, "-")
     .replace(/\s+/g, " ")
     .replace(/^[\s-]+|[\s-]+$/g, "");
-  return `${limpo || "imagem"}.svg`;
+  return `${limpo || padrao}.svg`;
 }
 
 /* -------------------------------------------------------------------------

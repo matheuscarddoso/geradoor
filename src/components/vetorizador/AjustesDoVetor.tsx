@@ -14,6 +14,7 @@ import {
 import type { Resultado } from "@/lib/useVetorizador";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
+import { preencher } from "@/lib/textosDasFerramentas";
 import type { Ferramentas } from "@/lib/textosDasFerramentas";
 
 /**
@@ -115,7 +116,11 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
         </div>
         <p className="mt-2.5 text-xs leading-relaxed text-subtle">
           {estiloAtual.dica}
-          {ajustes.estilo === "automatico" && resultado && ` Tratando como ${NOMES_DOS_ESTILOS[resultado.estilo].toLowerCase()}.`}
+          {ajustes.estilo === "automatico" &&
+            resultado &&
+            preencher(f.vetorizador.tratandoComo, {
+              estilo: NOMES_DOS_ESTILOS[resultado.estilo].toLowerCase(),
+            })}
         </p>
       </div>
 
@@ -152,8 +157,10 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
               texto={
                 ajustes.cores === "auto"
                   ? resultado
-                    ? `Automático: ${resultado.cores} ${resultado.cores === 1 ? "cor" : "cores"}.`
-                    : "Automático."
+                    ? preencher(f.vetorizador.automaticoCores, {
+                        cores: `${resultado.cores} ${resultado.cores === 1 ? f.vetorizador.cor : f.vetorizador.cores.toLowerCase()}`,
+                      })
+                    : f.vetorizador.automaticoSozinho
                   : f.vetorizador.menosCores
               }
               onAutomatico={() => alterar({ cores: "auto" })}

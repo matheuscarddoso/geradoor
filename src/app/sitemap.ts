@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
-import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_COM_INGLES, ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { absolute } from "@/lib/seo";
 
 /**
@@ -49,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
    */
   const ingles = [
     { url: absolute("/en"), priority: 0.9 },
-    ...ROTAS_PUBLICAS.map((rota) => ({
+    ...ROTAS_COM_INGLES.map((rota) => ({
       url: absolute(rota.en.href),
       priority: rota.grupo === "ferramenta" ? 0.8 : 0.7,
     })),

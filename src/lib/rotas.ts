@@ -66,8 +66,13 @@ export interface Rota {
    * O endereço em inglês é escrito em inglês, e não `/en/vetorizador`: quem
    * busca "vectorizer" não digita "vetorizador", e o endereço é um dos lugares
    * onde o buscador procura a palavra.
+   *
+   * Opcional porque nem toda ferramenta tem versão em inglês: o código de
+   * barras é interno e só existe em português. Enquanto este campo era
+   * obrigatório ele ganhou um par só para satisfazer o tipo, e o menu passou a
+   * oferecer um `/en/barcode` que nunca foi construído. Sem página, sem par.
    */
-  en: {
+  en?: {
     href: string;
     label: string;
     labelCurto?: string;
@@ -137,13 +142,8 @@ export const ROTAS: Rota[] = [
     termos: ["code 128", "barcode", "etiqueta", "formulário", "numeração", "gráfica", "pdf"],
     icon: Barcode,
     privada: true,
-    en: {
-      href: "/en/barcode",
-      label: "Barcode",
-      labelCurto: "Barcode",
-      descricao: "Generate a numbered PDF in Code 128",
-      termos: ["barcode", "code 128", "label", "pdf", "print"],
-    },
+    // Sem `en`: a ferramenta é interna e só existe em português. Ver o campo
+    // `en` em `Rota`.
   },
 
   {
@@ -238,6 +238,18 @@ export const ROTAS: Rota[] = [
 export const ROTAS_PUBLICAS: Rota[] = ROTAS.filter((rota) => !rota.privada);
 
 /**
+ * As rotas públicas que têm mesmo uma página em inglês.
+ *
+ * Quem lista endereços para fora — sitemap, llms.txt — precisa desta, e não da
+ * lista pública: anunciar uma URL que responde 404 gasta rastreamento e ensina
+ * ao buscador que o site promete página que não entrega. O tipo garante o `en`
+ * aqui dentro, então ninguém precisa repetir a checagem no ponto de uso.
+ */
+export const ROTAS_COM_INGLES = ROTAS_PUBLICAS.filter(
+  (rota): rota is Rota & { en: NonNullable<Rota["en"]> } => rota.en !== undefined
+);
+
+/**
  * A rota vista no idioma pedido: endereço, nome e descrição já resolvidos.
  *
  * Existe para quem desenha menu e lista não precisar escrever `idioma === "en"`
@@ -257,7 +269,9 @@ export interface RotaTraduzida {
 
 export function traduzir(rota: Rota, idioma: Idioma): RotaTraduzida {
   const { en, ...base } = rota;
-  if (idioma === "pt-BR") return base;
+  // Sem versão em inglês, a rota fica como está: o menu leva à ferramenta em
+  // português, que existe, em vez de a um endereço traduzido que não existe.
+  if (idioma === "pt-BR" || !en) return base;
   return { ...base, href: en.href, label: en.label, labelCurto: en.labelCurto, descricao: en.descricao, termos: en.termos };
 }
 
@@ -270,8 +284,8 @@ export function rotasPublicas(idioma: Idioma): RotaTraduzida[] {
 export function parDeIdiomas(href: string): { "pt-BR": string; en: string } | null {
   // A home é o par que não está na lista de ferramentas.
   if (href === "/" || href === "/en") return { "pt-BR": "/", en: "/en" };
-  const rota = ROTAS.find((r) => r.href === href || r.en.href === href);
-  if (rota) return { "pt-BR": rota.href, en: rota.en.href };
+  const rota = ROTAS.find((r) => r.href === href || r.en?.href === href);
+  if (rota?.en) return { "pt-BR": rota.href, en: rota.en.href };
 
   const pouso = ROTAS_DE_POUSO.find((r) => r.href === href || r.en?.href === href);
   return pouso?.en ? { "pt-BR": pouso.href, en: pouso.en.href } : null;
@@ -326,7 +340,7 @@ export const ROTAS_DE_POUSO: RotaDePouso[] = [
 /** Toda rota que o layout deve tratar como página de ferramenta. */
 export const HREFS_COM_CASCA = new Set<string>([
   ...ROTAS.map((rota) => rota.href),
-  ...ROTAS.map((rota) => rota.en.href),
+  ...ROTAS.flatMap((rota) => (rota.en ? [rota.en.href] : [])),
   ...ROTAS_DE_POUSO.map((rota) => rota.href),
   ...ROTAS_DE_POUSO.flatMap((rota) => (rota.en ? [rota.en.href] : [])),
 ]);

@@ -1,5 +1,5 @@
 import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
-import { ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
+import { ROTAS_COM_INGLES, ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { SITE, absolute } from "@/lib/seo";
 
 /**
@@ -53,7 +53,7 @@ ${ROTAS_DE_POUSO.map((r) => linha(r.href, r.label, r.descricao)).join("\n")}
 
 The whole site exists in English under /en, with its own tools where the format differs:
 
-${ROTAS_PUBLICAS.map((r) => linha(r.en.href, r.en.label, r.en.descricao)).join("\n")}
+${ROTAS_COM_INGLES.map((r) => linha(r.en.href, r.en.label, r.en.descricao)).join("\n")}
 
 ## Institucional
 

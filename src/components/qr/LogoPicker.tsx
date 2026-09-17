@@ -25,8 +25,6 @@ export interface LogoConfig {
   src: string | null;
   /** Lado do logo como fração do lado do QR. */
   scale: number;
-  /** Limpa os módulos atrás do logo em vez de sobrepô-los. */
-  excavate: boolean;
   /** Preset selecionado, para marcar o chip ativo. */
   presetId: string | null;
 }
@@ -34,7 +32,6 @@ export interface LogoConfig {
 export const DEFAULT_LOGO: LogoConfig = {
   src: null,
   scale: LOGO_DEFAULT_SCALE,
-  excavate: true,
   presetId: null,
 };
 
@@ -272,23 +269,6 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                         scale={value.scale}
                         onScaleChange={(scale) => onChange({ ...value, scale })}
                       />
-
-                      <div className="flex items-center justify-between gap-3">
-                        <label
-                          htmlFor="logo-excavate"
-                          className="text-xs text-zinc-500 dark:text-zinc-400 leading-snug"
-                        >
-                          Limpar fundo atrás do logo
-                        </label>
-                        <Switch
-                          id="logo-excavate"
-                          checked={value.excavate}
-                          onCheckedChange={(excavate) =>
-                            onChange({ ...value, excavate })
-                          }
-                          aria-label={f.qr.limparFundoDoLogo}
-                        />
-                      </div>
                     </div>
                   </motion.div>
                 )}

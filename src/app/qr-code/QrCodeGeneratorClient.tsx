@@ -256,7 +256,11 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                             src: logo.src,
                             height: Math.round(QR_SIZE * logo.scale),
                             width: Math.round(QR_SIZE * logo.scale),
-                            excavate: true,
+                            /* O logo traz o próprio contorno branco, então não
+                               há o que escavar: `excavate` limpa módulos
+                               inteiros e devolvia um quadrado no meio do
+                               código. */
+                            excavate: false,
                           }
                         : undefined
                     }
@@ -333,7 +337,11 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                             src: logo.src,
                             height: Math.round(QR_SIZE * logo.scale),
                             width: Math.round(QR_SIZE * logo.scale),
-                            excavate: true,
+                            /* O logo traz o próprio contorno branco, então não
+                               há o que escavar: `excavate` limpa módulos
+                               inteiros e devolvia um quadrado no meio do
+                               código. */
+                            excavate: false,
                           }
                         : undefined
                     }

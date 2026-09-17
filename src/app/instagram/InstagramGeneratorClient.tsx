@@ -129,7 +129,8 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
         src: logoSrc,
         height: Math.round(QR_RENDER_SIZE * logoScale),
         width: Math.round(QR_RENDER_SIZE * logoScale),
-        excavate: true,
+        // O logo traz o próprio contorno branco. Ver `presetMarkup`.
+        excavate: false,
       }
     : undefined;
 
@@ -344,8 +345,8 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                            cobrir o centro com a marca. */
                         level={logoAtivo ? "H" : "L"}
                         imageSettings={imageSettings}
-                        fgColor={resolvedTheme === "dark" ? "white" : "black"}
-                        bgColor={resolvedTheme === "dark" ? "black" : "white"}
+                        fgColor="black"
+                        bgColor="white"
                       />
                     </DialogSuperficie>
 

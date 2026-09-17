@@ -4,9 +4,9 @@
  * Path data e cor oficiais extraídos do simple-icons e embutidos estáticos —
  * são 8 ícones, não vale carregar o pacote inteiro em runtime.
  *
- * Cada marca é desenhada preenchida sobre a área branca escavada do código,
- * sem moldura. O QR só permanece legível porque `excavate` limpa os módulos
- * atrás dela e o nível de correção sobe para H.
+ * Cada marca é desenhada sobre um disco branco, e não sobre uma placa
+ * quadrada. O QR permanece legível porque o nível de correção sobe para H
+ * quando há logo.
  */
 
 export interface LogoPreset {
@@ -77,19 +77,41 @@ export const LOGO_PRESETS: LogoPreset[] = [
   },
 ];
 
+/** Raio do disco branco, no viewBox de 64 da imagem. */
+const RAIO_DO_DISCO = 20;
+
 /**
- * Markup do preset já sobre a placa branca.
+ * Largura do contorno branco, em unidades do viewBox de 24 do ícone.
  *
- * A placa existe por um motivo concreto: `excavate` limpa módulos inteiros,
- * então a área branca do código cresce em degraus enquanto o logo escala
- * continuamente. Pintando a mesma área de branco dentro da própria imagem,
- * o degrau fica branco-sobre-branco e some da vista.
+ * O traço é centrado no caminho, então metade avança sobre o desenho e metade
+ * para fora. O preenchimento vem depois e devolve a metade de dentro, o que
+ * deixa a folga toda do lado de fora.
+ */
+const CONTORNO = 2.8;
+
+/**
+ * Markup do preset sobre um disco branco, com contorno branco na própria marca.
+ *
+ * Antes era uma placa branca quadrada, e o resultado era um quadrado evidente
+ * no meio do código. O disco tira o quadrado sem tirar a legibilidade: metade
+ * destas marcas é vazada — a bolha do WhatsApp e a moldura do Instagram são
+ * anéis, não formas cheias —, e sem nada atrás os módulos pretos aparecem por
+ * dentro delas e o desenho some.
+ *
+ * O contorno continua porque o disco sozinho não basta: o ícone ocupa um
+ * quadrado de 36 unidades, cuja diagonal passa do raio, então as pontas de
+ * marcas largas como o X e o YouTube saem do disco. Nelas o contorno é que
+ * garante a separação.
+ *
+ * O caminho é desenhado duas vezes, e não com `paint-order`, porque este SVG
+ * é rasterizado em canvas e o caminho duplo funciona em qualquer renderizador.
  */
 export function presetMarkup(preset: LogoPreset): string {
   return [
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">',
-    '<rect width="64" height="64" fill="#FFFFFF"/>',
+    `<circle cx="32" cy="32" r="${RAIO_DO_DISCO}" fill="#FFFFFF"/>`,
     '<g transform="translate(14 14) scale(1.5)">',
+    `<path d="${preset.path}" fill="none" stroke="#FFFFFF" stroke-width="${CONTORNO}" stroke-linejoin="round" stroke-linecap="round"/>`,
     `<path fill="${preset.color}" d="${preset.path}"/>`,
     "</g></svg>",
   ].join("");

@@ -177,7 +177,6 @@ export type Ferramentas = {
     ativarLogo: string;
     marcaNoMeio: string;
     enviarLogo: string;
-    limparFundoDoLogo: string;
     ate4mb: string;
     naoAplicouIcone: string;
     naoCarregouImagem: string;
@@ -375,7 +374,6 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       ativarLogo: "Ativar logo no centro do QR Code",
       marcaNoMeio: "A marca aparece no meio do QR Code",
       enviarLogo: "Enviar imagem do logo",
-      limparFundoDoLogo: "Limpar fundo atrás do logo",
       ate4mb: "Até 4 MB.",
       naoAplicouIcone: "Não foi possível aplicar este ícone",
       naoCarregouImagem: "Não foi possível carregar a imagem",
@@ -570,7 +568,6 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       ativarLogo: "Put a logo in the center of the QR Code",
       marcaNoMeio: "The mark appears in the middle of the QR Code",
       enviarLogo: "Upload a logo image",
-      limparFundoDoLogo: "Clear the background behind the logo",
       ate4mb: "Up to 4 MB.",
       naoAplicouIcone: "Could not apply this icon",
       naoCarregouImagem: "Could not load the image",

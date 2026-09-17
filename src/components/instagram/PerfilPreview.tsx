@@ -3,7 +3,7 @@
 import { useFerramentas } from "@/lib/useTextos";
 
 import { QRCodeSVG } from "qrcode.react";
-import { LOGO_PRESETS } from "@/components/qr/presets";
+import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
 import { perfilUrl } from "@/lib/instagram";
 
 /**
@@ -125,12 +125,12 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
             imageSettings={
               MARCA
                 ? {
-                    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-                      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="#fff"/><path fill="#111" d="${MARCA.path}"/></svg>`
-                    )}`,
+                    // O mesmo desenho do código de verdade: contorno branco na
+                    // marca, e não uma placa branca quadrada atrás dela.
+                    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(presetMarkup(MARCA))}`,
                     height: 52,
                     width: 52,
-                    excavate: true,
+                    excavate: false,
                   }
                 : undefined
             }

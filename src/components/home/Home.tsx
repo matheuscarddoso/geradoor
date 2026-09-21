@@ -5,7 +5,8 @@ import { EtiquetaNovo } from "@/components/shell/EtiquetaNovo";
 import { ConteudoDaFerramenta, type PerguntaDaFerramenta, type SecaoDaFerramenta } from "@/components/shell/ConteudoDaFerramenta";
 import { BlocoDeChamada, CabecalhoDaSecao, CartaoNumerado, MarcadorDeSecao } from "./Secoes";
 import { Hero, type TextoDaHero } from "./Hero";
-import { rotasPublicas } from "@/lib/rotas";
+import { ROTAS_DE_POUSO, rotasPublicas } from "@/lib/rotas";
+import { TEXTOS } from "@/lib/textos";
 import type { Idioma } from "@/lib/idioma";
 
 /**
@@ -51,9 +52,14 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
   const rotas = rotasPublicas(idioma);
   const inicio = idioma === "en" ? "/en" : "/";
   const destaque = rotas.find((r) => r.novo) ?? rotas[0];
+  // As páginas de pouso ficam fora da grade de propósito (ver ROTAS_DE_POUSO),
+  // mas não podem ficar fora da home: é a página com mais autoridade do site,
+  // e sem um link daqui elas dependiam de um ou dois "Veja também" para o
+  // buscador achá-las. Em inglês, só as que têm par.
+  const pousos = ROTAS_DE_POUSO.flatMap((r) => (idioma === "en" ? (r.en ? [r.en] : []) : [r]));
 
   return (
-    <div className="flex min-h-dvh flex-col" lang={idioma === "en" ? "en" : undefined}>
+    <div className="flex min-h-dvh flex-col">
       <Hero idioma={idioma} texto={conteudo.hero}>
         {/* `role="img"` porque o desenho é um fundo de CSS: sem isso a captura
             de tela não teria nome nenhum para quem usa leitor. */}
@@ -113,6 +119,20 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
               ))}
             </ul>
           </nav>
+          {pousos.length > 0 && (
+            <p className="mt-5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+              <span>{TEXTOS[idioma].tambemFaz}</span>
+              {pousos.map(({ href, descricao }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="rounded text-foreground underline decoration-zinc-300 underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:decoration-zinc-600"
+                >
+                  {descricao.charAt(0).toLowerCase() + descricao.slice(1)}
+                </Link>
+              ))}
+            </p>
+          )}
         </div>
       </section>
 

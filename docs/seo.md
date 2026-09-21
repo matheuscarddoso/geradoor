@@ -46,6 +46,19 @@ usar o hook.
 navegador e catastrófico para indexação. Se um dia outra página precisar de
 `useSearchParams`, o boundary tem que ficar em volta do menor pedaço possível.
 
+### A mesma classe de defeito, de novo: o acordeão
+
+Em setembro de 2026 a FAQ virou acordeão com o `Accordion` do Radix, que
+**desmonta** o conteúdo fechado. As respostas sumiram do HTML servido — ficaram
+só no JSON-LD — e cada página perdeu ~300 palavras (`/cpf` foi de 805 para 508),
+com um `FAQPage` descrevendo texto invisível. O comentário do componente dizia
+o contrário, e ninguém conferiu no `curl`. Resolvido em 21/09/2026 trocando por
+`<details>` nativo (`FaqAcordeao`).
+
+**Lição:** o inspetor do navegador mostra o DOM depois do clique; o buscador lê
+o HTML antes dele. Todo componente que esconde conteúdo — acordeão, aba,
+"ver mais" — se confere com `curl`, procurando o texto escondido.
+
 ---
 
 ## 2. O formato do conteúdo
@@ -158,7 +171,8 @@ O que reduziu:
 | sitemap | `src/app/sitemap.ts` | Derivado de `ROTAS_PUBLICAS` e `ROTAS_DE_POUSO`. `lastModified` é **data fixa**, não a do build: dizer que toda página mudou a cada deploy ensina o buscador a ignorar o campo. |
 | robots | `src/app/robots.ts` | Nomeia `OAI-SearchBot`, `GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended` e outros. O `*` já os liberava; nomear deixa escrito que é decisão, e evita que alguém aperte o `*` um dia e corte a fonte de citação sem perceber. |
 | `llms.txt` | `src/app/llms.txt/route.ts` | Gerado da mesma lista de rotas. Ver a ressalva na seção 5. |
-| hreflang | `src/lib/seo.ts` | `pt-BR` e `x-default` na mesma URL. O site é monolíngue, mas concorrente que serve português europeu para busca brasileira perde por isso. |
+| hreflang | `src/lib/seo.ts`, `parDeIdiomas` em `src/lib/rotas.ts` | Cada página aponta para o par no outro idioma, inclusive as legais; `x-default` é o português. Página sem par declara só o próprio idioma — nunca `pt-BR` numa página em inglês. Teste em `rotas.test.ts`. |
+| `<html lang>` | `src/app/(pt)/layout.tsx`, `src/app/(en)/layout.tsx`, `Documento` | Dois layouts raiz em grupos de rota, um por idioma. Os parênteses não entram na URL, então nada mudou de endereço e tudo segue estático. Até 21/09/2026 era um layout só, fixo em `pt-BR`, e as páginas em inglês se declaravam português. O 404 de endereço sem rota vem de `global-not-found.tsx`. |
 | JSON-LD | `src/lib/seo.ts` | `WebApplication` + `Offer` + `BreadcrumbList` por página, `FAQPage` onde há FAQ, `ItemList` na home. A home declarava um segundo `WebSite` com a mesma URL do layout e outra descrição — dois nós conflitantes para o mesmo endereço. |
 
 ---
@@ -280,7 +294,18 @@ Acima de ~10% no bloco editorial, reescreva antes de publicar.
       redirecionamento. Vale repetir essa checagem sempre que uma rota nova
       entrar no sitemap — o script está na seção 6.
 
-- [ ] **Ler o relatório de Páginas** quando os dados aparecerem (~1 dia para
+- [x] **Primeira leitura do relatório de Páginas** — 21/09/2026: 16 de 31
+      indexadas. 14 em "Detectada, não indexada" com rastreamento N/D — fila de
+      rastreamento de domínio novo sem link externo, não defeito. A leitura
+      achou o acordeão (seção 1), o `lang` e o hreflang das legais (seção 4),
+      corrigidos no mesmo dia. Os três "com redirecionamento" são as variantes
+      http/sem www, com 308 para `https://www` — correto, não validar.
+
+- [ ] **Links externos.** Com zero backlinks o Google rastreia devagar, e isso
+      é a alavanca que falta, não código: README do repositório, perfis do
+      autor, e comunidades onde gerador de CPF/CNPJ de teste é útil de verdade.
+
+- [ ] **Ler o relatório de Páginas** de novo quando os dados aparecerem (~1 dia para
       cobertura, 1 a 2 semanas para saber quantas das 16 foram indexadas, 30
       dias para os primeiros termos de busca reais).
 

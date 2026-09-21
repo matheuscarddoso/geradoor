@@ -3,13 +3,7 @@ import { EMAIL_DE_CONTATO } from "@/lib/seo";
 import type { Idioma } from "@/lib/idioma";
 import { TEXTOS } from "@/lib/textos";
 import { cn } from "@/lib/utils";
-
-/** As páginas que o rodapé lista, na ordem. */
-export const PAGINAS_LEGAIS = [
-  { href: "/privacidade", en: { href: "/en/privacy", label: "Privacy" }, label: "Privacidade" },
-  { href: "/termos", en: { href: "/en/terms", label: "Terms" }, label: "Termos de uso" },
-  { href: "/cookies", en: { href: "/en/cookies", label: "Cookies" }, label: "Cookies" },
-] as const;
+import { PAGINAS_LEGAIS } from "@/lib/rotas";
 
 /** As páginas legais no idioma pedido. */
 export function paginasLegais(idioma: Idioma) {

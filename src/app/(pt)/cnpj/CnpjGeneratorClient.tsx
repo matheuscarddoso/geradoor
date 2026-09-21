@@ -1,0 +1,87 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { formatCNPJ, generateCNPJ } from '@/app/utils/cnpj_gen';
+import { Input } from '@/components/ui/input';
+import { toast } from "sonner";
+import { PageHeader } from '@/components/shell/AppShell';
+import { useRecentes } from '@/lib/recentes';
+import { useEspacoParaGerar } from '@/lib/useEspacoParaGerar';
+import { GerarComEspaco } from '@/components/GerarComEspaco';
+
+const CNPJGenerator: React.FC = () => {
+  const [cnpj, setCnpj] = useState<string>('');
+  const [copied, setCopied] = useState<boolean>(false);
+  const { registrar } = useRecentes();
+
+  useEffect(() => {
+    // Gera o primeiro valor ao montar. Antes isto convivia com uma
+    // manipulação manual da classe de tema no <html>, que brigava com o
+    // next-themes; a dependência era [theme], então trocar o tema regerava o
+    // valor sem motivo. Agora depende só da montagem.
+    handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);  
+
+  const handleGenerate = () => {
+    const newCnpj = generateCNPJ();
+    setCnpj(newCnpj);
+    registrar({ tipo: "cnpj", label: formatCNPJ(newCnpj) });
+  };
+
+  // Gerar passou a ser exclusivo da barra de espaço.
+  useEspacoParaGerar(handleGenerate);
+
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(cnpj);
+    setCopied(true);
+    toast("Copiado pro trem que coisa", {
+      description: "CNPJ copiado para a área de transferência",
+      action: {
+        label: "Cancelar",
+        onClick: () => {},
+      },
+    });
+    setTimeout(() => {
+      setCopied(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="w-full max-w-md">
+      <PageHeader
+        title="Gerador de CNPJ"
+        description="Números aleatórios com dígitos verificadores válidos, para testar cadastros e integrações."
+      />
+
+      <div
+        className="mx-auto flex flex-col items-center gap-3"
+        style={{ width: "calc(14.5ch + 3.5rem)" }}
+      >
+        <Input
+          readOnly
+          type="text"
+          placeholder="CNPJ"
+          title="Clique para copiar"
+          className="w-full cursor-pointer bg-background text-center"
+          value={formatCNPJ(cnpj)}
+          onClick={(evento) => {
+            if (!cnpj) return;
+            evento.currentTarget.select();
+            copyToClipboard();
+          }}
+        />
+
+        <Button className="w-full" onClick={copyToClipboard}>
+          {copied ? "Copiado!" : "Copiar CNPJ"}
+        </Button>
+
+        <GerarComEspaco onGerar={handleGenerate} />
+      </div>
+    </div>
+  );
+};
+
+export default CNPJGenerator;

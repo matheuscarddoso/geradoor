@@ -1,39 +1,44 @@
-"use client";
-
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ChevronDown } from "lucide-react";
 import type { PerguntaDaFerramenta } from "./ConteudoDaFerramenta";
 
 /**
  * As perguntas frequentes, em acordeão.
  *
- * Antes era uma lista de definições com tudo aberto. Vira acordeão porque a
- * página passou a ter dez perguntas em alguns lugares, e dez respostas abertas
- * empurram para baixo tudo que vem depois — quem chega procurando uma resposta
- * específica tinha de varrer o texto inteiro.
+ * Acordeão porque algumas páginas têm dez perguntas, e dez respostas abertas
+ * empurram para baixo tudo que vem depois.
  *
- * Um detalhe que precisa ficar claro, porque é fácil errar: o `FAQPage` do
- * JSON-LD continua saindo da MESMA lista, e a resposta continua no HTML servido.
- * Acordeão fechado esconde com CSS, não remove do documento — se removesse,
- * seria texto de FAQPage invisível ao leitor, que é violação da diretriz do
- * Google, e o buscador deixaria de ver o conteúdo.
+ * `<details>` nativo, e não o Accordion do Radix. O Radix DESMONTA o conteúdo
+ * fechado: a resposta não ia no HTML servido, só no JSON-LD. Enquanto foi assim
+ * o Googlebot, que não clica, leu ~300 palavras a menos por página, e o
+ * `FAQPage` passou a descrever texto invisível — exatamente a violação que
+ * este bloco existe para evitar. Com `<details>` a resposta está no documento,
+ * fechada ou aberta; o buscador a indexa, e o "localizar na página" do
+ * navegador abre o item sozinho quando o termo está lá dentro.
  *
- * `type="multiple"` sem item aberto por padrão: quem abre duas perguntas quer
- * comparar as duas respostas, e fechar a primeira ao abrir a segunda seria
- * trabalhar contra isso.
+ * De quebra vira componente de servidor: zero JavaScript para abrir e fechar.
+ * Cada item abre independente dos outros — quem abre duas perguntas quer
+ * comparar as respostas.
+ *
+ * Antes de trocar isto por qualquer componente de acordeão, confira no HTML
+ * servido (`curl`, não o inspetor do navegador) que a resposta continua lá.
  */
 export function FaqAcordeao({ perguntas }: { perguntas: PerguntaDaFerramenta[] }) {
   return (
-    <Accordion type="multiple" className="border-t border-border">
+    <div className="faq border-t border-border">
       {perguntas.map(({ pergunta, resposta }) => (
-        <AccordionItem key={pergunta} value={pergunta} className="border-border">
-          <AccordionTrigger className="gap-4 py-4 text-start text-[15px] font-medium hover:no-underline">
+        <details key={pergunta} className="group border-b border-border">
+          <summary
+            className="flex cursor-pointer list-none items-center justify-between gap-4 rounded py-4 text-start text-[15px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 [&::-webkit-details-marker]:hidden"
+          >
             {pergunta}
-          </AccordionTrigger>
-          <AccordionContent className="pb-4 pe-8 text-sm leading-[1.7] text-zinc-600 dark:text-zinc-300">
-            {resposta}
-          </AccordionContent>
-        </AccordionItem>
+            <ChevronDown
+              aria-hidden
+              className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+            />
+          </summary>
+          <p className="pb-4 pe-8 text-sm leading-[1.7] text-zinc-600 dark:text-zinc-300">{resposta}</p>
+        </details>
       ))}
-    </Accordion>
+    </div>
   );
 }

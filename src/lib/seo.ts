@@ -1,4 +1,4 @@
-import { idiomaDoCaminho } from "./idioma";
+import { idiomaDoCaminho, type Idioma } from "./idioma";
 import { parDeIdiomas } from "./rotas";
 /**
  * Constantes e blocos de dados estruturados do site.
@@ -46,6 +46,29 @@ export const SITE = {
     "Ferramentas online grátis: removedor de fundo, vetorizador de imagem, gerador de QR Code e geradores de CPF, CNPJ, cartão e telefone para teste. Sem cadastro e sem marca d'água.",
   twitter: "@geradoor",
 } as const;
+
+/**
+ * O que muda na identidade do site conforme o idioma.
+ *
+ * `SITE` continua sendo o português, que é a raiz; isto aqui é o que a versão
+ * em inglês troca — título padrão, descrição e o `og:locale`, que dizia
+ * `pt_BR` até nas páginas em inglês.
+ */
+export const SITE_POR_IDIOMA: Record<Idioma, { titulo: string; description: string; locale: string; raiz: string }> = {
+  "pt-BR": {
+    titulo: "Geradoor · Ferramentas grátis que rodam no seu navegador",
+    description: SITE.description,
+    locale: SITE.locale,
+    raiz: "/",
+  },
+  en: {
+    titulo: "Geradoor · Free tools that run in your browser",
+    description:
+      "Remove photo backgrounds, vectorize images, create QR Codes and generate test data. Free, no sign-up and no watermark.",
+    locale: "en_US",
+    raiz: "/en",
+  },
+};
 
 /** Caminho absoluto a partir de um path relativo. */
 export const absolute = (path: string) =>
@@ -157,23 +180,28 @@ export function pageMetadata({
 }) {
   const url = absolute(path);
   const par = parDeIdiomas(path);
+  const { locale } = SITE_POR_IDIOMA[idiomaDoCaminho(path)];
   return {
     title,
     description,
     // O hreflang de verdade: cada página aponta para a irmã no outro idioma.
     // É isto que impede o buscador de tratar as duas como duplicata e é o que
     // faz ele servir a versão certa para cada país. x-default é o português,
-    // que é a raiz.
+    // que é a raiz. Páginas sem par (a validadora de CPF, que só existe em
+    // português) declaram só o próprio idioma — nunca `pt-BR` numa página em
+    // inglês.
     alternates: {
       canonical: url,
       languages: par
         ? { "pt-BR": absolute(par["pt-BR"]), en: absolute(par.en), "x-default": absolute(par["pt-BR"]) }
-        : { "pt-BR": url, "x-default": url },
+        : idiomaDoCaminho(path) === "en"
+          ? { en: url }
+          : { "pt-BR": url, "x-default": url },
     },
     openGraph: {
       type: "website" as const,
       siteName: SITE.name,
-      locale: SITE.locale,
+      locale,
       url,
       title,
       description,

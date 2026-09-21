@@ -71,11 +71,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const idioma = idiomaDoCaminho(caminho);
 
   return (
-    /* O `lang` da subárvore fica aqui porque o shell já sabe o idioma pelo
-       caminho, e porque pôr um <div lang> dentro da página quebrava a cadeia de
-       altura da ferramenta. O <html> continua em pt-BR: lê-lo no layout raiz
-       exige headers(), e isso torna dinâmica toda página do site. */
-    <div className="flex h-screen overflow-hidden" lang={idioma === "en" ? "en" : undefined}>
+    // O idioma do documento vem do <html>, que cada layout raiz declara.
+    <div className="flex h-screen overflow-hidden">
       {aberta && (
         <Sidebar
           className="hidden md:flex"

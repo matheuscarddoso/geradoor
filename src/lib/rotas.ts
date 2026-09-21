@@ -288,8 +288,27 @@ export function parDeIdiomas(href: string): { "pt-BR": string; en: string } | nu
   if (rota?.en) return { "pt-BR": rota.href, en: rota.en.href };
 
   const pouso = ROTAS_DE_POUSO.find((r) => r.href === href || r.en?.href === href);
-  return pouso?.en ? { "pt-BR": pouso.href, en: pouso.en.href } : null;
+  if (pouso?.en) return { "pt-BR": pouso.href, en: pouso.en.href };
+
+  // As páginas legais têm par também. Sem esta linha, /en/privacy caía no
+  // ramo "sem par" e declarava `hreflang="pt-BR"` apontando para si mesma —
+  // um texto em inglês afirmando ser português.
+  const legal = PAGINAS_LEGAIS.find((p) => p.href === href || p.en.href === href);
+  return legal ? { "pt-BR": legal.href, en: legal.en.href } : null;
 }
+
+/**
+ * As páginas legais, na ordem do rodapé.
+ *
+ * Moram aqui, e não no componente do rodapé, porque o hreflang, o sitemap e o
+ * llms.txt também precisam delas — e quem declara pares de idioma é este
+ * arquivo.
+ */
+export const PAGINAS_LEGAIS = [
+  { href: "/privacidade", en: { href: "/en/privacy", label: "Privacy" }, label: "Privacidade" },
+  { href: "/termos", en: { href: "/en/terms", label: "Terms" }, label: "Termos de uso" },
+  { href: "/cookies", en: { href: "/en/cookies", label: "Cookies" }, label: "Cookies" },
+] as const;
 
 /**
  * Páginas de pouso: uma por intenção de busca, movidas pela mesma ferramenta.

@@ -640,3 +640,27 @@ html:not(.dark) .dialkit-root {
 .dark .home-produto {
   background-image: url("/home-produto-noite.webp");
 }
+
+/*
+ * A abertura da FAQ (<details>), com a mesma curva de 200 ms do antigo
+ * acordeão. `::details-content` e `interpolate-size` ainda não existem em todo
+ * navegador: onde faltam, o item abre seco, que é a degradação certa. Quem
+ * pede menos movimento também abre seco.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .faq {
+    interpolate-size: allow-keywords;
+  }
+
+  .faq details::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 200ms ease-out,
+      content-visibility 200ms allow-discrete;
+  }
+
+  .faq details[open]::details-content {
+    block-size: auto;
+  }
+}

@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-import { PAGINAS_LEGAIS } from "@/components/shell/Rodape";
-import { ROTAS_COM_INGLES, ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
+import { PAGINAS_LEGAIS, ROTAS_COM_INGLES, ROTAS_DE_POUSO, ROTAS_PUBLICAS } from "@/lib/rotas";
 import { absolute } from "@/lib/seo";
 
 /**

@@ -1,8 +1,10 @@
-import { existsSync } from "node:fs";
+import { readdirSync } from "node:fs";
+import { sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
   HREFS_COM_CASCA,
+  PAGINAS_LEGAIS,
   ROTAS,
   ROTAS_COM_INGLES,
   ROTAS_DE_POUSO,
@@ -10,6 +12,7 @@ import {
   parDeIdiomas,
   traduzir,
 } from "./rotas";
+import { pageMetadata } from "./seo";
 
 /**
  * A tabela de rotas, conferida contra o disco.
@@ -21,15 +24,29 @@ import {
  * existe arquivo atrás dela.
  */
 
-/** O `page.tsx` que responde por um endereço, se houver. */
+/**
+ * Todo endereço que tem `page.tsx` no disco.
+ *
+ * Grupos de rota — `(pt)`, `(en)`, `(legal)` — não aparecem na URL, então são
+ * tirados do caminho, que é exatamente o que o Next faz. Listar a árvore, em
+ * vez de testar caminhos conhecidos, é o que mantém este teste certo quando
+ * alguém cria ou reorganiza um grupo.
+ */
+const ENDERECOS_COM_PAGINA = new Set(
+  readdirSync("src/app", { recursive: true, encoding: "utf8" })
+    .filter((arquivo) => arquivo.split(sep).at(-1) === "page.tsx")
+    .map((arquivo) => {
+      const segmentos = arquivo
+        .split(sep)
+        .slice(0, -1)
+        .filter((segmento) => !/^\(.*\)$/.test(segmento));
+      return `/${segmentos.join("/")}`;
+    })
+);
+
+/** Se há um `page.tsx` que responde por um endereço. */
 function temPagina(href: string): boolean {
-  const relativo = href === "/" ? "" : href;
-  // Grupo de rota: `(legal)` não aparece na URL, então vale procurar nos dois.
-  return (
-    existsSync(`src/app${relativo}/page.tsx`) ||
-    existsSync(`src/app${relativo.replace(/^\/en/, "/en/(legal)")}/page.tsx`) ||
-    existsSync(`src/app/(legal)${relativo}/page.tsx`)
-  );
+  return ENDERECOS_COM_PAGINA.has(href);
 }
 
 describe("tabela de rotas", () => {
@@ -81,5 +98,36 @@ describe("tabela de rotas", () => {
       expect(parDeIdiomas(rota.href)).toEqual({ "pt-BR": rota.href, en: rota.en.href });
       expect(parDeIdiomas(rota.en.href)).toEqual({ "pt-BR": rota.href, en: rota.en.href });
     }
+  });
+
+  it("as páginas legais também são pares", () => {
+    for (const p of PAGINAS_LEGAIS) {
+      expect(parDeIdiomas(p.href)).toEqual({ "pt-BR": p.href, en: p.en.href });
+      expect(parDeIdiomas(p.en.href)).toEqual({ "pt-BR": p.href, en: p.en.href });
+      expect(temPagina(p.href), p.href).toBe(true);
+      expect(temPagina(p.en.href), p.en.href).toBe(true);
+    }
+  });
+});
+
+/**
+ * Nenhuma página em inglês pode se declarar português — nem pelo hreflang, nem
+ * pelo og:locale. As páginas legais em inglês faziam as duas coisas.
+ */
+describe("metadata por idioma", () => {
+  const enderecosEmIngles = [...ENDERECOS_COM_PAGINA].filter((h) => h === "/en" || h.startsWith("/en/"));
+
+  it("página em inglês nunca aponta hreflang pt-BR para si mesma", () => {
+    for (const href of enderecosEmIngles) {
+      const { alternates } = pageMetadata({ title: "t", description: "d", path: href });
+      const idiomas = alternates.languages as Record<string, string>;
+      expect(idiomas["pt-BR"], href).not.toBe(alternates.canonical);
+      expect(idiomas.en, href).toBe(alternates.canonical);
+    }
+  });
+
+  it("og:locale acompanha o idioma do endereço", () => {
+    expect(pageMetadata({ title: "t", description: "d", path: "/en/privacy" }).openGraph.locale).toBe("en_US");
+    expect(pageMetadata({ title: "t", description: "d", path: "/privacidade" }).openGraph.locale).toBe("pt_BR");
   });
 });

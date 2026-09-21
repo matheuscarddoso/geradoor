@@ -38,6 +38,8 @@ export type Dicionario = {
   /** Blocos de conteúdo. */
   perguntasFrequentes: string;
   vejaTambem: string;
+  /** Rótulo da linha de páginas de pouso, abaixo da grade de ferramentas da home. */
+  tambemFaz: string;
   nestaPagina: string;
   atualizadoEm: string;
 };
@@ -62,6 +64,7 @@ export const TEXTOS: Record<Idioma, Dicionario> = {
     contato: "Contato",
     perguntasFrequentes: "Perguntas frequentes",
     vejaTambem: "Veja também",
+  tambemFaz: "Também dá para",
     nestaPagina: "Nesta página",
     atualizadoEm: "Atualizado em",
   },
@@ -84,6 +87,7 @@ export const TEXTOS: Record<Idioma, Dicionario> = {
     contato: "Contact",
     perguntasFrequentes: "Frequently asked questions",
     vejaTambem: "See also",
+  tambemFaz: "You can also",
     nestaPagina: "On this page",
     atualizadoEm: "Updated on",
   },

@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
    * a sua própria pasta e não encosta na do dev.
    */
   distDir: process.env.NEXT_BUILD_DIR || ".next",
+  experimental: {
+    // O site tem dois layouts raiz, (pt) e (en), um para cada `<html lang>`.
+    // Sem layout acima dos dois, o 404 de endereço sem rota precisa do
+    // `src/app/global-not-found.tsx`, e ele só é lido com esta chave.
+    globalNotFound: true,
+  },
   async headers() {
     return [
       {

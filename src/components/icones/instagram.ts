@@ -5,8 +5,8 @@ import { createLucideIcon } from "lucide-react";
  *
  * O lucide-react 1.0 tirou os ícones de marca do pacote. Este é o mesmo
  * desenho que ele trazia até a 0.x, montado pela função do próprio Lucide:
- * sai com a classe `lucide`, o traço de 1px do design system e as mesmas
- * props dos outros ícones, então o menu e a busca não percebem a troca.
+ * sai com a classe `lucide`, o traço e as mesmas props dos outros ícones,
+ * então o menu e a busca não percebem a troca.
  *
  * Desenho original: lucide-react 0.460.0, licença ISC.
  */

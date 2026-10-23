@@ -500,23 +500,6 @@
 }
 
 @layer utilities {
-  /*
- * Traço de 1px nos ícones, o desenho do Nucleo.
- *
- * `vector-effect: non-scaling-stroke` torna o valor literal: sem ele, um
- * ícone de viewBox 24 renderizado a 16px teria traço de 0,67px. Com ele, 1
- * significa 1 pixel de tela em qualquer tamanho.
- *
- * A classe `lucide` é injetada em runtime pela biblioteca e nunca aparece
- * no código-fonte. Por isso é CSS comum numa layer nativa, e não `@utility`:
- * utilitário o Tailwind 4 só gera quando acha o nome no código, e esta regra
- * sumiria.
- */
-  svg.lucide {
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-  }
-
   /* =========================================================================
    Responsivo
    ========================================================================= */

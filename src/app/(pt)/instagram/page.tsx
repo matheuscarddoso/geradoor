@@ -6,7 +6,7 @@ import { breadcrumbSchema, jsonLd, pageMetadata, toolSchema } from "@/lib/seo";
 
 const TITLE = "Gerador de QR Code do Instagram";
 const DESCRIPTION =
-  "Crie um QR Code que abre o seu perfil do Instagram. Informe o @, escolha se quer a marca no centro e baixe em PNG, PDF ou SVG.";
+  "Crie um QR Code que abre o seu perfil do Instagram, no estilo do cartão do app. Informe o @, escolha a versão preta ou em gradiente e baixe em PNG, PDF ou SVG.";
 
 export const metadata: Metadata = pageMetadata({
   title: TITLE,
@@ -21,7 +21,7 @@ const schema = [
     path: "/instagram",
     features: [
       "QR Code apontando para o perfil",
-      "Marca do Instagram no centro do código",
+      "Estilo do cartão do Instagram, em preto ou gradiente",
       "Download em PNG, PDF e SVG",
     ],
   }),

@@ -8,7 +8,9 @@ export const SECOES: SecaoDaFerramenta[] = [
     conteudo: (
       <>
         <p>
-          Digite o seu <Dado>@</Dado> e o código aparece na hora, apontando para o endereço público do seu perfil.
+          Digite o seu <Dado>@</Dado> e o código sai no estilo do cartão do app — pontos, cantos arredondados, a
+          marca no meio e o seu @ embaixo —, em <Dado>preto ou gradiente</Dado>, apontando para o endereço público
+          do seu perfil.
           Baixe em PNG para usar em tela, ou em SVG e PDF para imprimir — os dois últimos são vetoriais e ficam
           nítidos em qualquer tamanho.
         </p>

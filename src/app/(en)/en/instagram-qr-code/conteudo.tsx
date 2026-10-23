@@ -8,7 +8,9 @@ export const SECOES: SecaoDaFerramenta[] = [
     conteudo: (
       <>
         <p>
-          Type your <Dado>@</Dado> and the code appears immediately, pointing at your public profile address.
+          Type your <Dado>@</Dado> and the code comes out in the app&apos;s card style — dots, rounded corners, the
+          mark in the middle and your @ underneath — in <Dado>black or gradient</Dado>, pointing at your public
+          profile address.
           Download PNG for screen use, or SVG and PDF for print — both are vector and stay sharp at any size.
         </p>
         <p>

@@ -63,6 +63,11 @@ interface DownloadOptions {
   format: QrFormat;
   /** Nome do arquivo, sem extensão. */
   filename?: string;
+  /**
+   * Largura do arquivo em px, antes da amostragem do PNG. Sem ela vale a
+   * largura na tela — o que amarra a resolução do arquivo ao layout do modal.
+   */
+  width?: number;
 }
 
 /**
@@ -73,6 +78,7 @@ export async function downloadQrCode({
   element,
   format,
   filename = "qrcode",
+  width,
 }: DownloadOptions): Promise<void> {
   if (!element) {
     throw new QrDownloadError("QR Code não encontrado");
@@ -88,21 +94,30 @@ export async function downloadQrCode({
     return;
   }
 
-  // As dimensões saem do próprio SVG, não de constante: as duas telas
-  // renderizam em tamanhos diferentes e a margem entra no viewBox.
+  // As dimensões saem do próprio SVG, não de constante: as telas renderizam
+  // em tamanhos diferentes e a margem entra no viewBox. A proporção também:
+  // o código do Instagram leva o @ embaixo e não é quadrado.
   const rendered = element.getBoundingClientRect();
-  const size = Math.round(rendered.width) || 200;
+  const viewBox = element instanceof SVGSVGElement ? element.viewBox.baseVal : null;
+  const ratio =
+    viewBox && viewBox.width > 0
+      ? viewBox.height / viewBox.width
+      : rendered.width > 0
+        ? rendered.height / rendered.width
+        : 1;
+  const drawWidth = width ?? (Math.round(rendered.width) || 200);
+  const drawHeight = Math.round(drawWidth * ratio);
 
   const canvas = document.createElement("canvas");
-  canvas.width = size * DEFAULT_SCALE;
-  canvas.height = size * DEFAULT_SCALE;
+  canvas.width = drawWidth * DEFAULT_SCALE;
+  canvas.height = drawHeight * DEFAULT_SCALE;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new QrDownloadError("Seu navegador não suporta canvas 2D");
 
   const image = await loadImage(svgToDataUrl(markup));
   ctx.scale(DEFAULT_SCALE, DEFAULT_SCALE);
-  ctx.drawImage(image, 0, 0, size, size);
+  ctx.drawImage(image, 0, 0, drawWidth, drawHeight);
 
   if (format === "png") {
     triggerDownload(await toBlob(canvas), `${filename}.png`);
@@ -115,8 +130,20 @@ export async function downloadQrCode({
   // funciona no browser, mas não é o construtor em todas elas.
   const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF();
-  const side = 180;
-  const offset = (210 - side) / 2; // centraliza na largura A4
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", offset, offset, side, side);
+  const margin = 15;
+  // Cabe na A4 com a margem dos dois lados, na largura e na altura.
+  const pdfWidth = Math.min(210 - margin * 2, (297 - margin * 2) / ratio);
+  const pdfHeight = pdfWidth * ratio;
+  pdf.addImage(
+    canvas.toDataURL("image/png"),
+    "PNG",
+    (210 - pdfWidth) / 2, // centraliza na largura A4
+    margin,
+    pdfWidth,
+    pdfHeight,
+    undefined,
+    // Sem isso o jspdf grava os pixels crus: 1200 × 1332 viram 4,8 MB.
+    "FAST"
+  );
   pdf.save(`${filename}.pdf`);
 }

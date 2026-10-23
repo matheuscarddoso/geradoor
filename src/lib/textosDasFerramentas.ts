@@ -180,14 +180,19 @@ export type Ferramentas = {
     ate4mb: string;
     naoAplicouIcone: string;
     naoCarregouImagem: string;
+    vetor: string;
   };
   instagram: {
     arrobaInvalido: string;
     criandoQr: string;
     gerandoPerfil: string;
     gerarQr: string;
-    usarIcone: string;
-    naoCarregouIcone: string;
+    estilo: string;
+    estiloPreto: string;
+    estiloGradiente: string;
+    estiloDica: string;
+    qrCriado: string;
+    qrCriadoTexto: string;
     seuPerfil: string;
     compartilharPerfil: string;
     copiarLink: string;
@@ -377,14 +382,19 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       ate4mb: "Até 4 MB.",
       naoAplicouIcone: "Não foi possível aplicar este ícone",
       naoCarregouImagem: "Não foi possível carregar a imagem",
+      vetor: "vetor",
     },
     instagram: {
       arrobaInvalido: "Esse @ não é válido",
       criandoQr: "Criando seu QR Code",
       gerandoPerfil: "Estamos gerando o código do seu perfil.",
       gerarQr: "Gerar meu QR Code",
-      usarIcone: "Usar o ícone do Instagram no centro do QR Code",
-      naoCarregouIcone: "Não foi possível carregar o ícone do Instagram",
+      estilo: "Estilo",
+      estiloPreto: "Preto",
+      estiloGradiente: "Gradiente",
+      estiloDica: "As duas versões aparecem lado a lado antes de baixar.",
+      qrCriado: "QR Code criado",
+      qrCriadoTexto: "Quem escanear cai direto no seu perfil. Escolha a versão e baixe.",
       seuPerfil: "seu.perfil",
       compartilharPerfil: "Compartilhar perfil",
       copiarLink: "Copiar link",
@@ -571,14 +581,19 @@ export const FERRAMENTAS: Record<Idioma, Ferramentas> = {
       ate4mb: "Up to 4 MB.",
       naoAplicouIcone: "Could not apply this icon",
       naoCarregouImagem: "Could not load the image",
+      vetor: "vector",
     },
     instagram: {
       arrobaInvalido: "That @ is not valid",
       criandoQr: "Creating your QR Code",
       gerandoPerfil: "We are generating the code for your profile.",
       gerarQr: "Create my QR Code",
-      usarIcone: "Use the Instagram icon in the center of the QR Code",
-      naoCarregouIcone: "Could not load the Instagram icon",
+      estilo: "Style",
+      estiloPreto: "Black",
+      estiloGradiente: "Gradient",
+      estiloDica: "Both versions show side by side before you download.",
+      qrCriado: "QR Code created",
+      qrCriadoTexto: "Whoever scans lands right on your profile. Pick a version and download.",
       seuPerfil: "your.profile",
       compartilharPerfil: "Share profile",
       copiarLink: "Copy link",

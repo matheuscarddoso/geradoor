@@ -15,7 +15,7 @@ const schema = [
     name: "Instagram QR Code Generator",
     description: DESCRIPTION,
     path: "/en/instagram-qr-code",
-    features: ["Readable by any camera, not just the app", "PNG, SVG and PDF download", "Points at your public profile"],
+    features: ["Readable by any camera, not just the app", "Instagram card style, in black or gradient", "PNG, SVG and PDF download", "Points at your public profile"],
   }),
   breadcrumbSchema([
     { name: "Home", path: "/en" },

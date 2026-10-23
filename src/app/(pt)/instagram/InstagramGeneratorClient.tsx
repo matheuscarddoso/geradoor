@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { ChevronDown, Loader } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -20,12 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DialogAcoes,
-  DialogDestaque,
-  DialogSelo,
-  DialogSuperficie,
-} from "@/components/ui/dialog-parts";
+import { DialogAcoes, DialogDestaque, DialogSelo } from "@/components/ui/dialog-parts";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,21 +27,22 @@ import { PageHeader } from "@/components/shell/AppShell";
 import { MarcaSvg } from "@/components/MarcaSvg";
 import PhoneFrame from "@/components/whatsapp/PhoneFrame";
 import { PerfilPreview } from "@/components/instagram/PerfilPreview";
-import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
-import {
-  LOGO_DEFAULT_SCALE,
-  LogoScaleSlider,
-} from "@/components/qr/LogoScaleSlider";
-import { rasterizeSvgMarkup } from "@/lib/image";
+import { EscolhaDeVariante, SeletorDeVariante } from "@/components/instagram/VariantesDoQr";
 import { MAX_ARROBA, parseArroba, perfilUrl, type MotivoDoArroba } from "@/lib/instagram";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
+import type { VarianteDoQr } from "@/lib/qrInstagram";
 import { useRecentes } from "@/lib/recentes";
 import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
 import { preencher } from "@/lib/textosDasFerramentas";
 
-const QR_RENDER_SIZE = 200;
+/**
+ * Largura do arquivo baixado, em px, antes da amostragem 4x do PNG: sai com
+ * 1200 px de largura, o bastante para impressão em cartão e cartaz pequeno.
+ * Fixa, e não lida da tela, porque no modal o código aparece em meia coluna.
+ */
+const LARGURA_DO_ARQUIVO = 300;
 
 const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
   titulo = "Gerador de QR Code do Instagram",
@@ -88,51 +80,16 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
     setModalAberto(true);
   }, []);
   const [baixando, setBaixando] = useState<QrFormat | null>(null);
-  const [usarLogo, setUsarLogo] = useState(true);
-  const [logoScale, setLogoScale] = useState(LOGO_DEFAULT_SCALE);
-  const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const { resolvedTheme } = useTheme();
+  const [variante, setVariante] = useState<VarianteDoQr>("gradiente");
+  const svgs = useRef<Record<VarianteDoQr, SVGSVGElement | null>>({ preto: null, gradiente: null });
+  const registrarSvg = useCallback((qual: VarianteDoQr, svg: SVGSVGElement | null) => {
+    svgs.current[qual] = svg;
+  }, []);
   const { registrar } = useRecentes();
 
   const perfil = useMemo(() => parseArroba(arroba), [arroba]);
   // Só acusa erro depois de sair do campo, para não brigar com quem digita.
   const mostrarErro = tocado && arroba.length > 0 && !perfil.ok;
-
-  /**
-   * A marca entra no QR como PNG data URL, não como SVG.
-   *
-   * O download desenha o SVG do código num canvas, e um <image> apontando para
-   * SVG aninhado não carrega quando o externo é lido como imagem — a marca
-   * sumiria do arquivo baixado.
-   */
-  useEffect(() => {
-    if (!usarLogo || logoSrc) return;
-    const preset = LOGO_PRESETS.find((item) => item.id === "instagram");
-    if (!preset) return;
-
-    let ativo = true;
-    rasterizeSvgMarkup(presetMarkup(preset))
-      .then((src) => ativo && setLogoSrc(src))
-      .catch(() => {
-        if (!ativo) return;
-        toast.error(f.instagram.naoCarregouIcone);
-        setUsarLogo(false);
-      });
-    return () => {
-      ativo = false;
-    };
-  }, [usarLogo, logoSrc, f.instagram.naoCarregouIcone]);
-
-  const logoAtivo = usarLogo && logoSrc !== null;
-  const imageSettings = logoAtivo
-    ? {
-        src: logoSrc,
-        height: Math.round(QR_RENDER_SIZE * logoScale),
-        width: Math.round(QR_RENDER_SIZE * logoScale),
-        // O logo traz o próprio contorno branco. Ver `presetMarkup`.
-        excavate: false,
-      }
-    : undefined;
 
   const handleGenerate = async () => {
     if (!perfil.ok || !perfil.usuario) {
@@ -161,7 +118,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
         label: `@${perfil.usuario}`,
         href: hrefRecente("/instagram", dados.shortcode),
       });
-      toast.success("QR Code criado com sucesso!");
+      toast.success(f.qr.criadoComSucesso);
     } catch (error) {
       console.error("Erro ao criar QR Code:", error);
       toast.error(f.qr.erroAoCriar);
@@ -174,9 +131,10 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
     try {
       setBaixando(format);
       await downloadQrCode({
-        element: document.querySelector<SVGElement>(".qrcode-svg"),
+        element: svgs.current[variante],
         format,
-        filename: `instagram-${perfil.usuario ?? "perfil"}`,
+        filename: `instagram-${perfil.usuario ?? "perfil"}-${variante}`,
+        width: LARGURA_DO_ARQUIVO,
       });
     } catch (error) {
       toast.error(
@@ -251,39 +209,10 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
               )}
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <Label htmlFor="logo-instagram" className="text-sm font-medium leading-none">
-                  Ícone do Instagram no centro
-                </Label>
-                <p className="mt-1 text-xs text-subtle">
-                  {f.qr.marcaNoMeio}
-                </p>
-              </div>
-              <Switch
-                id="logo-instagram"
-                checked={usarLogo}
-                onCheckedChange={setUsarLogo}
-                aria-label={f.instagram.usarIcone}
-              />
-            </div>
-
-            {/* O tamanho só faz sentido com o logo aplicado. A altura anima por
-                grid-template-rows, em CSS: uma revelação simples não justifica
-                carregar uma biblioteca de animação nesta página. O `inert` tira o
-                controle do caminho do Tab enquanto ele está recolhido. */}
-            <div
-              inert={!logoAtivo}
-              className={cn(
-                "grid transition-all duration-200 ease-out motion-reduce:transition-none",
-                logoAtivo ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-              )}
-            >
-              <div className="overflow-hidden">
-                <div className="pt-4">
-                  <LogoScaleSlider scale={logoScale} onScaleChange={setLogoScale} />
-                </div>
-              </div>
+            <div className="mt-2 space-y-2.5">
+              <p className="text-sm font-medium leading-none">{f.instagram.estilo}</p>
+              <SeletorDeVariante valor={variante} onChange={setVariante} />
+              <p className="text-xs text-subtle">{f.instagram.estiloDica}</p>
             </div>
 
             <Dialog
@@ -300,7 +229,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   disabled={!perfil.ok || carregando}
                 >{f.instagram.gerarQr}</Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[440px]">
                 {carregando ? (
                   /* O DialogTitle precisa existir em TODO estado: o Radix o
                      usa como nome acessível do diálogo e avisa quando falta.
@@ -317,10 +246,8 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                   <>
                     <DialogSelo variante="sucesso" />
                     <DialogHeader>
-                      <DialogTitle>QR Code criado</DialogTitle>
-                      <DialogDescription>
-                        Quem escanear vai direto para o seu perfil no Instagram.
-                      </DialogDescription>
+                      <DialogTitle>{f.instagram.qrCriado}</DialogTitle>
+                      <DialogDescription>{f.instagram.qrCriadoTexto}</DialogDescription>
                     </DialogHeader>
 
                     <DialogDestaque>
@@ -333,22 +260,15 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                       </Link>
                     </DialogDestaque>
 
-                    <DialogSuperficie className="flex justify-center py-5">
-                      <QRCodeSVG
-                        className="qrcode-svg"
-                        value={qrCodeValue ?? ""}
-                        size={QR_RENDER_SIZE}
-                        /* 4 módulos de quiet zone, como pede a especificação;
-                           o padrão da biblioteca é 0 e leitores falham. */
-                        marginSize={4}
-                        /* Nível H recupera ~30% dos módulos e é o que permite
-                           cobrir o centro com a marca. */
-                        level={logoAtivo ? "H" : "L"}
-                        imageSettings={imageSettings}
-                        fgColor="black"
-                        bgColor="white"
+                    {qrCodeValue && (
+                      <EscolhaDeVariante
+                        valor={variante}
+                        onChange={setVariante}
+                        valorDoQr={qrCodeValue}
+                        usuario={perfil.usuario}
+                        registrar={registrarSvg}
                       />
-                    </DialogSuperficie>
+                    )}
 
                     <DialogAcoes>
                       <DropdownMenu>
@@ -370,7 +290,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                             PDF<span className="ms-auto text-xs text-subtle">{f.qr.impressao}</span>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleDownload("svg")}>
-                            SVG<span className="ms-auto text-xs text-subtle">vetor</span>
+                            SVG<span className="ms-auto text-xs text-subtle">{f.qr.vetor}</span>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -402,7 +322,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
             recorte="inteiro"
             className="absolute left-1/2 top-1/2 w-[56%] -translate-x-1/2 -translate-y-1/2"
           >
-            <PerfilPreview usuario={perfil.usuario ?? ""} />
+            <PerfilPreview usuario={perfil.usuario ?? ""} variante={variante} />
           </PhoneFrame>
         </div>
       </div>

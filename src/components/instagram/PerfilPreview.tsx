@@ -2,9 +2,9 @@
 
 import { useFerramentas } from "@/lib/useTextos";
 
-import { QRCodeSVG } from "qrcode.react";
-import { LOGO_PRESETS, presetMarkup } from "@/components/qr/presets";
+import { QrInstagram } from "@/components/instagram/QrInstagram";
 import { perfilUrl } from "@/lib/instagram";
+import type { VarianteDoQr } from "@/lib/qrInstagram";
 
 /**
  * Prévia da tela de compartilhar perfil do Instagram.
@@ -15,16 +15,12 @@ import { perfilUrl } from "@/lib/instagram";
  */
 
 const pt = (v: number) => `${(v / 393) * 100}cqw`;
-const MARCA = LOGO_PRESETS.find((p) => p.id === "instagram");
 
 /**
- * O QR da prévia NÃO leva a classe `qrcode-svg`.
- *
- * O download busca o código pelo `document.querySelector(".qrcode-svg")`, e
- * com dois elementos marcados ele pegaria o primeiro do DOM — que seria este,
- * decorativo, em vez do código do modal.
+ * O código da prévia sai do mesmo desenho do arquivo baixado, na variante
+ * escolhida no formulário: trocar o estilo muda o celular na hora.
  */
-export function PerfilPreview({ usuario }: { usuario: string }) {
+export function PerfilPreview({ usuario, variante }: { usuario: string; variante: VarianteDoQr }) {
   const f = useFerramentas();
   const arroba = usuario.trim() || f.instagram.seuPerfil;
 
@@ -110,41 +106,18 @@ export function PerfilPreview({ usuario }: { usuario: string }) {
         className="flex flex-1 flex-col items-center justify-center"
         style={{ padding: `0 ${pt(34)}` }}
       >
+        {/* O código já traz a própria margem branca e o @ embaixo: o
+            cartão só arredonda e dá um respiro curto em volta. */}
         <div
-          className="flex w-full flex-col items-center bg-white"
-          style={{ borderRadius: pt(26), padding: `${pt(26)} ${pt(20)}` }}
+          className="w-full overflow-hidden bg-white"
+          style={{ borderRadius: pt(26), padding: pt(8) }}
         >
-          <QRCodeSVG
-            value={perfilUrl(arroba)}
-            size={220}
-            className="h-auto w-full"
-            marginSize={0}
-            level="H"
-            fgColor="#111111"
-            bgColor="#FFFFFF"
-            imageSettings={
-              MARCA
-                ? {
-                    // O mesmo desenho do código de verdade: contorno branco na
-                    // marca, e não uma placa branca quadrada atrás dela.
-                    src: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(presetMarkup(MARCA))}`,
-                    height: 52,
-                    width: 52,
-                    excavate: false,
-                  }
-                : undefined
-            }
+          <QrInstagram
+            valor={perfilUrl(arroba)}
+            usuario={arroba}
+            variante={variante}
+            className="block h-auto w-full"
           />
-          <p
-            className="w-full truncate text-center font-bold uppercase text-[#111]"
-            style={{
-              marginTop: pt(14),
-              fontSize: pt(21),
-              letterSpacing: "0.02em",
-            }}
-          >
-            @{arroba}
-          </p>
         </div>
 
         {/* Três ações */}

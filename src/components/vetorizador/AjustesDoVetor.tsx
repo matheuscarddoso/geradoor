@@ -58,7 +58,7 @@ function LinhaAutomatica({ automatico, texto, onAutomatico }: { automatico: bool
         <button
           type="button"
           onClick={onAutomatico}
-          className="shrink-0 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+          className="shrink-0 underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
         >
           Voltar ao automático
         </button>
@@ -103,7 +103,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
                 onClick={() => onAjustes(ajustesDoEstilo(id, ajustes.fundoTransparente))}
                 className={cn(
                   "h-9 whitespace-nowrap rounded-lg px-2 text-[13px] transition-[background-color,color,box-shadow] duration-150",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+                  "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
                   selecionado
                     ? "bg-background font-medium text-foreground shadow-[0_0_0_0.5px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.08)] dark:bg-zinc-800 dark:shadow-[0_0_0_0.5px_rgb(255_255_255/0.08)]"
                     : "text-subtle hover:text-foreground"
@@ -186,7 +186,7 @@ export function AjustesDoVetor({ ajustes, onAjustes, corDoTraco, onCorDoTraco, r
                 onClick={() => onCorDoTraco(cor)}
                 className={cn(
                   "h-7 w-7 rounded-full ring-1 ring-inset ring-black/10 transition-shadow duration-150 dark:ring-white/15",
-                  "focus-visible:outline-none",
+                  "focus-visible:outline-hidden",
                   corDoTraco === cor && "shadow-[0_0_0_2px_hsl(var(--background)),0_0_0_3.5px_hsl(var(--foreground))]"
                 )}
                 style={{ backgroundColor: cor }}

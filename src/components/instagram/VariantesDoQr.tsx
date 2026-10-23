@@ -61,7 +61,7 @@ export function SeletorDeVariante({ valor, onChange }: SeletorProps) {
           className={cn(
             "flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-[13px] text-subtle",
             "transition-[background-color,color,box-shadow] duration-150 hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+            "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
             "data-[state=checked]:bg-background data-[state=checked]:font-medium data-[state=checked]:text-foreground",
             "data-[state=checked]:shadow-[0_0_0_0.5px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.08)]",
             "dark:data-[state=checked]:bg-zinc-800 dark:data-[state=checked]:shadow-[0_0_0_0.5px_rgb(255_255_255/0.08)]"
@@ -109,7 +109,7 @@ export function EscolhaDeVariante({ valor, onChange, valorDoQr, usuario, registr
             "group flex flex-col gap-2.5 rounded-[20px] p-2 pb-2.5 text-start",
             "transition-[background-color,box-shadow] duration-150 ease-out",
             "hover:bg-selected/60 data-[state=checked]:bg-selected",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           )}
         >
           <QrInstagram
@@ -130,7 +130,7 @@ export function EscolhaDeVariante({ valor, onChange, valorDoQr, usuario, registr
             {rotulos[variante]}
             <Check
               aria-hidden="true"
-              className="ms-auto h-3.5 w-3.5 opacity-0 transition-opacity duration-150 [stroke-width:2.25] group-data-[state=checked]:opacity-100"
+              className="ms-auto h-3.5 w-3.5 opacity-0 transition-opacity duration-150 stroke-[2.25] group-data-[state=checked]:opacity-100"
             />
           </span>
         </RadioGroup.Item>

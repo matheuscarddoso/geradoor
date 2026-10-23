@@ -1,11 +1,13 @@
 
+// O endereço do banco mora em prisma.config.ts desde o Prisma 7, e o cliente
+// é gerado dentro de src/ (fora do node_modules), como o gerador novo exige.
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {

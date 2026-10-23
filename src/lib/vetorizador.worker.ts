@@ -118,7 +118,7 @@ async function preparar(pedido: Pedido<"preparar">) {
 }
 
 /** A referência da fidelidade, reduzida ao tamanho da amostra. */
-function amostrar(pixels: Uint8ClampedArray, tracado: Dimensoes): Uint8ClampedArray {
+function amostrar(pixels: Uint8ClampedArray<ArrayBuffer>, tracado: Dimensoes): Uint8ClampedArray {
   const amostra = dimensoesDaAmostra(tracado);
   const origem = new OffscreenCanvas(tracado.largura, tracado.altura);
   contexto(origem).putImageData(new ImageData(pixels, tracado.largura, tracado.altura), 0, 0);
@@ -182,7 +182,7 @@ async function vetorizar(pedido: Pedido<"vetorizar">) {
   const { tracado, original, ajustes } = pedido;
   // O buffer chegou por cópia: este worker é o dono dele e pode escrever.
   const pixels = new Uint8ClampedArray(pedido.pixels);
-  const referencia: { pixels: Uint8ClampedArray | null } = { pixels: null };
+  const referencia: { pixels: Uint8ClampedArray<ArrayBuffer> | null } = { pixels: null };
   const preparacao = prepararPixels(pixels, tracado, ajustes, (p) => (referencia.pixels = p));
 
   const parametros = parametrosDoMotor(ajustes, preparacao.estilo, tracado);

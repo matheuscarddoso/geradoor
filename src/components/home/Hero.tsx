@@ -58,9 +58,9 @@ export function Hero({
             céu azul e mar brilhante, onde branco não se lê: o véu vira branco e
             o texto, escuro. O horizontal é o que importa, porque o texto mora à
             esquerda; o vertical firma o topo e o pé, de onde a tela emerge. */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/85 dark:from-[#0a1020]/75 dark:via-[#0a1020]/25 dark:to-[#0a1020]/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/45 to-transparent dark:from-[#0a1020]/85 dark:via-[#0a1020]/35 dark:to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-b from-transparent to-background" />
+        <div className="absolute inset-0 bg-linear-to-b from-white/70 via-white/30 to-white/85 dark:from-[#0a1020]/75 dark:via-[#0a1020]/25 dark:to-[#0a1020]/90" />
+        <div className="absolute inset-0 bg-linear-to-r from-white/90 via-white/45 to-transparent dark:from-[#0a1020]/85 dark:via-[#0a1020]/35 dark:to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-linear-to-b from-transparent to-background" />
       </div>
 
       <div className="relative">
@@ -77,7 +77,7 @@ export function Hero({
         <div className="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-8 sm:pb-14 sm:pt-24">
           <Link
             href={texto.aviso.href}
-            className="group inline-flex items-center gap-2 rounded-full border border-zinc-900/15 bg-white/50 py-1 pe-2.5 ps-1.5 text-[13px] text-zinc-700 backdrop-blur transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/20 dark:bg-white/[0.06] dark:text-white/80 dark:hover:text-white dark:focus-visible:ring-white/60"
+            className="group inline-flex items-center gap-2 rounded-full border border-zinc-900/15 bg-white/50 py-1 pe-2.5 ps-1.5 text-[13px] text-zinc-700 backdrop-blur-sm transition-colors duration-150 hover:text-zinc-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/20 dark:bg-white/6 dark:text-white/80 dark:hover:text-white dark:focus-visible:ring-white/60"
           >
             <EtiquetaNovo idioma={idioma} />
             <span className="truncate">{texto.aviso.texto}</span>
@@ -95,14 +95,14 @@ export function Hero({
           <div className="mt-8 flex flex-wrap items-center gap-2.5">
             <Link
               href={texto.acao.href}
-              className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 dark:bg-white dark:text-zinc-900 dark:focus-visible:ring-white/60"
+              className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-opacity duration-150 hover:opacity-90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-500 dark:bg-white dark:text-zinc-900 dark:focus-visible:ring-white/60"
             >
               {texto.acao.texto}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={texto.secundaria.href}
-              className="inline-flex items-center rounded-full border border-zinc-900/20 px-4 py-2.5 text-sm text-zinc-700 transition-colors duration-150 hover:border-zinc-900/50 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/25 dark:text-white/85 dark:hover:border-white/50 dark:hover:text-white dark:focus-visible:ring-white/60"
+              className="inline-flex items-center rounded-full border border-zinc-900/20 px-4 py-2.5 text-sm text-zinc-700 transition-colors duration-150 hover:border-zinc-900/50 hover:text-zinc-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:border-white/25 dark:text-white/85 dark:hover:border-white/50 dark:hover:text-white dark:focus-visible:ring-white/60"
             >
               {texto.secundaria.texto}
             </Link>

@@ -95,7 +95,7 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
                 >
                   <Link
                     href={href}
-                    className="group flex h-full flex-col gap-5 p-3.5 transition-colors duration-150 hover:bg-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 sm:gap-8 sm:p-5"
+                    className="group flex h-full flex-col gap-5 p-3.5 transition-colors duration-150 hover:bg-selected focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 sm:gap-8 sm:p-5"
                   >
                     <span className="hidden flex-1 items-center justify-center py-3 sm:flex">
                       <Icone
@@ -126,7 +126,7 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
                 <Link
                   key={href}
                   href={href}
-                  className="rounded text-foreground underline decoration-zinc-300 underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:decoration-zinc-600"
+                  className="rounded text-foreground underline decoration-zinc-300 underline-offset-4 transition-colors duration-150 hover:decoration-current focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:decoration-zinc-600"
                 >
                   {descricao.charAt(0).toLowerCase() + descricao.slice(1)}
                 </Link>
@@ -204,14 +204,14 @@ export function Home({ idioma, conteudo }: { idioma: Idioma; conteudo: ConteudoD
           <>
             <Link
               href={destaque.href}
-              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-blue-700 transition-opacity duration-150 hover:opacity-90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
             >
               {conteudo.chamada.acao}
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={idioma === "en" ? "/en/privacy" : "/privacidade"}
-              className="inline-flex items-center rounded-full border border-white/35 px-4 py-2.5 text-sm text-white/90 transition-colors duration-150 hover:border-white hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="inline-flex items-center rounded-full border border-white/35 px-4 py-2.5 text-sm text-white/90 transition-colors duration-150 hover:border-white hover:text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white"
             >
               {conteudo.chamada.secundaria}
             </Link>

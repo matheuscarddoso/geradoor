@@ -50,7 +50,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         "text-zinc-500 transition-colors duration-150",
         "hover:bg-zinc-50 hover:text-foreground",
         "dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
         className
       )}
     >

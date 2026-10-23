@@ -27,7 +27,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { v4 as uuidv4 } from "uuid";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import {
   DropdownMenu,
@@ -82,7 +81,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
     }
 
     const link = `https://wa.me/${phone}?text=${encodeURIComponent(message || "")}`;
-    const shortcode = uuidv4().slice(0, 6);
+    const shortcode = crypto.randomUUID().slice(0, 6);
     const baseUrl = "https://www.geradoor.com/";
 
     try {
@@ -350,7 +349,7 @@ const WhatsappLinkGenerator: React.FC<{ titulo?: string; descricao?: string }> =
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="min-w-[9rem]">
+                  <DropdownMenuContent align="center" className="min-w-36">
                     <DropdownMenuItem onClick={() => handleDownload("png")}>
                       PNG
                       <span className="ms-auto text-xs text-subtle">{f.qr.imagemMinuscula}</span>

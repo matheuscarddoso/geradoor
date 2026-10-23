@@ -6,11 +6,11 @@ import {
   IdCard,
   MessageCircle,
   QrCode,
-  Instagram,
   Smartphone,
   Spline,
   type LucideIcon,
 } from "lucide-react";
+import { Instagram } from "@/components/icones/instagram";
 import type { Idioma } from "./idioma";
 
 /**

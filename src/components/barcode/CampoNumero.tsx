@@ -180,7 +180,7 @@ export function CampoNumero({
             setRascunho(null);
           }
         }}
-        className="w-full min-w-0 bg-transparent text-right font-mono text-xs tabular-nums outline-none"
+        className="w-full min-w-0 bg-transparent text-right font-mono text-xs tabular-nums outline-hidden"
       />
       {unidade && (
         <span aria-hidden className="shrink-0 select-none text-[10px] text-muted-foreground">

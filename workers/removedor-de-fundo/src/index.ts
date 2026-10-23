@@ -112,7 +112,7 @@ export function cabecalhosDeCors(origem: string | null, permitidas: string): Rec
 }
 
 /** Lê o corpo inteiro, abortando assim que passar do teto — sem confiar no Content-Length. */
-async function lerCorpo(request: Request): Promise<Uint8Array> {
+async function lerCorpo(request: Request): Promise<Uint8Array<ArrayBuffer>> {
   if (!request.body) throw new Recusa(400, "imagem");
   const leitor = request.body.getReader();
   const partes: Uint8Array[] = [];
@@ -137,7 +137,7 @@ async function lerCorpo(request: Request): Promise<Uint8Array> {
   return bytes;
 }
 
-const emStream = (bytes: Uint8Array) => new Blob([bytes]).stream();
+const emStream = (bytes: Uint8Array<ArrayBuffer>) => new Blob([bytes]).stream();
 
 /**
  * Traduz a falha do Images para um motivo.
@@ -288,6 +288,8 @@ export async function atender(request: Request, env: Env): Promise<Response> {
   }
 }
 
-export default {
+const worker = {
   fetch: (request: Request, env: Env) => atender(request, env),
 };
+
+export default worker;

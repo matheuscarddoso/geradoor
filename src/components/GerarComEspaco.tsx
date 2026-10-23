@@ -27,7 +27,7 @@ export function GerarComEspaco({ onGerar }: { onGerar: () => void }) {
     <button
       type="button"
       onClick={onGerar}
-      className="block shrink-0 self-center whitespace-nowrap text-center text-xs text-subtle transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 rounded-full px-2 py-1"
+      className="block shrink-0 self-center whitespace-nowrap text-center text-xs text-subtle transition-colors duration-150 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 rounded-full px-2 py-1"
     >
       <span className="apenas-mouse">
         {ingles ? "Press" : "Pressione"}

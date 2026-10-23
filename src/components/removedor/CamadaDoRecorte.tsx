@@ -222,7 +222,7 @@ export function CamadaDoRecorte({
           "absolute inset-0 h-full w-full",
           // Pintando, o dedo desenha em vez de rolar a página, e o cursor do
           // sistema dá lugar ao círculo do tamanho do pincel.
-          pintando && "cursor-none [touch-action:none]",
+          pintando && "cursor-none touch-none",
           processandoMagia && "cursor-wait"
         )}
         onPointerDown={(evento) => {

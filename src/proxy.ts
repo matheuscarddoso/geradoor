@@ -33,7 +33,13 @@ const endurecer = (res: NextResponse) => {
  */
 async function guardarAdmin(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
-  if (pathname === "/admin/login") return naoIndexar(NextResponse.next());
+  // A página de login e a API que ela chama ficam fora do portão: exigir
+  // sessão de quem está tentando abrir uma sessão trancava o painel para
+  // sempre — o POST voltava como redirect e o formulário dizia "senha
+  // incorreta" a qualquer credencial.
+  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
+    return naoIndexar(NextResponse.next());
+  }
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   if (!(await verifySessionToken(process.env.ADMIN_TOKEN, token))) {
@@ -50,7 +56,7 @@ async function guardarAdmin(req: NextRequest): Promise<NextResponse> {
 /**
  * Portão do gerador de código de barras: sessão longa, credencial só dele.
  *
- * A verificação é no middleware, e não na página, porque a página é um
+ * A verificação é no proxy, e não na página, porque a página é um
  * componente de cliente: checar lá dentro entregaria o HTML e o JavaScript
  * antes de perguntar a senha, o que não é portão, é aviso.
  *
@@ -145,7 +151,7 @@ function levarAoIdioma(req: NextRequest): NextResponse | null {
   return res;
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (pathname.startsWith(ROTA_PROTEGIDA)) return guardarGrafica(req);
@@ -166,7 +172,7 @@ export const config = {
     /*
      * Tudo que é página. Fica de fora o que não é: arquivo estático, imagem de
      * compartilhamento, modelo, fonte e os arquivos de robô. Rodar o
-     * middleware neles só gastaria tempo, e desviar idioma num PNG não faz
+     * proxy neles só gastaria tempo, e desviar idioma num PNG não faz
      * sentido.
      *
      * As rotas protegidas continuam batendo aqui e são tratadas primeiro, na

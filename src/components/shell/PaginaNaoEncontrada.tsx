@@ -36,7 +36,7 @@ export function PaginaNaoEncontrada({ idioma, bilingue = false }: { idioma: Idio
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
         <Link
           href={t.inicio}
-          className="rounded-lg bg-foreground px-4 py-2 font-medium text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="rounded-lg bg-foreground px-4 py-2 font-medium text-background transition-opacity duration-150 hover:opacity-85 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {t.acao}
         </Link>
@@ -44,7 +44,7 @@ export function PaginaNaoEncontrada({ idioma, bilingue = false }: { idioma: Idio
           <Link
             href="/en"
             lang="en"
-            className="rounded text-muted-foreground underline decoration-zinc-300 underline-offset-4 transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:decoration-zinc-600"
+            className="rounded text-muted-foreground underline decoration-zinc-300 underline-offset-4 transition-colors duration-150 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:decoration-zinc-600"
           >
             English version
           </Link>

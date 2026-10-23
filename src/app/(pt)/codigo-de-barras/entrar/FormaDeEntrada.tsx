@@ -30,7 +30,7 @@ export function FormaDeEntrada() {
         // `replace` e não `push`: sem isto o botão de voltar traz a tela de
         // senha de volta por cima da ferramenta já aberta.
         router.replace(ROTA_PROTEGIDA);
-        // O router só troca de rota; o `refresh` é o que faz o middleware
+        // O router só troca de rota; o `refresh` é o que faz o proxy
         // rodar de novo com o cookie novo em mãos.
         router.refresh();
         return;

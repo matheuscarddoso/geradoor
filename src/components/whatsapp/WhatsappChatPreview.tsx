@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
 

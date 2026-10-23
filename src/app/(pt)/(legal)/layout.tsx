@@ -21,7 +21,7 @@ export default function LayoutLegal({ children }: { children: React.ReactNode })
         <header className="flex shrink-0 items-center justify-between px-4 py-4 sm:px-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+            className="inline-flex items-center gap-2 rounded text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
           >
             <MarcaGeradoor size={22} />
             <span className="font-logo text-base font-medium tracking-tight">Geradoor</span>

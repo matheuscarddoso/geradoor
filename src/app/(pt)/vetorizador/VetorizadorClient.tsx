@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Code, Download, ImageUp, Info, Loader, Lock, RotateCcw, Spline } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -183,7 +183,7 @@ export default function VetorizadorClient({
         >
           {imagem ? (
             <>
-              <div className="absolute inset-4 grid place-items-center [container-type:size] sm:inset-8 md:inset-10">
+              <div className="absolute inset-4 grid place-items-center @container-size sm:inset-8 md:inset-10">
                 <ComparadorDoVetor
                   original={imagem.url}
                   vetor={resultado?.url ?? null}
@@ -212,7 +212,7 @@ export default function VetorizadorClient({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15, ease: EASE_OUT }}
-                className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm"
+                className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-xs"
               >
                 <p className="text-base font-medium">{f.comum.solteParaTrocar}</p>
               </motion.div>
@@ -290,7 +290,7 @@ export default function VetorizadorClient({
                     limpar();
                     setAjustes(AJUSTES_INICIAIS);
                   }}
-                  className="shrink-0 text-xs text-subtle underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                  className="shrink-0 text-xs text-subtle underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
                 >
                   {f.comum.limpar}
                 </button>
@@ -362,7 +362,7 @@ function ConviteParaSoltar({ mac, arrastando, onEscolher }: { mac: boolean; arra
       onClick={onEscolher}
       className={cn(
         "group absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400"
+        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400"
       )}
     >
       {/* Um quadrado de pixels atrás e a mesma forma em curva na frente: o
@@ -378,8 +378,8 @@ function ConviteParaSoltar({ mac, arrastando, onEscolher }: { mac: boolean; arra
         <span
           className={cn(
             "absolute left-0 top-2 h-[88px] w-[72px] -rotate-6 overflow-hidden rounded-xl bg-zinc-300 ring-1 ring-black/5 transition-transform duration-300 ease-ios dark:bg-zinc-700 dark:ring-white/10",
-            "[background-image:linear-gradient(90deg,rgb(0_0_0/0.06)_1px,transparent_1px),linear-gradient(rgb(0_0_0/0.06)_1px,transparent_1px)] [background-size:8px_8px]",
-            "group-hover:-translate-x-0.5 group-hover:-rotate-[9deg]",
+            "bg-[linear-gradient(90deg,rgb(0_0_0/0.06)_1px,transparent_1px),linear-gradient(rgb(0_0_0/0.06)_1px,transparent_1px)] bg-size-[8px_8px]",
+            "group-hover:-translate-x-0.5 group-hover:rotate-[-9deg]",
             arrastando && "-translate-x-1 -rotate-12"
           )}
         />

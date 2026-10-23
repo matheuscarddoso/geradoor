@@ -3,7 +3,7 @@
 import { useFerramentas } from "@/lib/useTextos";
 
 import React, { useRef, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ImagePlus, Trash2, Loader } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
@@ -132,7 +132,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                     "border-zinc-300 dark:border-zinc-700 grid place-items-center",
                     "transition-colors duration-150 overflow-hidden",
                     "hover:border-zinc-400 dark:hover:border-zinc-600",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                    "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
                   )}
                   aria-label={f.qr.enviarLogo}
                 >
@@ -155,7 +155,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                   )}
 
                   {loadingPreset === "upload" && (
-                    <span className="absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm">
+                    <span className="absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-xs">
                       <Loader className="w-3.5 h-3.5 animate-spin" />
                     </span>
                   )}
@@ -223,7 +223,7 @@ const LogoPicker: React.FC<LogoPickerProps> = ({ value, onChange, disabled }) =>
                       className={cn(
                         "relative h-9 w-9 rounded-lg grid place-items-center",
                         "border transition-colors duration-150",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+                        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
                         active
                           ? "border-zinc-900 dark:border-zinc-100"
                           : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"

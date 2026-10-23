@@ -20,7 +20,7 @@ export function paginasLegais(idioma: Idioma) {
  */
 export function Rodape({ className, idioma = "pt-BR" }: { className?: string; idioma?: Idioma }) {
   const link =
-    "rounded transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400";
+    "rounded transition-colors duration-150 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400";
   const t = TEXTOS[idioma];
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CircleMinus, CirclePlus, Redo2, Undo2, type LucideIcon } from "lucide-react";
 import { Slider } from "dialkit";
 import { Switch } from "@/components/ui/switch";
@@ -97,7 +97,7 @@ export function AjustesDoRecorte({
   const botaoDeHistorico = cn(
     "grid h-8 w-8 place-items-center rounded-lg text-subtle transition-colors duration-150",
     "hover:bg-muted hover:text-foreground",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+    "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
     "disabled:pointer-events-none disabled:opacity-35"
   );
 
@@ -142,7 +142,7 @@ export function AjustesDoRecorte({
               onClick={() => onFerramenta(selecionada ? null : id)}
               className={cn(
                 "flex h-9 items-center justify-center gap-2 rounded-lg px-3 text-sm transition-[background-color,color,box-shadow] duration-150",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
                 selecionada
                   ? "bg-background font-medium text-foreground shadow-[0_0_0_0.5px_rgb(0_0_0/0.06),0_1px_2px_rgb(0_0_0/0.08)] dark:bg-zinc-800 dark:shadow-[0_0_0_0.5px_rgb(255_255_255/0.08)]"
                   : "text-subtle hover:text-foreground"

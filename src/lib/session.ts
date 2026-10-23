@@ -7,7 +7,7 @@
  * chave de assinatura e nunca sai do servidor.
  *
  * Formato: base64url(JSON payload) + "." + base64url(HMAC-SHA256)
- * Implementado sobre Web Crypto para rodar no edge runtime do middleware.
+ * Implementado sobre Web Crypto, que existe igual no proxy (Node) e no navegador.
  */
 
 const encoder = new TextEncoder();

@@ -77,7 +77,7 @@ function ReguasBase({ pagina, escala, unidade, selecionado }: Props) {
         {marcas.horizontal.map(({ mm, rotulo }) => (
           <div key={mm} className="absolute bottom-0 top-0" style={{ left: mm * escala }}>
             <div className="absolute bottom-0 h-1.5 w-px bg-border" />
-            <span className="absolute bottom-2 start-1 whitespace-nowrap text-[8px] leading-none text-muted-foreground">
+            <span className="absolute bottom-2 inset-s-1 whitespace-nowrap text-[8px] leading-none text-muted-foreground">
               {rotulo}
             </span>
           </div>
@@ -96,11 +96,11 @@ function ReguasBase({ pagina, escala, unidade, selecionado }: Props) {
           />
         )}
         {marcas.vertical.map(({ mm, rotulo }) => (
-          <div key={mm} className="absolute start-0 end-0" style={{ top: mm * escala }}>
-            <div className="absolute end-0 h-px w-1.5 bg-border" />
+          <div key={mm} className="absolute inset-s-0 inset-e-0" style={{ top: mm * escala }}>
+            <div className="absolute inset-e-0 h-px w-1.5 bg-border" />
             {/* Girado para o número acompanhar a régua sem alargar a faixa. */}
             <span
-              className="absolute end-2 top-1 origin-top-right -rotate-90 whitespace-nowrap text-[8px] leading-none text-muted-foreground"
+              className="absolute inset-e-2 top-1 origin-top-right -rotate-90 whitespace-nowrap text-[8px] leading-none text-muted-foreground"
               style={{ transformOrigin: "100% 0" }}
             >
               {rotulo}

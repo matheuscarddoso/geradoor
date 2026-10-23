@@ -1042,7 +1042,7 @@ export default function CodigoDeBarrasClient() {
     return () => {
       window.removeEventListener("keydown", desce, { capture: true });
       window.removeEventListener("keyup", sobe, { capture: true });
-      window.removeEventListener("blur", soltar);
+      window.removeEventListener("blur-sm", soltar);
     };
   }, []);
 
@@ -1790,7 +1790,7 @@ export default function CodigoDeBarrasClient() {
             da folha. Desfazer fica à esquerda porque é histórico do documento,
             não ferramenta. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 grid grid-cols-[1fr_auto_1fr] items-end gap-3 p-3">
-          <div className="pointer-events-auto flex w-fit items-center gap-px rounded-lg border border-border bg-background p-1 shadow-sm">
+          <div className="pointer-events-auto flex w-fit items-center gap-px rounded-lg border border-border bg-background p-1 shadow-xs">
             <button
               type="button"
               aria-label="Desfazer"
@@ -1848,7 +1848,7 @@ export default function CodigoDeBarrasClient() {
                 >
                   <ChevronDown className="h-3 w-3" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="min-w-[11rem]">
+                <DropdownMenuContent side="top" align="start" className="min-w-44">
                   {FERRAMENTAS_DE_MANIPULACAO.map((id) => {
                     const { nome, tecla, icone: Icone } = FERRAMENTAS[id];
                     return (
@@ -1948,7 +1948,7 @@ export default function CodigoDeBarrasClient() {
                   {Math.round(escala * PX_POR_MM_A_100)}%
                   <ChevronDown className="h-3 w-3" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[9rem]">
+                <DropdownMenuContent align="end" className="min-w-36">
                   <DropdownMenuItem className="justify-between text-xs" onClick={encaixarNaTela}>
                     Encaixar na tela
                     <span className="font-mono text-[10px] text-muted-foreground">0</span>
@@ -2213,7 +2213,7 @@ export default function CodigoDeBarrasClient() {
                     placeholder="Cliente ou serviço"
                     maxLength={120}
                     aria-label={`Anotação da emissão ${formatarValor(emissao.de, emissao.digitos)}`}
-                    className="mt-1 w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none"
+                    className="mt-1 w-full bg-transparent text-[11px] text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden"
                   />
                 </div>
               ))}
@@ -2762,7 +2762,7 @@ export default function CodigoDeBarrasClient() {
                       }));
                     }}
                     onFocus={(evento) => evento.currentTarget.select()}
-                    className="w-7 bg-transparent text-right font-mono text-xs tabular-nums outline-none"
+                    className="w-7 bg-transparent text-right font-mono text-xs tabular-nums outline-hidden"
                   />
                   %
                 </label>

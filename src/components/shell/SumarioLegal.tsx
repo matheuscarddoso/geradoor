@@ -56,7 +56,7 @@ export function SumarioLegal({
               aria-current={ativa === id ? "true" : undefined}
               className={cn(
                 "block rounded py-1.5 text-sm leading-snug transition-colors duration-150",
-                "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+                "hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
                 ativa === id ? "font-medium text-foreground" : "text-muted-foreground"
               )}
             >

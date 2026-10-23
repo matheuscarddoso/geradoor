@@ -74,7 +74,7 @@ export function SeletorDeFundo({ valor, onChange, desabilitado }: SeletorDeFundo
     "relative grid h-9 w-9 place-items-center rounded-full",
     "ring-1 ring-inset ring-black/10 dark:ring-white/15",
     "transition-[box-shadow,transform] duration-150 ease-out active:scale-95",
-    "focus-visible:outline-none",
+    "focus-visible:outline-hidden",
     "disabled:cursor-not-allowed disabled:opacity-40"
   );
   // O anel de seleção fica afastado da amostra: colado nela, some contra o
@@ -103,14 +103,14 @@ export function SeletorDeFundo({ valor, onChange, desabilitado }: SeletorDeFundo
             disabled={desabilitado}
             onClick={() => onChange(opcao.cor)}
             onKeyDown={(evento) => aoTeclar(evento, indice)}
-            className={cn(amostra, !opcao.cor && "xadrez [background-size:8px_8px]", ativa ? selecionada : focada)}
+            className={cn(amostra, !opcao.cor && "xadrez bg-size-[8px_8px]", ativa ? selecionada : focada)}
             style={opcao.cor ? { backgroundColor: opcao.cor } : undefined}
           >
             {ativa && (
               <Check
                 aria-hidden="true"
                 className={cn(
-                  "h-3.5 w-3.5 [stroke-width:2]",
+                  "h-3.5 w-3.5 stroke-2",
                   opcao.cor === "#000000" ? "text-white" : "text-zinc-900"
                 )}
               />

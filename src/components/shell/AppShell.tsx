@@ -102,9 +102,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           title={t.abrirMenu}
           className={cn(
             "absolute left-2 top-2 z-20 grid h-9 w-9 place-items-center rounded-lg",
-            "bg-background/80 text-zinc-500 backdrop-blur-sm transition-colors duration-150",
+            "bg-background/80 text-zinc-500 backdrop-blur-xs transition-colors duration-150",
             "hover:bg-zinc-100 hover:text-foreground dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+            "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
             aberta && "md:hidden"
           )}
         >
@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             O padding do topo no celular é o espaço do botão acima: sem ele, o
             botão cobriria o título da ferramenta. */}
-        {/* `[&>*:first-child]:md:min-h-full` dá à ferramenta a altura da área
+        {/* `md:[&>*:first-child]:min-h-full` dá à ferramenta a altura da área
             visível sem prendê-la ali: o conteúdo de SEO que vem depois flui
             abaixo e a página rola normalmente.
 
@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "min-h-0 min-w-0 flex-1 overflow-auto pt-12 md:pt-0",
-            "[&>*:first-child]:md:min-h-full",
+            "md:[&>*:first-child]:min-h-full",
             aberta && "md:pt-0"
           )}
         >

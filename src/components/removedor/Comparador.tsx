@@ -12,7 +12,7 @@ import {
   useReducedMotion,
   useTransform,
   type AnimationPlaybackControls,
-} from "framer-motion";
+} from "motion/react";
 import { ChevronsLeftRight } from "lucide-react";
 import { CamadaDoRecorte } from "./CamadaDoRecorte";
 import type { Ferramenta, Traco } from "@/lib/pincel";
@@ -274,7 +274,7 @@ export function Comparador({
                 "pointer-events-auto absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full",
                 "bg-white text-zinc-900 shadow-[0_1px_2px_rgb(0_0_0/0.2),0_6px_16px_rgb(0_0_0/0.18)]",
                 "transition-transform duration-150 ease-out active:scale-95",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
               )}
             >
               <ChevronsLeftRight className="h-4 w-4" />

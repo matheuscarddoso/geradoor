@@ -28,7 +28,7 @@ export function FaqAcordeao({ perguntas }: { perguntas: PerguntaDaFerramenta[] }
       {perguntas.map(({ pergunta, resposta }) => (
         <details key={pergunta} className="group border-b border-border">
           <summary
-            className="flex cursor-pointer list-none items-center justify-between gap-4 rounded py-4 text-start text-[15px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 [&::-webkit-details-marker]:hidden"
+            className="flex cursor-pointer list-none items-center justify-between gap-4 rounded py-4 text-start text-[15px] font-medium focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 [&::-webkit-details-marker]:hidden"
           >
             {pergunta}
             <ChevronDown

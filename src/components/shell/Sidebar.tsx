@@ -57,7 +57,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
         <Link
           href="/"
           data-touch-target
-          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-selected focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-foreground transition-colors duration-150 hover:bg-selected focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
         >
           <MarcaGeradoor size={22} />
           <span className="truncate font-logo text-base font-medium tracking-tight">Geradoor</span>
@@ -68,7 +68,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
           data-touch-target
           aria-label={t.recolherMenu}
           title={t.recolherMenu}
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors duration-150 hover:bg-zinc-100 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-zinc-400 transition-colors duration-150 hover:bg-zinc-100 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
         >
           <PanelLeftClose className="h-4 w-4" />
         </button>
@@ -91,7 +91,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
                       aria-current={ativa ? "page" : undefined}
                       className={cn(
                         "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400",
+                        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400",
                         ativa
                           ? "bg-zinc-100 font-medium text-foreground dark:bg-zinc-800"
                           : "text-zinc-600 hover:bg-zinc-50 hover:text-foreground dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
@@ -168,7 +168,7 @@ export function Sidebar({ className, onRecolher, onBuscar, mac }: SidebarProps) 
         <button
           type="button"
           onClick={onBuscar}
-          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-zinc-500 transition-colors duration-150 hover:bg-zinc-50 hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
         >
           <Search className="h-4 w-4 shrink-0 text-zinc-400" />
           <span className="truncate">{t.buscar}</span>

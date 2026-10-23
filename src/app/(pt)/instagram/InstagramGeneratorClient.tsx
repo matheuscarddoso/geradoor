@@ -4,7 +4,6 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronDown, Loader } from "lucide-react";
-import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,7 +97,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
       return;
     }
 
-    const shortcode = uuidv4().slice(0, 6);
+    const shortcode = crypto.randomUUID().slice(0, 6);
     const baseUrl = "https://www.geradoor.com/";
 
     try {
@@ -174,7 +173,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
               <div className="relative max-w-[320px]">
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute inset-y-0 start-4 flex items-center text-sm text-subtle"
+                  className="pointer-events-none absolute inset-y-0 inset-s-4 flex items-center text-sm text-subtle"
                 >
                   @
                 </span>
@@ -282,7 +281,7 @@ const InstagramGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                             )}
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="center" className="min-w-[9rem]">
+                        <DropdownMenuContent align="center" className="min-w-36">
                           <DropdownMenuItem onClick={() => handleDownload("png")}>
                             PNG<span className="ms-auto text-xs text-subtle">{f.qr.imagemMinuscula}</span>
                           </DropdownMenuItem>

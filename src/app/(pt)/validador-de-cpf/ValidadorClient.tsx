@@ -52,7 +52,7 @@ export default function ValidadorClient() {
 
         {/* role=status para quem usa leitor de tela ouvir a resposta sem
             precisar sair do campo e voltar. */}
-        <div id="resposta-da-validacao" role="status" aria-live="polite" className="min-h-[3.25rem]">
+        <div id="resposta-da-validacao" role="status" aria-live="polite" className="min-h-13">
           {resultado.estado === "valido" && (
             <Resposta ok titulo="CPF válido">
               Os dois dígitos verificadores fecham. Emissão na região fiscal de {resultado.regiao}.
@@ -98,8 +98,8 @@ function Resposta({ ok, titulo, children }: { ok?: boolean; titulo: string; chil
       className={cn(
         "flex gap-2.5 rounded-xl border px-3 py-2.5",
         ok
-          ? "border-emerald-600/25 bg-emerald-600/[0.06]"
-          : "border-amber-600/25 bg-amber-600/[0.06]"
+          ? "border-emerald-600/25 bg-emerald-600/6"
+          : "border-amber-600/25 bg-amber-600/6"
       )}
     >
       <Icone

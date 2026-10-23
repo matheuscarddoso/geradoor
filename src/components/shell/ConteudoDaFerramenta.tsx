@@ -131,7 +131,7 @@ export function ConteudoDaFerramenta({
                 <li key={href}>
                   <Link
                     href={href}
-                    className="group inline-flex flex-wrap items-baseline gap-x-2 rounded text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                    className="group inline-flex flex-wrap items-baseline gap-x-2 rounded text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
                   >
                     <span className="font-medium underline decoration-zinc-300 underline-offset-4 group-hover:decoration-current dark:decoration-zinc-600">
                       {label}

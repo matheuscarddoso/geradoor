@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 /**
  * Escapa os cinco caracteres com significado sintático em XML/SVG.
  *

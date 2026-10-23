@@ -12,7 +12,7 @@ import {
   useReducedMotion,
   useTransform,
   type AnimationPlaybackControls,
-} from "framer-motion";
+} from "motion/react";
 import { ChevronsLeftRight, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -180,7 +180,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
       className={cn(
         "relative select-none overflow-hidden rounded-lg",
         interativo && !ampliado && "cursor-ew-resize [touch-action:pan-y]",
-        interativo && ampliado && "cursor-grab [touch-action:none] active:cursor-grabbing"
+        interativo && ampliado && "cursor-grab touch-none active:cursor-grabbing"
       )}
       style={{ width: `min(100cqw, ${proporcao * 100}cqh)`, aspectRatio: `${largura} / ${altura}` }}
       onPointerDown={(evento) => {
@@ -297,7 +297,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
                 "pointer-events-auto absolute left-1/2 top-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-ew-resize place-items-center rounded-full",
                 "bg-white text-zinc-900 shadow-[0_1px_2px_rgb(0_0_0/0.2),0_6px_16px_rgb(0_0_0/0.18)]",
                 "transition-transform duration-150 ease-out active:scale-95",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
+                "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900"
               )}
             >
               <ChevronsLeftRight className="h-4 w-4" />
@@ -316,7 +316,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
               disabled={indice <= 0}
               aria-label="Diminuir zoom"
               data-touch-target
-              className="grid h-7 w-7 place-items-center rounded-full transition-colors duration-150 hover:bg-white/15 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="grid h-7 w-7 place-items-center rounded-full transition-colors duration-150 hover:bg-white/15 disabled:opacity-40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70"
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
@@ -324,7 +324,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
               type="button"
               onClick={() => aplicarZoom(1)}
               aria-label="Zoom inteiro"
-              className="min-w-[3rem] rounded-full px-1 text-center text-xs font-medium tabular-nums transition-colors duration-150 hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="min-w-12 rounded-full px-1 text-center text-xs font-medium tabular-nums transition-colors duration-150 hover:bg-white/15 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70"
             >
               {zoom * 100}%
             </button>
@@ -334,7 +334,7 @@ export function ComparadorDoVetor({ original, vetor, largura, altura, processand
               disabled={indice >= NIVEIS.length - 1}
               aria-label="Aumentar zoom"
               data-touch-target
-              className="grid h-7 w-7 place-items-center rounded-full transition-colors duration-150 hover:bg-white/15 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              className="grid h-7 w-7 place-items-center rounded-full transition-colors duration-150 hover:bg-white/15 disabled:opacity-40 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-white/70"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>

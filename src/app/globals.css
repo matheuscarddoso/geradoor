@@ -1,9 +1,367 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@custom-variant dark (&:is(.dark *));
+
+/*
+  `inline` porque estes tokens apontam para outras variáveis — as da paleta
+  e as das fontes do next/font. Sem ele, o Tailwind 4 resolve o valor uma
+  vez só, no :root, e as variáveis definidas mais abaixo na árvore (as fontes
+  ficam no <body>) não chegam: a logo perdia a Geist Mono. Com `inline`, a
+  classe usa a variável direto onde é aplicada, como era na v3.
+*/
+@theme inline {
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 18px;
+  --text-base: 14px;
+  --text-base--line-height: 20px;
+  --text-lg: 16px;
+  --text-lg--line-height: 22px;
+  --text-xl: 18px;
+  --text-xl--line-height: 24px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 30px;
+
+  --font-logo: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, SF Pro Text, SF Pro Display,
+    var(--font-geist-sans), Segoe UI, system-ui, sans-serif;
+
+  --color-subtle: hsl(var(--subtle));
+  --color-strong: hsl(var(--strong));
+  --color-selected: hsl(var(--bg-selected));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/*
+  Outros dois padrões que o Tailwind 4 mudou e que o site usava: botão com
+  cursor de mão e placeholder em cinza fixo (a v4 usa a cor do texto a 50%).
+  Mantidos como eram para a atualização não mudar nada na tela.
+*/
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
+
+/* =========================================================================
+   Cromo do iOS para os mockups (/instagram)
+   Era `.imsg`, da prévia do iMessage que foi substituída pela do WhatsApp.
+   O nome mudou porque o que sobrou aqui não é de nenhum app: é a superfície
+   de vidro e a cor de texto do sistema, que o mockup do Instagram usa.
+   ========================================================================= */
+@layer components {
+  .ios {
+    --ios-bg: #ffffff;
+    --ios-text: #000000;
+    --ios-secondary: #8e8e93;
+    --ios-glass: rgba(255, 255, 255, 0.72);
+    --ios-glass-edge: rgba(0, 0, 0, 0.06);
+    --ios-edge: rgba(255, 255, 255, 0.5);
+
+    background: var(--ios-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      system-ui, sans-serif;
+  }
+
+  .dark .ios {
+    --ios-bg: #000000;
+    --ios-text: #ffffff;
+    --ios-secondary: #8e8e93;
+    --ios-glass: rgba(58, 58, 60, 0.6);
+    --ios-glass-edge: rgba(255, 255, 255, 0.14);
+    --ios-edge: rgba(255, 255, 255, 0.11);
+  }
+
+  /* Material flutuante do iOS 26.
+     Blur mais saturação é o teto do que a web faz — o Liquid Glass real
+     refrata, e CSS não expõe isso. */
+  .ios-glass {
+    background: var(--ios-glass);
+    backdrop-filter: blur(18px) saturate(180%);
+    border: 0.5px solid var(--ios-glass-edge);
+    box-shadow:
+      0 1px 5px rgba(0, 0, 0, 0.1),
+      0 0 0.5px rgba(0, 0, 0, 0.06),
+      inset 0 0.5px 0 0 var(--ios-edge);
+  }
+
+  /* Quem pede menos transparência recebe superfície sólida, não fosca. */
+  @media (prefers-reduced-transparency: reduce) {
+    .ios-glass {
+      background: color-mix(in srgb, var(--ios-bg) 88%, var(--ios-secondary));
+      backdrop-filter: none;
+    }
+  }
+}
+
+/* =========================================================================
+   Prévia da conversa do WhatsApp no iOS (/whatsapp)
+   Cores extraídas da captura de referência; o papel de parede é o próprio
+   arquivo do app. Acompanha o tema do site via .dark.
+   ========================================================================= */
+@layer components {
+  .wa {
+    --wa-header: rgba(247, 253, 246, 0.92);
+    --wa-header-text: #0b0b0a;
+    --wa-icon: #0b0b0a;
+    --wa-hairline: rgba(0, 0, 0, 0.14);
+    --wa-sent: #d0ffcf;
+    --wa-sent-text: #0b141a;
+    --wa-bubble-meta: rgba(0, 0, 0, 0.45);
+    --wa-meta: rgba(0, 0, 0, 0.5);
+    --wa-tick: #53bdeb;
+    --wa-datepill: rgba(255, 255, 255, 0.92);
+    --wa-datepill-text: rgba(0, 0, 0, 0.55);
+    --wa-inputbar: rgba(246, 246, 246, 0.94);
+    --wa-field: #ffffff;
+    --wa-field-edge: rgba(0, 0, 0, 0.1);
+    --wa-avatar-bg: #cfd4d1;
+    --wa-avatar-fg: #ffffff;
+    --wa-home-indicator: rgba(0, 0, 0, 0.85);
+    --wa-wallpaper: url("/wa-chat-bg-light.webp");
+
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      system-ui, sans-serif;
+  }
+
+  .dark .wa {
+    --wa-header: rgba(31, 44, 51, 0.94);
+    --wa-header-text: #e9edef;
+    --wa-icon: #e9edef;
+    --wa-hairline: rgba(255, 255, 255, 0.1);
+    --wa-sent: #005c4b;
+    --wa-sent-text: #e9edef;
+    --wa-bubble-meta: rgba(233, 237, 239, 0.6);
+    --wa-meta: rgba(233, 237, 239, 0.6);
+    --wa-tick: #53bdeb;
+    --wa-datepill: rgba(32, 44, 51, 0.92);
+    --wa-datepill-text: rgba(233, 237, 239, 0.6);
+    --wa-inputbar: rgba(31, 44, 51, 0.94);
+    --wa-field: #2a3942;
+    --wa-field-edge: rgba(255, 255, 255, 0.06);
+    --wa-avatar-bg: #3b4a54;
+    --wa-avatar-fg: #8696a0;
+    --wa-home-indicator: rgba(233, 237, 239, 0.85);
+    --wa-wallpaper: url("/wa-chat-bg-dark.webp");
+  }
+
+  /* O papel de parede do WhatsApp não é ladrilho: é uma arte única esticada
+     para cobrir a tela. `cover` mantém a proporção e corta o excedente, que é
+     o comportamento do app. */
+  .wa-wallpaper {
+    background-image: var(--wa-wallpaper);
+    background-size: cover;
+    background-position: center;
+  }
+
+  /* A barra de navegação é translúcida sobre a conversa, que corre por baixo.
+     A linha de 0,5pt embaixo é o que separa as duas — sem ela, com papel de
+     parede claro, o header se dissolve no chat. */
+  .wa-header {
+    background: var(--wa-header);
+    backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: inset 0 -0.5px 0 0 var(--wa-hairline);
+  }
+
+  .wa-inputbar {
+    background: var(--wa-inputbar);
+    backdrop-filter: blur(20px) saturate(180%);
+    box-shadow: inset 0 0.5px 0 0 var(--wa-hairline);
+  }
+
+  .wa-field {
+    background: var(--wa-field);
+    border: 0.5px solid var(--wa-field-edge);
+    color: var(--wa-meta);
+  }
+
+  .wa-bubble {
+    background: var(--wa-sent);
+    color: var(--wa-sent-text);
+    word-break: break-word;
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+  }
+
+  .wa-datepill {
+    background: var(--wa-datepill);
+    color: var(--wa-datepill-text);
+    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
+    font-weight: 500;
+  }
+
+  /* Quem pede menos transparência recebe superfície sólida, não fosca. */
+  @media (prefers-reduced-transparency: reduce) {
+    .wa-header,
+    .wa-inputbar {
+      backdrop-filter: none;
+    }
+  }
+}
+
+/* =========================================================================
+   Removedor de fundo (/removedor-de-fundo)
+   ========================================================================= */
+@layer components {
+  /*
+   * Xadrez de transparência, o mesmo sinal do Figma e do Photoshop.
+   *
+   * Um conic-gradient só, sem imagem: pinta dois quadrados de quatro por
+   * ladrilho. No escuro as casas ficam próximas em valor para o xadrez não
+   * brigar com o recorte — ele informa "aqui é vazio", não decora.
+   */
+  .xadrez {
+    --xadrez-claro: #ffffff;
+    --xadrez-escuro: #ececec;
+    background-color: var(--xadrez-claro);
+    background-image: conic-gradient(
+      var(--xadrez-escuro) 25%,
+      transparent 0 50%,
+      var(--xadrez-escuro) 0 75%,
+      transparent 0
+    );
+    background-size: 16px 16px;
+  }
+
+  .dark .xadrez {
+    --xadrez-claro: #1f1f1f;
+    --xadrez-escuro: #292929;
+  }
+
+  /*
+   * Varredura sobre a foto enquanto o modelo trabalha.
+   *
+   * Uma faixa de luz desce pela imagem, com a borda de baixo mais acesa, como
+   * um scanner. Comunica "estou lendo a sua foto" melhor que um spinner, que
+   * só diz "espere". Anima transform e nada mais, então fica na GPU.
+   */
+  .varredura {
+    background: rgb(0 0 0 / 0.14);
+    overflow: hidden;
+  }
+
+  .varredura::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: -40%;
+    height: 40%;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(255 255 255 / 0.12) 80%,
+      rgb(255 255 255 / 0.5) 99%,
+      rgb(255 255 255 / 0.9)
+    );
+    animation: varredura 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+
+  /* Sem movimento, sobra o véu: ainda diz que a foto está ocupada. */
+  @media (prefers-reduced-motion: reduce) {
+    .varredura::before {
+      animation: none;
+      opacity: 0;
+    }
+  }
+}
+
+@layer utilities {
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
 }
 
 @layer base {
@@ -105,171 +463,14 @@ body {
   }
 }
 
-.pattern {
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center center;
-  background-repeat: repeat;
-  background-image: var(--pattern);
-};
-/* =========================================================================
-   Cromo do iOS para os mockups (/instagram)
-   Era `.imsg`, da prévia do iMessage que foi substituída pela do WhatsApp.
-   O nome mudou porque o que sobrou aqui não é de nenhum app: é a superfície
-   de vidro e a cor de texto do sistema, que o mockup do Instagram usa.
-   ========================================================================= */
-@layer components {
-  .ios {
-    --ios-bg: #ffffff;
-    --ios-text: #000000;
-    --ios-secondary: #8e8e93;
-    --ios-glass: rgba(255, 255, 255, 0.72);
-    --ios-glass-edge: rgba(0, 0, 0, 0.06);
-    --ios-edge: rgba(255, 255, 255, 0.5);
-
-    background: var(--ios-bg);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-      system-ui, sans-serif;
-  }
-
-  .dark .ios {
-    --ios-bg: #000000;
-    --ios-text: #ffffff;
-    --ios-secondary: #8e8e93;
-    --ios-glass: rgba(58, 58, 60, 0.6);
-    --ios-glass-edge: rgba(255, 255, 255, 0.14);
-    --ios-edge: rgba(255, 255, 255, 0.11);
-  }
-
-  /* Material flutuante do iOS 26.
-     Blur mais saturação é o teto do que a web faz — o Liquid Glass real
-     refrata, e CSS não expõe isso. */
-  .ios-glass {
-    background: var(--ios-glass);
-    backdrop-filter: blur(18px) saturate(180%);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    border: 0.5px solid var(--ios-glass-edge);
-    box-shadow:
-      0 1px 5px rgba(0, 0, 0, 0.1),
-      0 0 0.5px rgba(0, 0, 0, 0.06),
-      inset 0 0.5px 0 0 var(--ios-edge);
-  }
-
-  /* Quem pede menos transparência recebe superfície sólida, não fosca. */
-  @media (prefers-reduced-transparency: reduce) {
-    .ios-glass {
-      background: color-mix(in srgb, var(--ios-bg) 88%, var(--ios-secondary));
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-  }
-}
-
-/* =========================================================================
-   Prévia da conversa do WhatsApp no iOS (/whatsapp)
-   Cores extraídas da captura de referência; o papel de parede é o próprio
-   arquivo do app. Acompanha o tema do site via .dark.
-   ========================================================================= */
-@layer components {
-  .wa {
-    --wa-header: rgba(247, 253, 246, 0.92);
-    --wa-header-text: #0b0b0a;
-    --wa-icon: #0b0b0a;
-    --wa-hairline: rgba(0, 0, 0, 0.14);
-    --wa-sent: #d0ffcf;
-    --wa-sent-text: #0b141a;
-    --wa-bubble-meta: rgba(0, 0, 0, 0.45);
-    --wa-meta: rgba(0, 0, 0, 0.5);
-    --wa-tick: #53bdeb;
-    --wa-datepill: rgba(255, 255, 255, 0.92);
-    --wa-datepill-text: rgba(0, 0, 0, 0.55);
-    --wa-inputbar: rgba(246, 246, 246, 0.94);
-    --wa-field: #ffffff;
-    --wa-field-edge: rgba(0, 0, 0, 0.1);
-    --wa-avatar-bg: #cfd4d1;
-    --wa-avatar-fg: #ffffff;
-    --wa-home-indicator: rgba(0, 0, 0, 0.85);
-    --wa-wallpaper: url("/wa-chat-bg-light.webp");
-
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-      system-ui, sans-serif;
-  }
-
-  .dark .wa {
-    --wa-header: rgba(31, 44, 51, 0.94);
-    --wa-header-text: #e9edef;
-    --wa-icon: #e9edef;
-    --wa-hairline: rgba(255, 255, 255, 0.1);
-    --wa-sent: #005c4b;
-    --wa-sent-text: #e9edef;
-    --wa-bubble-meta: rgba(233, 237, 239, 0.6);
-    --wa-meta: rgba(233, 237, 239, 0.6);
-    --wa-tick: #53bdeb;
-    --wa-datepill: rgba(32, 44, 51, 0.92);
-    --wa-datepill-text: rgba(233, 237, 239, 0.6);
-    --wa-inputbar: rgba(31, 44, 51, 0.94);
-    --wa-field: #2a3942;
-    --wa-field-edge: rgba(255, 255, 255, 0.06);
-    --wa-avatar-bg: #3b4a54;
-    --wa-avatar-fg: #8696a0;
-    --wa-home-indicator: rgba(233, 237, 239, 0.85);
-    --wa-wallpaper: url("/wa-chat-bg-dark.webp");
-  }
-
-  /* O papel de parede do WhatsApp não é ladrilho: é uma arte única esticada
-     para cobrir a tela. `cover` mantém a proporção e corta o excedente, que é
-     o comportamento do app. */
-  .wa-wallpaper {
-    background-image: var(--wa-wallpaper);
+@layer utilities {
+  .pattern {
+    width: 100%;
+    height: 100%;
     background-size: cover;
-    background-position: center;
-  }
-
-  /* A barra de navegação é translúcida sobre a conversa, que corre por baixo.
-     A linha de 0,5pt embaixo é o que separa as duas — sem ela, com papel de
-     parede claro, o header se dissolve no chat. */
-  .wa-header {
-    background: var(--wa-header);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: inset 0 -0.5px 0 0 var(--wa-hairline);
-  }
-
-  .wa-inputbar {
-    background: var(--wa-inputbar);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    box-shadow: inset 0 0.5px 0 0 var(--wa-hairline);
-  }
-
-  .wa-field {
-    background: var(--wa-field);
-    border: 0.5px solid var(--wa-field-edge);
-    color: var(--wa-meta);
-  }
-
-  .wa-bubble {
-    background: var(--wa-sent);
-    color: var(--wa-sent-text);
-    word-break: break-word;
-    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
-  }
-
-  .wa-datepill {
-    background: var(--wa-datepill);
-    color: var(--wa-datepill-text);
-    box-shadow: 0 1px 0.5px rgba(11, 20, 26, 0.13);
-    font-weight: 500;
-  }
-
-  /* Quem pede menos transparência recebe superfície sólida, não fosca. */
-  @media (prefers-reduced-transparency: reduce) {
-    .wa-header,
-    .wa-inputbar {
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
+    background-position: center center;
+    background-repeat: repeat;
+    background-image: var(--pattern);
   }
 }
 
@@ -298,27 +499,29 @@ body {
 
 }
 
-/*
+@layer utilities {
+  /*
  * Traço de 1px nos ícones, o desenho do Nucleo.
  *
  * `vector-effect: non-scaling-stroke` torna o valor literal: sem ele, um
  * ícone de viewBox 24 renderizado a 16px teria traço de 0,67px. Com ele, 1
  * significa 1 pixel de tela em qualquer tamanho.
  *
- * Fora de @layer de propósito: a classe `lucide` é injetada em runtime pela
- * biblioteca e nunca aparece no código-fonte, então o Tailwind não a detecta
- * e remove a regra se ela estiver dentro de uma layer.
+ * A classe `lucide` é injetada em runtime pela biblioteca e nunca aparece
+ * no código-fonte. Por isso é CSS comum numa layer nativa, e não `@utility`:
+ * utilitário o Tailwind 4 só gera quando acha o nome no código, e esta regra
+ * sumiria.
  */
-svg.lucide {
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-}
+  svg.lucide {
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
 
-/* =========================================================================
+  /* =========================================================================
    Responsivo
    ========================================================================= */
 
-/*
+  /*
  * O Safari do iOS dá zoom no viewport ao focar um campo com fonte menor que
  * 16px, e não há como desativar sem travar o zoom por gesto — o que quebra
  * acessibilidade. A saída é o campo ter 16px no toque.
@@ -326,128 +529,64 @@ svg.lucide {
  * Isto virou necessário quando a escala do design system passou `text-base`
  * de 16px para 14px: antes os campos não zoomavam por acidente.
  */
-@media (max-width: 767px) {
-  input,
-  select,
-  textarea {
-    font-size: 16px;
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
   }
-}
 
-/*
+  /*
  * Alvo de toque de 44px nos controles só-ícone.
  *
  * Aplicado apenas a ponteiro grosso: no mouse, 36px é confortável e crescer
  * deixaria o topo pesado. `pointer: coarse` isola dedo de cursor.
  */
-@media (pointer: coarse) {
-  [data-touch-target] {
-    min-height: 44px;
-    min-width: 44px;
+  @media (pointer: coarse) {
+    [data-touch-target] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
-}
 
-/*
+  /*
  * Alterna conteúdo entre ponteiro fino e grosso.
  *
  * Existe porque atalho de teclado não tem como ser acionado no toque: o
  * teclado do celular só aparece com um campo focado, e o campo do resultado é
  * somente leitura. Sem isto, a página fica estática no telefone.
  */
-.apenas-mouse {
-  display: inline;
-}
-.apenas-toque {
-  display: none;
-}
-@media (pointer: coarse) {
   .apenas-mouse {
-    display: none;
-  }
-  .apenas-toque {
     display: inline;
   }
-}
+  .apenas-toque {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .apenas-mouse {
+      display: none;
+    }
+    .apenas-toque {
+      display: inline;
+    }
+  }
 
-/*
+  /*
  * Switch no padrão do iOS.
  *
  * Medidas do UISwitch nativo: trilho 51x31, botão de 27 com 2 de recuo, o que
  * dá 20 de curso. Verdes oficiais do sistema, um por tema.
  */
-:root {
-  --ios-switch-on: #34c759;
-  --ios-switch-off: #e9e9ea;
-}
-.dark {
-  --ios-switch-on: #30d158;
-  --ios-switch-off: #39393d;
-}
-
-/* =========================================================================
-   Removedor de fundo (/removedor-de-fundo)
-   ========================================================================= */
-@layer components {
-  /*
-   * Xadrez de transparência, o mesmo sinal do Figma e do Photoshop.
-   *
-   * Um conic-gradient só, sem imagem: pinta dois quadrados de quatro por
-   * ladrilho. No escuro as casas ficam próximas em valor para o xadrez não
-   * brigar com o recorte — ele informa "aqui é vazio", não decora.
-   */
-  .xadrez {
-    --xadrez-claro: #ffffff;
-    --xadrez-escuro: #ececec;
-    background-color: var(--xadrez-claro);
-    background-image: conic-gradient(
-      var(--xadrez-escuro) 25%,
-      transparent 0 50%,
-      var(--xadrez-escuro) 0 75%,
-      transparent 0
-    );
-    background-size: 16px 16px;
+  :root {
+    --ios-switch-on: #34c759;
+    --ios-switch-off: #e9e9ea;
+  }
+  .dark {
+    --ios-switch-on: #30d158;
+    --ios-switch-off: #39393d;
   }
 
-  .dark .xadrez {
-    --xadrez-claro: #1f1f1f;
-    --xadrez-escuro: #292929;
-  }
-
-  /*
-   * Varredura sobre a foto enquanto o modelo trabalha.
-   *
-   * Uma faixa de luz desce pela imagem, com a borda de baixo mais acesa, como
-   * um scanner. Comunica "estou lendo a sua foto" melhor que um spinner, que
-   * só diz "espere". Anima transform e nada mais, então fica na GPU.
-   */
-  .varredura {
-    background: rgb(0 0 0 / 0.14);
-    overflow: hidden;
-  }
-
-  .varredura::before {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: -40%;
-    height: 40%;
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(255 255 255 / 0.12) 80%,
-      rgb(255 255 255 / 0.5) 99%,
-      rgb(255 255 255 / 0.9)
-    );
-    animation: varredura 1.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  }
-
-  /* Sem movimento, sobra o véu: ainda diz que a foto está ocupada. */
-  @media (prefers-reduced-motion: reduce) {
-    .varredura::before {
-      animation: none;
-      opacity: 0;
-    }
-  }
 }
 
 /*

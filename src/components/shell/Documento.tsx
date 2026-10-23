@@ -10,7 +10,7 @@ import { GeistSans } from "geist/font";
  * que usa a marca lê da variável --font-logo, num lugar só.
  */
 import { GeistMono } from "geist/font/mono";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AppShell } from "./AppShell";
 import { Toaster } from "@/components/ui/sonner";

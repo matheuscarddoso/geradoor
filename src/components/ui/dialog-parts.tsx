@@ -101,7 +101,7 @@ export function DialogSuperficie({
 /** Rodapé: um botão ocupa a linha, dois dividem em partes iguais. */
 export function DialogAcoes({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-2 grid gap-2 [&>*]:w-full [&:has(>*+*)]:grid-cols-2">
+    <div className="mt-2 grid gap-2 *:w-full [&:has(>*+*)]:grid-cols-2">
       {children}
     </div>
   );

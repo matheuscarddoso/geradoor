@@ -18,7 +18,15 @@ import { TRACADO_DA_MARCA } from "@/components/ui/marca-geradoor";
 export const TAMANHO = { width: 1200, height: 630 };
 export const TIPO_DA_IMAGEM = "image/png";
 
-const daPasta = (caminho: string) => readFileSync(join(process.cwd(), caminho));
+/*
+ * Cada arquivo é lido com o caminho escrito por extenso, e não por uma função
+ * que recebe o caminho: o Turbopack só rastreia leitura de arquivo que ele
+ * consegue resolver no build. Com o caminho variável, ele desistia e
+ * empacotava o projeto inteiro, `public/` junto, em cada imagem.
+ */
+const FOTO_DE_FUNDO = readFileSync(join(process.cwd(), "public/og-fundo.png"));
+const FONTE_GEIST_PIXEL = readFileSync(join(process.cwd(), "public/fonts/geistpixel-400.woff"));
+const FONTE_INTER = readFileSync(join(process.cwd(), "public/fonts/inter-400.ttf"));
 
 /**
  * A foto vai embutida: o gerador roda no build, sem servidor para buscá-la.
@@ -30,7 +38,7 @@ const daPasta = (caminho: string) => readFileSync(join(process.cwd(), caminho));
  * perto de 300 KB, e na tela a diferença não se vê: a foto já é feita de
  * blocos de cor chapada.
  */
-const fundo = `data:image/png;base64,${daPasta("public/og-fundo.png").toString("base64")}`;
+const fundo = `data:image/png;base64,${FOTO_DE_FUNDO.toString("base64")}`;
 
 /**
  * A marca, em branco, como data URI.
@@ -285,8 +293,8 @@ export function imagemDeCompartilhamento(rota: string): ImageResponse {
     {
       ...TAMANHO,
       fonts: [
-        { name: "Geist Pixel", data: daPasta("public/fonts/geistpixel-400.woff"), weight: 400, style: "normal" },
-        { name: "Inter", data: daPasta("public/fonts/inter-400.ttf"), weight: 400, style: "normal" },
+        { name: "Geist Pixel", data: FONTE_GEIST_PIXEL, weight: 400, style: "normal" },
+        { name: "Inter", data: FONTE_INTER, weight: 400, style: "normal" },
       ],
     }
   );

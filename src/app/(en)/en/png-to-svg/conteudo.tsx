@@ -64,7 +64,7 @@ export const FAQ: PerguntaDaFerramenta[] = [
   {
     pergunta: "Is PNG transparency kept in the SVG?",
     resposta:
-      "Yes, when it is full transparency: the cut-through region becomes no shape and the SVG has a transparent background. Partial transparency like a soft shadow does not survive — vectors have no per-pixel opacity, so the gradient becomes a step of color or disappears.",
+      "Yes, when it is full transparency: the cut-through region becomes no shape and the SVG has a transparent background. Partial transparency like a soft shadow-sm does not survive — vectors have no per-pixel opacity, so the gradient becomes a step of color or disappears.",
   },
   {
     pergunta: "Why does PNG vectorize better than JPG?",

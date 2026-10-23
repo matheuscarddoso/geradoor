@@ -387,16 +387,18 @@ export async function gerarPdfs({
   };
   conferirCancelamento();
 
-  const blocos: Array<{ nome: string; bytes: Uint8Array }> = [];
+  const blocos: Array<{ nome: string; bytes: Uint8Array<ArrayBuffer> }> = [];
   // O zip é montado em fluxo: cada PDF pronto é empurrado e liberado em
   // seguida, então a memória fica no tamanho de um bloco, não da faixa toda.
-  const pedacosZip: Uint8Array[] = [];
+  const pedacosZip: Uint8Array<ArrayBuffer>[] = [];
   let erroZip: Error | null = null;
   const zip =
     totalArquivos > 1
       ? new Zip((erro, dados) => {
           if (erro) erroZip = erro;
-          else pedacosZip.push(dados);
+          // O fflate aloca cada pedaço num ArrayBuffer próprio, nunca num
+          // SharedArrayBuffer; o tipo dele só não diz isso, e o Blob exige.
+          else pedacosZip.push(dados as Uint8Array<ArrayBuffer>);
         })
       : null;
 

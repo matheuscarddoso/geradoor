@@ -43,3 +43,6 @@ next-env.d.ts
 
 # wrangler (cache local de build e deploy dos Workers)
 .wrangler/
+
+# Cliente do Prisma, gerado no postinstall
+/src/generated/

@@ -27,9 +27,9 @@ const Switch = React.forwardRef<
     className={cn(
       "peer relative inline-flex h-[24px] w-[40px] shrink-0 cursor-pointer items-center rounded-full p-[1.5px]",
       "transition-colors duration-200 ease-ios",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
       "disabled:cursor-not-allowed disabled:opacity-50",
-      "bg-[var(--ios-switch-off)] data-[state=checked]:bg-[var(--ios-switch-on)]",
+      "bg-(--ios-switch-off) data-[state=checked]:bg-(--ios-switch-on)",
       className
     )}
     {...props}

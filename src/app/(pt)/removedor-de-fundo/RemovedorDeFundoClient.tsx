@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Copy, Download, ImageUp, Info, Loader, Lock, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -311,7 +311,7 @@ export default function RemovedorDeFundoClient({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.15, ease: EASE_OUT }}
-                className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-sm"
+                className="pointer-events-none absolute inset-0 grid place-items-center bg-background/70 backdrop-blur-xs"
               >
                 <p className="text-base font-medium">{f.comum.solteParaTrocar}</p>
               </motion.div>
@@ -379,7 +379,7 @@ function ConviteParaSoltar({
       onClick={onEscolher}
       className={cn(
         "group absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400"
+        "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400"
       )}
     >
       {/* Duas folhas: a foto atrás, o recorte na frente, sobre o xadrez. O
@@ -394,15 +394,15 @@ function ConviteParaSoltar({
       >
         <span
           className={cn(
-            "absolute left-0 top-2 h-[88px] w-[72px] -rotate-6 rounded-xl bg-gradient-to-br from-zinc-300 to-zinc-400",
+            "absolute left-0 top-2 h-[88px] w-[72px] -rotate-6 rounded-xl bg-linear-to-br from-zinc-300 to-zinc-400",
             "shadow-[0_1px_2px_rgb(0_0_0/0.08)] ring-1 ring-black/5 transition-transform duration-300 ease-ios dark:from-zinc-700 dark:to-zinc-800 dark:ring-white/10",
-            "group-hover:-rotate-[9deg] group-hover:-translate-x-0.5",
+            "group-hover:rotate-[-9deg] group-hover:-translate-x-0.5",
             arrastando && "-translate-x-1 -rotate-12"
           )}
         />
         <span
           className={cn(
-            "xadrez absolute right-0 top-0 grid h-[96px] w-[80px] rotate-3 place-items-center overflow-hidden rounded-xl [background-size:10px_10px]",
+            "xadrez absolute right-0 top-0 grid h-[96px] w-[80px] rotate-3 place-items-center overflow-hidden rounded-xl bg-size-[10px_10px]",
             "shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-6px_rgb(0_0_0/0.18)] ring-1 ring-black/5 transition-transform duration-300 ease-ios dark:ring-white/10",
             "group-hover:rotate-6 group-hover:translate-x-0.5",
             arrastando && "translate-x-1 rotate-[8deg]"
@@ -460,7 +460,7 @@ function Palco({
     <>
       {/* A área útil é um container de tamanho: o comparador calcula a caixa
           da imagem com cqw e cqh a partir dela. */}
-      <div className="absolute inset-4 grid place-items-center [container-type:size] sm:inset-8 md:inset-10">
+      <div className="absolute inset-4 grid place-items-center @container-size sm:inset-8 md:inset-10">
         <Comparador
           original={imagem.url}
           recorte={estado.fase === "pronto" ? estado.recorte.url : null}
@@ -507,7 +507,7 @@ function Palco({
                 type="button"
                 onClick={onSairDaFerramenta}
                 data-touch-target
-                className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background transition-opacity duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                className="rounded-full bg-foreground px-3 py-1 text-xs font-medium text-background transition-opacity duration-150 hover:opacity-90 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
               >
                 Concluir
               </button>
@@ -746,7 +746,7 @@ function Rodape({ estado, onLimpar }: { estado: Estado; onLimpar: () => void }) 
       <button
         type="button"
         onClick={onLimpar}
-        className="shrink-0 text-xs text-subtle underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+        className="shrink-0 text-xs text-subtle underline-offset-4 transition-colors duration-150 hover:text-foreground hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-zinc-400"
       >
         Limpar
       </button>

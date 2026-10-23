@@ -130,7 +130,7 @@ export const FAQ: PerguntaDaFerramenta[] = [
   {
     pergunta: "Are my photos used to train a model?",
     resposta:
-      "No. The downscaled copy sent to compute the outline is discarded when the request ends, is never stored, and feeds no training. Your full-resolution photo never leaves your device in the first place.",
+      "No. The downscaled copy sent to compute the outline-solid is discarded when the request ends, is never stored, and feeds no training. Your full-resolution photo never leaves your device in the first place.",
   },
   {
     pergunta: "Do I need to install anything or create an account?",

@@ -7,12 +7,11 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/shell/AppShell";
 import { useRecentes } from "@/lib/recentes";
 import { RestauradorDeQr, hrefRecente, useLimparQrDaUrl } from "@/lib/qrRecente";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Loader } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFerramentas } from "@/lib/useTextos";
-import { v4 as uuidv4 } from "uuid";
 import LogoPicker, { DEFAULT_LOGO, type LogoConfig } from "@/components/qr/LogoPicker";
 import { QrDownloadError, downloadQrCode, type QrFormat } from "@/lib/qrDownload";
 import DecorativeQR from "@/components/qr/DecorativeQR";
@@ -87,7 +86,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
 
     const url = link.url;
 
-    const shortcode = uuidv4().slice(0, 6);
+    const shortcode = crypto.randomUUID().slice(0, 6);
     const baseUrl = "https://www.geradoor.com/";
 
     try {
@@ -279,7 +278,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                         )}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="center" className="min-w-[9rem]">
+                    <DropdownMenuContent align="center" className="min-w-36">
                       <DropdownMenuItem onClick={() => handleDownload("png")}>
                         PNG
                         <span className="ms-auto text-xs text-subtle">{f.qr.imagemMinuscula}</span>
@@ -369,7 +368,7 @@ const QRCodeGenerator: React.FC<{ titulo?: string; descricao?: string }> = ({
                 {loadingQrCode && (
                   <motion.div
                     key="loading"
-                    className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm"
+                    className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-xs"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}

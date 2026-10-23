@@ -1023,7 +1023,7 @@ export function prepararPixels(
   rgba: Uint8ClampedArray | Uint8Array,
   dimensoes: Dimensoes,
   ajustes: Ajustes,
-  referencia?: (pixels: Uint8ClampedArray) => void
+  referencia?: (pixels: Uint8ClampedArray<ArrayBuffer>) => void
 ): Preparacao {
   const total = dimensoes.largura * dimensoes.altura;
   const original = new Uint8ClampedArray(rgba);

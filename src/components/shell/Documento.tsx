@@ -145,8 +145,13 @@ export function Documento({ idioma, children }: { idioma: Idioma; children: Reac
           disableTransitionOnChange
         >
           <AppShell>{children}</AppShell>
-          <Analytics />
-          <SpeedInsights />
+          {/* Os analytics da Vercel só coletam na Vercel; fora dela o script dá 404. */}
+          {process.env.VERCEL && (
+            <>
+              <Analytics />
+              <SpeedInsights />
+            </>
+          )}
           {/* Em cima, e não no canto de baixo: as ações principais do editor
               de código de barras — Gerar, Amostra, Exportar — ficam no rodapé
               do painel da direita, exatamente onde o toast aparecia. Ele

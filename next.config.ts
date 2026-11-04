@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Servidor autocontido (server.js + node_modules rastreados) que a
+  // plataforma publica como imagem de container.
+  output: "standalone",
   /*
    * Permite buildar sem derrubar o `next dev`.
    *
